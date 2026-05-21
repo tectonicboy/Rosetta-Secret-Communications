@@ -28,11 +28,35 @@ CFLAGS += -Wno-stringop-truncation
 CFLAGS += -Wno-cast-qual
 CFLAGS += -Wno-discarded-qualifiers
 
-CC = cc
+# Some of these may not be available outside GCC.
+
+# Use the stack pointer only for managing function-local storage.
+# Do not waste an entire register for the unnecessary frame pointer.
+# On x86-64, this frees up the rbp register.
+GNU_OPTIMIZATION_FLAGS += -fomit-frame-pointer
+
+#INFO: To check the segment sizes (like .data, .text) of an ELF binary:
+#      size my_file
+
+# Eliminate the code for functions that are never called.
+# This includes inlined functions which the compiler emitted a non-inlined
+# copy of, just in case an unpredictable external call to them happened.
+# With this option turned on, we let the linker remove such functions.
+# The data-sections ones does the same but for unused globals.
+# LDFLAGS += -Wl,--gc-sections is required to instruct the linker to
+# perform the actual removal.
+GNU_OPTIMIZATION_FLAGS += -ffunction-sections
+GNU_OPTIMIZATION_FLAGS += -fdata-sections
+
+LDFLAGS += -Wl,--gc-sections
 LDFLAGS += -pthread
 LDFLAGS += -lm
+CC = cc
 OPTIMIZATION_LEVEL = -O3
 ARCHITECTURE_FLAGS = -march=native
+
+# INFO: -pipe
+# Causes the build process to use pipes between build stages, not temp. files.
 
 # Ask GCC to tell us of any vectorization and loop optimizations it performed
 # when we build the server and the client sources.
@@ -58,32 +82,32 @@ SIMULATION_1_SPAWNER_3_BIN = automatic-user-testing/auto-spawner3
 all:
 	$(CC) $(ROSETTA_TEST_FRAMEWORK_SRC) \
 	-o $(BIN_DIR)/$(ROSETTA_TEST_FRAMEWORK_BIN) \
-	$(COMPILER_OPTIMIZATION_REPORT) \
+	$(COMPILER_OPTIMIZATION_REPORT) $(GNU_OPTIMIZATION_FLAGS) \
 	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
 	&& \
 	$(CC) $(MANUAL_USER_SPAWNER_SRC) \
-	-o $(BIN_DIR)/$(MANUAL_USER_SPAWNER_BIN) \
+	-o $(BIN_DIR)/$(MANUAL_USER_SPAWNER_BIN) $(GNU_OPTIMIZATION_FLAGS) \
 	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
 	&& \
 	$(CC) $(ROSETTA_SERVER_SRC) \
 	-o $(BIN_DIR)/$(ROSETTA_SERVER_BIN) \
-	$(COMPILER_OPTIMIZATION_REPORT) \
+	$(COMPILER_OPTIMIZATION_REPORT) $(GNU_OPTIMIZATION_FLAGS) \
 	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
 	&& \
 	$(CC) $(USER_SIMULATION_TEST_1_SRC) \
-	-o $(BIN_DIR)/$(USER_SIMULATION_TEST_1_BIN) \
+	-o $(BIN_DIR)/$(USER_SIMULATION_TEST_1_BIN) $(GNU_OPTIMIZATION_FLAGS) \
 	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
 	&& \
 	$(CC) $(SIMULATION_1_SPAWNER_1_SRC) \
-	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_1_BIN) \
+	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_1_BIN)  $(GNU_OPTIMIZATION_FLAGS) \
 	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
 	&& \
 	$(CC) $(SIMULATION_1_SPAWNER_2_SRC) \
-	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_2_BIN) \
+	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_2_BIN) $(GNU_OPTIMIZATION_FLAGS) \
 	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
 	&& \
 	$(CC) $(SIMULATION_1_SPAWNER_3_SRC) \
-	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_3_BIN) \
+	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_3_BIN) $(GNU_OPTIMIZATION_FLAGS) \
 	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS)
 
 clean:
