@@ -45,26 +45,26 @@ uint8_t tcp_init_communication(void)
         perror("[ERR] Server: TCP socket() call failed: ");
         goto label_error;
     }
-		printf("[OK]  Server: TCP socket file descriptor obtained.\n");
+        printf("[OK]  Server: TCP socket file descriptor obtained.\n");
 
     #ifdef SO_REUSEPORT
     if(setsockopt(listening_socket, SOL_SOCKET, SO_REUSEPORT, &optval1,
                   sizeof(optval1))
-			 == -1)
-		{
+             == -1)
+        {
         perror("[ERR] Server: TCP setsockopt() for REUSEPORT failed: ");
-				goto label_error;
-		}
-		printf("[OK]  Server: TCP socket option for REUSEPORT has been set.\n");
+                goto label_error;
+        }
+        printf("[OK]  Server: TCP socket option for REUSEPORT has been set.\n");
     #endif
 
-		if(setsockopt(listening_socket, SOL_SOCKET, SO_REUSEADDR, &optval2,
+        if(setsockopt(listening_socket, SOL_SOCKET, SO_REUSEADDR, &optval2,
                   sizeof(optval2))
-			 == -1)
+             == -1)
     {
         perror("[ERR] TCP socket option for REUSEADDR failed: ");
-				goto label_error;
-	  }
+                goto label_error;
+      }
     printf("[OK]  Server: TCP socket option for REUSEADDR has been set.\n");
     if( bind(listening_socket, (struct sockaddr*)&tcp_servaddr,
              sizeof(tcp_servaddr))
@@ -73,10 +73,10 @@ uint8_t tcp_init_communication(void)
         (errno != 13))
     {
         printf("[ERR] Server: TCP bind() failed. Errno != 13. Aborting.\n");
-				perror("errno: ");
+                perror("errno: ");
         goto label_error;
     }
-		printf("[OK]  Server: TCP bind() call successful.\n");
+        printf("[OK]  Server: TCP bind() call successful.\n");
     if( (listen(listening_socket, CONNECTIONS_BACKLOG_LIMIT)) == -1){
         perror("[ERR] Server: TCP listen() call failed: ");
         goto label_error;
@@ -88,7 +88,7 @@ label_error:
     if(listening_socket){
         close(listening_socket);
     }
-		status = 1;
+        status = 1;
 
 label_finished:
     return status;
@@ -97,13 +97,13 @@ label_finished:
 uint8_t tcp_onboard_new_client()
 {
     /* Having accept() fill out local variables before filling out the proper
-		 * global user descriptor allows the current free user index global to be
-		 * updated by another thread if a client exits the system before a new one
-		 * arrives. Both threads are under the same mutex, so this is safe.
-		 * Letting accept itself fill out the user descriptor at next_free_user_ix
-		 * was buggy because the index would NOT be updated even if a user leaving
-		 * the system updates next_free_user_ix.
-		 */
+         * global user descriptor allows the current free user index global to be
+         * updated by another thread if a client exits the system before a new one
+         * arrives. Both threads are under the same mutex, so this is safe.
+         * Letting accept itself fill out the user descriptor at next_free_user_ix
+         * was buggy because the index would NOT be updated even if a user leaving
+         * the system updates next_free_user_ix.
+         */
     struct sockaddr_in new_client_address;
     socklen_t new_clientLen = sizeof(struct sockaddr_in);
     int new_socket =
@@ -112,13 +112,13 @@ uint8_t tcp_onboard_new_client()
               &new_clientLen);
     uint64_t socket_ix = curr_free_user_ix;
     client_socket_fd[socket_ix] = new_socket;
-		memcpy(&(client_addresses[socket_ix]), &new_client_address,
-					 sizeof(struct sockaddr_in));
-		memcpy(&(clientLens[socket_ix]), &new_clientLen, sizeof(socklen_t));
+        memcpy(&(client_addresses[socket_ix]), &new_client_address,
+                     sizeof(struct sockaddr_in));
+        memcpy(&(clientLens[socket_ix]), &new_clientLen, sizeof(socklen_t));
 
     if(client_socket_fd[socket_ix] == -1){
         printf("[ERR] Server: TCP accept() for client[%lu] failed\n",socket_ix);
-				perror("errno: ");
+                perror("errno: ");
         return 1;
     }
     else{
@@ -134,13 +134,13 @@ uint8_t tcp_onboard_new_client()
        == -1)
     {
         printf("[ERR] Server: TCP setsockopt RCVTIMEO for client[%lu] failed\n",
-							 socket_ix);
-				perror("errno: ");
+                             socket_ix);
+                perror("errno: ");
         close(client_socket_fd[socket_ix]);
-				return 1;
+                return 1;
     }
     printf("[OK]  Server: TCP socket option RCVTIMEO\n"
-					 "              for client[%lu] has been set.\n", socket_ix);
+                     "              for client[%lu] has been set.\n", socket_ix);
 
     return 0;
 }
@@ -148,17 +148,17 @@ uint8_t tcp_onboard_new_client()
 uint8_t tcp_transmit_payload(uint64_t socket_ix, uint8_t* buf, size_t send_len)
 {
     if( __builtin_expect (send(client_socket_fd[socket_ix], buf,
-															 send_len, MSG_NOSIGNAL) == -1, false))
+                                                             send_len, MSG_NOSIGNAL) == -1, false))
     {
-			  /* This is fine. A client suddenly poofed, while a poll request sent by
-				 * it was still on its way to the server. Handle it gracefully.
-				 */
-			  if(errno == EPIPE){
-						printf("[OK]  Server: send() gave EPIPE, socket[%lu]\n", socket_ix);
+              /* This is fine. A client suddenly poofed, while a poll request sent by
+                 * it was still on its way to the server. Handle it gracefully.
+                 */
+              if(errno == EPIPE){
+                        printf("[OK]  Server: send() gave EPIPE, socket[%lu]\n", socket_ix);
             return 0;
-				}
+                }
         printf("[ERR] Server: TCP send() for client[%lu] failed.\n", socket_ix);
-				perror("errno: ");
+                perror("errno: ");
         return 1;
     }
     else{
@@ -208,7 +208,7 @@ uint8_t ipc_init_communication()
     strncpy(ipc_servaddr.sun_path, AF_UNIX_SOCK_PATH, AF_UNIX_SOCK_PATH_LEN +1);
     if (bind(listening_socket, (struct sockaddr*)&ipc_servaddr,
              sizeof(struct sockaddr_un))
-				== -1)
+                == -1)
     {
         perror("[ERR] Server: AF_UNIX bind() call failed: ");
         goto label_error;
@@ -220,7 +220,7 @@ uint8_t ipc_init_communication()
         goto label_error;
     }
     printf("[OK]  Server: AF_UNIX listen() call successful.\n");
-		printf("[OK]  Server: Local interprocess communication INIT finished.\n");
+        printf("[OK]  Server: Local interprocess communication INIT finished.\n");
     goto label_init_succeeded;
 
 label_error:
@@ -228,7 +228,7 @@ label_error:
         close(listening_socket);
     }
     unlink(AF_UNIX_SOCK_PATH);
-		ret = 1;
+        ret = 1;
 
 label_init_succeeded:
 
@@ -237,7 +237,7 @@ label_init_succeeded:
 
 uint8_t ipc_onboard_new_client()
 {
-	  /* Having accept() fill out local variables before filling out the proper
+      /* Having accept() fill out local variables before filling out the proper
      * global user descriptor allows the current free user index global to be
      * updated by another thread if a client exits the system before a new one
      * arrives. Both threads are under the same mutex, so this is safe.
@@ -247,13 +247,13 @@ uint8_t ipc_onboard_new_client()
      */
     int new_socket = accept(listening_socket, NULL, NULL);
 
-		uint64_t socket_ix = curr_free_user_ix;
-		client_socket_fd[socket_ix] = new_socket;
+        uint64_t socket_ix = curr_free_user_ix;
+        client_socket_fd[socket_ix] = new_socket;
 
-		if(client_socket_fd[socket_ix] == -1){
+        if(client_socket_fd[socket_ix] == -1){
         printf("[ERR] Server: AF_UNIX accept call for client[%lu] failed.\n",
-							 socket_ix);
-				perror("errno: ");
+                             socket_ix);
+                perror("errno: ");
         return 1;
     }
     else{
@@ -269,20 +269,20 @@ uint8_t ipc_onboard_new_client()
        == -1)
     {
         printf("[ERR] Server: AF_UNIX setsockopt RCVTIMEO, client %lu fail.\n",
-							 socket_ix);
-				perror("errno: ");
+                             socket_ix);
+                perror("errno: ");
         close(client_socket_fd[socket_ix]);
-				return 1;
+                return 1;
     }
     printf("[OK]  Server: AF_UNIX socket option for RCVTIMEO\n"
-					 "              for client[%lu] has been set.\n", socket_ix);
+                     "              for client[%lu] has been set.\n", socket_ix);
     return 0;
 }
 
 uint8_t ipc_transmit_payload(uint64_t socket_ix, uint8_t* buf, size_t send_len)
 {
     if( __builtin_expect (send(client_socket_fd[socket_ix],
-															 buf, send_len, MSG_NOSIGNAL) == -1, false))
+                                                             buf, send_len, MSG_NOSIGNAL) == -1, false))
     {
         /* This is fine. A client suddenly poofed, while a poll request sent by
          * it was still on its way to the server. Handle it gracefully.
@@ -310,12 +310,12 @@ ssize_t ipc_receive_payload(uint64_t socket_ix, uint8_t* buf, size_t max_len)
           )
         {
             printf("[ERR] Server: AF_UNIX client[%lu] poll recv failed.\n",
-									 socket_ix);
+                                     socket_ix);
             perror("errno: ");
         }
         else{
             printf("[ERR] Server: AF_UNIX client[%lu] poll recv timeout.\n",
-									 socket_ix);
+                                     socket_ix);
         }
     }
     else if( __builtin_expect (num_read == 0, false) ){

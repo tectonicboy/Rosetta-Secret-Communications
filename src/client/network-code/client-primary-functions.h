@@ -123,7 +123,7 @@ u8 self_init(u8* password, int password_len, char* save_dir)
     prms.y = 0x02;              /* Constant in Argon2 spec.             */
     /* Zero-extend the password to 16 bytes including a null terminator.   */
     /* Len does not include the null terminator already placed by the GUI. */
-		if(pw_bytes_for_zeroing > 0){
+        if(pw_bytes_for_zeroing > 0){
         memset(password + password_len, 0, pw_bytes_for_zeroing);
     }
     prms.P = password;
@@ -131,7 +131,7 @@ u8 self_init(u8* password, int password_len, char* save_dir)
     /* Salt = saved_string || BLAKE2B{64}(client's saved long-term public key)*/
     /* Call Blake2b to get the second part of the Salt parameter. */
     blake2b_init(saved_pubkey, PUBKEY_LEN, 0, 64, b2b_pubkey_output);
-		/* Now construct the complete Salt parameter with the 2 components. */
+        /* Now construct the complete Salt parameter with the 2 components. */
     memcpy(Salt, saved_string, ARGON_STRING_LEN);
     memcpy(Salt + ARGON_STRING_LEN, b2b_pubkey_output, 64);
     prms.S = Salt;
@@ -425,9 +425,9 @@ void* begin_polling(__attribute__((unused)) void* input)
                 }
                 else if(curr_msg_type == PACKET_ID_51){
                     process_msg_51(reply_buf + read_ix);
-		                /* Tell GUI (if used) to update the widgets for having been
-		                 * booted from our (now closed by the owner) chatroom.
-		                 */
+                        /* Tell GUI (if used) to update the widgets for having been
+                         * booted from our (now closed by the owner) chatroom.
+                         */
                     #ifdef USE_WX_GUI
                     force_user_out_of_room();
                     #endif
@@ -446,11 +446,11 @@ void* begin_polling(__attribute__((unused)) void* input)
                     /* Tell GUI/TUI to display the newly received message. */
                     #ifndef USE_WX_GUI
                     printf("{OWN_INDEX: %lu} received msg: %s\n", own_ix, text_message_line);
-		                #else
-		                display_received_msg((char*)text_message_line);
+                        #else
+                        display_received_msg((char*)text_message_line);
                     #endif
 
-  		              read_ix += SMALL_FIELD_LEN + curr_msg_len;
+                      read_ix += SMALL_FIELD_LEN + curr_msg_len;
                     continue;
                 }
             }
@@ -727,7 +727,7 @@ u8 login(u8* password, int password_len, char* save_dir)
             goto label_cleanup;
         }
         status = 10;
-	      goto label_cleanup;
+          goto label_cleanup;
     }
     memset(reply_buf, 0, MAX_TXT_LEN);
     status = receive_payload(reply_buf, (uint64_t*)&reply_len);
@@ -751,12 +751,12 @@ u8 login(u8* password, int password_len, char* save_dir)
             goto label_cleanup;
         }
         status = 10;
-	      goto label_cleanup;
+          goto label_cleanup;
     }
     else{
         printf("[ERR] Client: Unexpected reply by the server to msg_01.\n\n");
         status = 1;
-	      goto label_cleanup;
+          goto label_cleanup;
     }
     texting_should_stop = 0;
     start_polling_thread();
@@ -790,7 +790,7 @@ u8 make_new_chatroom(unsigned char* roomid, int roomid_len,
     status = construct_msg_10(userid, roomid, &msg_buf, &msg_len);
     if(status){
         printf("[ERR] Client: Couldn't construct msg_10\n\n");
-	      goto label_cleanup;
+          goto label_cleanup;
     }
     status = transmit_payload(msg_buf, msg_len);
     if(status){

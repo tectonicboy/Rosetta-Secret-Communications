@@ -72,13 +72,13 @@ void display_gui_user_booted(){
         g_instance->info_msg_box->WriteText
           ("Chat room has been closed by the owner.");
         g_instance->info_msg_box->Show();
-	      g_instance->btn_leavetheroom->Hide();
+          g_instance->btn_leavetheroom->Hide();
         g_instance->btn_send_msg->Hide();
-	      g_instance->msg_entries->SetValue("");
+          g_instance->msg_entries->SetValue("");
         g_instance->msg_entries->Hide();
-	      g_instance->usermsg_input->SetValue("");
+          g_instance->usermsg_input->SetValue("");
         g_instance->usermsg_input->Hide();
-	      g_instance->btn_makeroom->Show();
+          g_instance->btn_makeroom->Show();
         g_instance->btn_joinroom->Show();
         g_instance->btn_quit->Show();
     });
@@ -95,16 +95,16 @@ cMain::cMain() : wxFrame(
                  )
 {
     g_instance = this;
-	  display_received_msg = display_gui_message;
+      display_received_msg = display_gui_message;
     force_user_out_of_room = display_gui_user_booted;
 
     /* Create a Monospace Bold font */
     wxFont Monospace_Bold
       (12, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
     wxFont Monospace_Regular
-	    (12, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+        (12, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
 
-	/* Construct the button member variable. */
+    /* Construct the button member variable. */
     btn_login = new wxButton(
          this              /* Parent of the button - this window class        */
         ,10001             /* Match the ID we specified in the Event Table.   */
@@ -115,7 +115,7 @@ cMain::cMain() : wxFrame(
     btn_login->SetBackgroundColour(BG_COLOR);
     btn_login->SetForegroundColour(FG_COLOR);
     btn_login->SetFont(Monospace_Regular);
-	  btn_reg = new wxButton
+      btn_reg = new wxButton
       (this, 10002, "Register", wxPoint(850, 660), wxSize(200, 50));
     btn_reg->SetBackgroundColour(BG_COLOR);
     btn_reg->SetForegroundColour(FG_COLOR);
@@ -126,67 +126,67 @@ cMain::cMain() : wxFrame(
     btn_login_GO->SetForegroundColour(FG_COLOR);
     btn_login_GO->SetFont(Monospace_Regular);
     btn_login_BACK = new wxButton
-	    (this, 10004, "Back", wxPoint(850, 660), wxSize(200, 50));
+        (this, 10004, "Back", wxPoint(850, 660), wxSize(200, 50));
     btn_login_BACK->SetBackgroundColour(BG_COLOR);
     btn_login_BACK->SetForegroundColour(FG_COLOR);
     btn_login_BACK->SetFont(Monospace_Regular);
     btn_reg_GO = new wxButton
-	    (this, 10005, "Go", wxPoint(850, 600), wxSize(200, 50));
+        (this, 10005, "Go", wxPoint(850, 600), wxSize(200, 50));
     btn_reg_GO->SetBackgroundColour(BG_COLOR);
     btn_reg_GO->SetForegroundColour(FG_COLOR);
     btn_reg_GO->SetFont(Monospace_Regular);
     btn_reg_BACK = new wxButton
-	    (this, 10006, "Back", wxPoint(850, 660), wxSize(200, 50));
+        (this, 10006, "Back", wxPoint(850, 660), wxSize(200, 50));
     btn_reg_BACK->SetBackgroundColour(BG_COLOR);
     btn_reg_BACK->SetForegroundColour(FG_COLOR);
     btn_reg_BACK->SetFont(Monospace_Regular);
     btn_quit = new wxButton
-	    (this, 10007, "Quit Rosetta", wxPoint(850, 720), wxSize(200, 50));
+        (this, 10007, "Quit Rosetta", wxPoint(850, 720), wxSize(200, 50));
     btn_quit->SetBackgroundColour(BG_COLOR);
     btn_quit->SetForegroundColour(FG_COLOR);
     btn_quit->SetFont(Monospace_Regular);
     btn_makeroom = new wxButton
-	    (this, 10008, "Create a chat room", wxPoint(850, 600), wxSize(200, 50));
+        (this, 10008, "Create a chat room", wxPoint(850, 600), wxSize(200, 50));
     btn_makeroom->SetBackgroundColour(BG_COLOR);
     btn_makeroom->SetForegroundColour(FG_COLOR);
     btn_makeroom->SetFont(Monospace_Regular);
     btn_joinroom = new wxButton
-	    (this, 10009, "Join a chat room", wxPoint(850, 660), wxSize(200, 50));
+        (this, 10009, "Join a chat room", wxPoint(850, 660), wxSize(200, 50));
     btn_joinroom->SetBackgroundColour(BG_COLOR);
     btn_joinroom->SetForegroundColour(FG_COLOR);
     btn_joinroom->SetFont(Monospace_Regular);
     btn_joinroom_GO = new wxButton
-	    (this, 10010, "Go", wxPoint(850, 600), wxSize(200, 50));
+        (this, 10010, "Go", wxPoint(850, 600), wxSize(200, 50));
     btn_joinroom_GO->SetBackgroundColour(BG_COLOR);
     btn_joinroom_GO->SetForegroundColour(FG_COLOR);
     btn_joinroom_GO->SetFont(Monospace_Regular);
     btn_joinroom_BACK = new wxButton
-	    (this, 10011, "Back", wxPoint(850, 660), wxSize(200, 50));
+        (this, 10011, "Back", wxPoint(850, 660), wxSize(200, 50));
     btn_joinroom_BACK->SetBackgroundColour(BG_COLOR);
     btn_joinroom_BACK->SetForegroundColour(FG_COLOR);
     btn_joinroom_BACK->SetFont(Monospace_Regular);
     btn_makeroom_GO = new wxButton
-	    (this, 10012, "Go", wxPoint(850, 600), wxSize(200, 50));
+        (this, 10012, "Go", wxPoint(850, 600), wxSize(200, 50));
     btn_makeroom_GO->SetBackgroundColour(BG_COLOR);
     btn_makeroom_GO->SetForegroundColour(FG_COLOR);
     btn_makeroom_GO->SetFont(Monospace_Regular);
     btn_makeroom_BACK = new wxButton
-	    (this, 10013, "Back", wxPoint(850, 660), wxSize(200, 50));
+        (this, 10013, "Back", wxPoint(850, 660), wxSize(200, 50));
     btn_makeroom_BACK->SetBackgroundColour(BG_COLOR);
     btn_makeroom_BACK->SetForegroundColour(FG_COLOR);
     btn_makeroom_BACK->SetFont(Monospace_Regular);
     btn_closeyourroom = new wxButton
-	    (this, 10014, "Close the chat room", wxPoint(525, 910), wxSize(200, 50));
+        (this, 10014, "Close the chat room", wxPoint(525, 910), wxSize(200, 50));
     btn_closeyourroom->SetBackgroundColour(BG_COLOR);
     btn_closeyourroom->SetForegroundColour(FG_COLOR);
     btn_closeyourroom->SetFont(Monospace_Regular);
     btn_leavetheroom = new wxButton
-	    (this, 10015, "Leave the chat room", wxPoint(525, 910), wxSize(200, 50));
+        (this, 10015, "Leave the chat room", wxPoint(525, 910), wxSize(200, 50));
     btn_leavetheroom->SetBackgroundColour(BG_COLOR);
     btn_leavetheroom->SetForegroundColour(FG_COLOR);
     btn_leavetheroom->SetFont(Monospace_Regular);
     btn_send_msg = new wxButton
-	    (this, 10016, "Send", wxPoint(1335, 850), wxSize(50, 50));
+        (this, 10016, "Send", wxPoint(1335, 850), wxSize(50, 50));
     btn_send_msg->SetBackgroundColour(BG_COLOR);
     btn_send_msg->SetForegroundColour(FG_COLOR);
     btn_send_msg->SetFont(Monospace_Regular);
@@ -203,48 +203,48 @@ cMain::cMain() : wxFrame(
     btn_joinroom_BACK->Hide();
     btn_closeyourroom->Hide();
     btn_leavetheroom->Hide();
-	  btn_send_msg->Hide();
+      btn_send_msg->Hide();
 
     password_input = new wxTextCtrl
-	    (this, wxID_ANY, "", wxPoint(850, 750), wxSize(200, 50), wxTE_PASSWORD);
+        (this, wxID_ANY, "", wxPoint(850, 750), wxSize(200, 50), wxTE_PASSWORD);
     password_input->SetBackgroundColour(BG_COLOR);
     password_input->SetForegroundColour(FG_COLOR);
     password_input->SetHint("Your password...");
     password_input->SetFont(Monospace_Bold);
     roomid_input = new wxTextCtrl
-	    (this, wxID_ANY, "", wxPoint(850, 750), wxSize(400, 50));
+        (this, wxID_ANY, "", wxPoint(850, 750), wxSize(400, 50));
     roomid_input->SetBackgroundColour(BG_COLOR);
     roomid_input->SetForegroundColour(FG_COLOR);
     roomid_input->SetHint("Chat room's name...");
     roomid_input->SetFont(Monospace_Bold);
     userid_input = new wxTextCtrl
-	    (this, wxID_ANY, "", wxPoint(850, 810), wxSize(400, 50));
-	  userid_input->SetBackgroundColour(BG_COLOR);
+        (this, wxID_ANY, "", wxPoint(850, 810), wxSize(400, 50));
+      userid_input->SetBackgroundColour(BG_COLOR);
     userid_input->SetForegroundColour(FG_COLOR);
     userid_input->SetHint("Your codename for this chatroom...");
     userid_input->SetFont(Monospace_Bold);
     usermsg_input = new wxTextCtrl
-	    (this, 10017, "", wxPoint(525, 850), wxSize(800, 50),
-	  wxTE_PROCESS_ENTER);
+        (this, 10017, "", wxPoint(525, 850), wxSize(800, 50),
+      wxTE_PROCESS_ENTER);
     usermsg_input->SetHint("Your message...  (limit: 1024 characters)");
-	  usermsg_input->SetBackgroundColour(BG_COLOR);
+      usermsg_input->SetBackgroundColour(BG_COLOR);
     usermsg_input->SetForegroundColour(FG_COLOR);
     usermsg_input->SetFont(Monospace_Bold);
     info_msg_box = new wxTextCtrl
-	    (this, wxID_ANY, "",
+        (this, wxID_ANY, "",
        wxPoint(725, 880), wxSize(600, 120), wxTE_READONLY | wxTE_MULTILINE);
     info_msg_box->SetBackgroundColour(BG_COLOR);
     info_msg_box->SetForegroundColour(FG_COLOR);
     info_msg_box->SetFont(Monospace_Bold);
     msg_entries = new wxTextCtrl
-	    (this, wxID_ANY, "",
-	     wxPoint(525, 440), wxSize(800, 400), wxTE_READONLY | wxTE_MULTILINE);
+        (this, wxID_ANY, "",
+         wxPoint(525, 440), wxSize(800, 400), wxTE_READONLY | wxTE_MULTILINE);
     msg_entries->SetBackgroundColour(BG_COLOR);
     msg_entries->SetForegroundColour(FG_COLOR);
     msg_entries->SetFont(Monospace_Bold);
 
-	  usermsg_input->Hide();
-	  msg_entries->Hide();
+      usermsg_input->Hide();
+      msg_entries->Hide();
     password_input->Hide();
     info_msg_box->Hide();
     roomid_input->Hide();
@@ -322,16 +322,16 @@ void cMain::BtnClickLoginGo(wxCommandEvent &evt)
         info_msg_box->SetValue("");
         info_msg_box->WriteText(
           "Success!\n"
-					"Private key correctly decrypted by password.\n"
-					"Connected to the Rosetta server.\n"
-					"You are now logged in.\n");
+                    "Private key correctly decrypted by password.\n"
+                    "Connected to the Rosetta server.\n"
+                    "You are now logged in.\n");
         info_msg_box->Show();
         btn_makeroom->Show();
         btn_joinroom->Show();
         btn_quit->Show();
         btn_login_GO->Hide();
         btn_login_BACK->Hide();
-		    password_input->SetValue("");
+            password_input->SetValue("");
         password_input->Hide();
     }
     /* Finish the event. */
@@ -492,25 +492,25 @@ void cMain::BtnClickJoinRoomGo(wxCommandEvent &evt)
             (const char*)userid_as_wxstring.mb_str(wxConvUTF8),
             userid_len);
     joinroom_status = join_chatroom(roomid, roomid_len,
-									                  (unsigned char*)userid, userid_len);
+                                                      (unsigned char*)userid, userid_len);
     if(joinroom_status){
         info_msg_box->SetValue("");
         info_msg_box->WriteText("Error. Room joining failed unexpectedly.");
         info_msg_box->Show();
     }
     else{
-		    btn_joinroom_GO->Hide();
+            btn_joinroom_GO->Hide();
         btn_joinroom_BACK->Hide();
-		    roomid_input->SetValue("");
+            roomid_input->SetValue("");
         roomid_input->Hide();
-		    userid_input->SetValue("");
+            userid_input->SetValue("");
         userid_input->Hide();
-		    btn_leavetheroom->Show();
-		    btn_send_msg->Show();
-		    msg_entries->SetValue("");
-		    msg_entries->Show();
-		    usermsg_input->SetValue("");
-		    usermsg_input->Show();
+            btn_leavetheroom->Show();
+            btn_send_msg->Show();
+            msg_entries->SetValue("");
+            msg_entries->Show();
+            usermsg_input->SetValue("");
+            usermsg_input->Show();
     }
     /* Finish the event. */
     evt.Skip();
@@ -547,7 +547,7 @@ void cMain::BtnClickMakeRoomGo(wxCommandEvent &evt)
     roomid_len = roomid_as_wxstring.Length();
     userid_len = userid_as_wxstring.Length();
     printf("[DEBUG] WX: Obtained roomid_len=%d, userid_len=%d\n",
-	         roomid_len, userid_len);
+             roomid_len, userid_len);
     if(roomid_len > 7 || roomid_len < 2 || userid_len > 7 || userid_len < 2){
         info_msg_box->SetValue("");
         info_msg_box->WriteText("Bad: Enter 2 to 7 characters for each field.");
@@ -564,7 +564,7 @@ void cMain::BtnClickMakeRoomGo(wxCommandEvent &evt)
             (const char*)userid_as_wxstring.mb_str(wxConvUTF8),
             userid_len);
     makeroom_status = make_new_chatroom(roomid, roomid_len,
-										                    (unsigned char*)userid, userid_len);
+                                                            (unsigned char*)userid, userid_len);
     if(makeroom_status == 1){
         info_msg_box->SetValue("");
         info_msg_box->WriteText("Error. Room creation failed unexpectedly.");
@@ -576,15 +576,15 @@ void cMain::BtnClickMakeRoomGo(wxCommandEvent &evt)
         info_msg_box->Show();
     }
     else{
-		    btn_makeroom_GO->Hide();
+            btn_makeroom_GO->Hide();
         btn_makeroom_BACK->Hide();
         roomid_input->Hide();
         userid_input->Hide();
         btn_closeyourroom->Show();
         btn_send_msg->Show();
-		    msg_entries->SetValue("");
+            msg_entries->SetValue("");
         msg_entries->Show();
-		    usermsg_input->SetValue("");
+            usermsg_input->SetValue("");
         usermsg_input->Show();
     }
     /* Finish the event. */
@@ -610,44 +610,44 @@ void cMain::BtnClickMakeRoomBack(wxCommandEvent &evt)
 
 void cMain::BtnClickSendMsg(wxCommandEvent &evt)
 {
-	  uint8_t  send_msg_status;
-	  uint8_t  msg_buf[MAX_TXT_LEN];
+      uint8_t  send_msg_status;
+      uint8_t  msg_buf[MAX_TXT_LEN];
     int      msg_len;
-	  wxString msg_as_wxstring = "";
+      wxString msg_as_wxstring = "";
 
-	  memset(msg_buf, 0x00, MAX_TXT_LEN);
-	  msg_as_wxstring = usermsg_input->GetValue();
-	  msg_len = msg_as_wxstring.Length();
-	  usermsg_input->SetValue("");
-	  if(msg_len >= MAX_TXT_LEN || msg_len < 1){
-		    std::cout << "Entered ret on error. msg_len: " << msg_len << std::endl;
-		    usermsg_input->SetFocus();
+      memset(msg_buf, 0x00, MAX_TXT_LEN);
+      msg_as_wxstring = usermsg_input->GetValue();
+      msg_len = msg_as_wxstring.Length();
+      usermsg_input->SetValue("");
+      if(msg_len >= MAX_TXT_LEN || msg_len < 1){
+            std::cout << "Entered ret on error. msg_len: " << msg_len << std::endl;
+            usermsg_input->SetFocus();
         evt.Skip();
         return;
     }
     strncpy((char*)msg_buf,
-			      (const char*)(msg_as_wxstring.mb_str(wxConvUTF8)),
-			      msg_len);
+                  (const char*)(msg_as_wxstring.mb_str(wxConvUTF8)),
+                  msg_len);
 
     send_msg_status = send_text(msg_buf, msg_len);
 
     if(send_msg_status){
         printf("[ERR] Sending a MSG failed: %u. Terminate.\n", send_msg_status);
-		    exit(1);
-	  }
+            exit(1);
+      }
 
     /* Put that user's message into their own UI too. */
-	  for(uint8_t i = 0; i < (SMALL_FIELD_LEN - 1 - userid_len); ++i){
+      for(uint8_t i = 0; i < (SMALL_FIELD_LEN - 1 - userid_len); ++i){
         msg_entries->AppendText(" ");
-	  }
-	  msg_entries->AppendText(wxString::FromUTF8((const char*)userid,userid_len));
-	  msg_entries->AppendText(": ");
+      }
+      msg_entries->AppendText(wxString::FromUTF8((const char*)userid,userid_len));
+      msg_entries->AppendText(": ");
     msg_entries->AppendText(msg_as_wxstring);
     msg_entries->AppendText("\n");
     usermsg_input->SetFocus();
     /* Finish the event. */
     evt.Skip();
-	  return;
+      return;
 }
 
 void cMain::BtnClickCloseYourRoom(wxCommandEvent &evt)
@@ -662,28 +662,28 @@ void cMain::BtnClickCloseYourRoom(wxCommandEvent &evt)
     }
     else{
         printf("[ERR] Closing the room returned: %u  Logging out.\n", status);
-		    status = logout();
+            status = logout();
         if(!status){
             printf("[OK] User logged out of rosetta successfully.\n");
         }
         else{
             printf("[ERR] User logout returned status: %u\n", status);
         }
-		    exit(1);
+            exit(1);
     }
     btn_makeroom->Show();
     btn_joinroom->Show();
     btn_quit->Show();
-	  btn_leavetheroom->Hide();
-	  btn_closeyourroom->Hide();
+      btn_leavetheroom->Hide();
+      btn_closeyourroom->Hide();
     msg_entries->SetValue("");
     usermsg_input->SetValue("");
-	  btn_send_msg->Hide();
+      btn_send_msg->Hide();
     msg_entries->Hide();
     usermsg_input->Hide();
     /* Finish the event. */
-	  evt.Skip();
-	  return;
+      evt.Skip();
+      return;
 }
 
 void cMain::BtnClickLeaveTheRoom(wxCommandEvent &evt)
@@ -692,34 +692,34 @@ void cMain::BtnClickLeaveTheRoom(wxCommandEvent &evt)
 
     info_msg_box->Hide();
 
-	  if(!status){
+      if(!status){
         info_msg_box->SetValue("");
         info_msg_box->WriteText("You have now left the chatroom.");
         info_msg_box->Show();
-	  }
+      }
     else{
         printf("[ERR] Leaving room returned: %u  Logging out.\n", status);
-		    status = logout();
+            status = logout();
         if(!status){
             printf("[OK] User logged out of rosetta successfully.\n");
         }
         else{
             printf("[ERR] User logout returned status: %u\n", status);
         }
-		    exit(1);
-	  }
+            exit(1);
+      }
     btn_makeroom->Show();
     btn_joinroom->Show();
     btn_quit->Show();
     btn_leavetheroom->Hide();
     btn_closeyourroom->Hide();
-	  btn_send_msg->Hide();
-	  msg_entries->SetValue("");
+      btn_send_msg->Hide();
+      msg_entries->SetValue("");
     msg_entries->Hide();
-	  usermsg_input->SetValue("");
+      usermsg_input->SetValue("");
     usermsg_input->Hide();
-	  evt.Skip();
-	  return;
+      evt.Skip();
+      return;
 }
 
 void cMain::BtnClickQuit(__attribute__((unused)) wxCommandEvent &evt)
@@ -728,11 +728,11 @@ void cMain::BtnClickQuit(__attribute__((unused)) wxCommandEvent &evt)
 
     if(!status){
         printf("[OK] User logged out of rosetta successfully.\n");
-		    exit(0);
-	  }
-	  else{
-		    printf("[ERR] User logout returned status: %u\n", status);
-	      exit(1);
-	  }
+            exit(0);
+      }
+      else{
+            printf("[ERR] User logout returned status: %u\n", status);
+          exit(1);
+      }
     return;
 }

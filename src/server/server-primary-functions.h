@@ -6,25 +6,25 @@ u8 self_init()
     FILE* privkey_dat = NULL;
     u8 status = 0;
 
-		/* Set a signal disposition (handler function) for the SIGPIPE signal,
-		 * telling the server to ignore that signal. This is because a client
-		 * could crash or otherwise disappear suddenly, while a poll request
-		 * sent by them is still on its way to the server (or being processed
-		 * by the server already), in which case, at least for interprocess
-		 * communication (AF_UNIX) sockets, the OS sends a SIGPIPE to the server,
-		 * killing it if no handler has been set for that signal. When ignoring it,
-		 * write() and send() issued by the server to that no longer present client
-		 * will return -1 and sent errno to EPIPE, which can be handled eleganrtly
-		 * by the server, instead of the server process getting terminated.
-		 */
+        /* Set a signal disposition (handler function) for the SIGPIPE signal,
+         * telling the server to ignore that signal. This is because a client
+         * could crash or otherwise disappear suddenly, while a poll request
+         * sent by them is still on its way to the server (or being processed
+         * by the server already), in which case, at least for interprocess
+         * communication (AF_UNIX) sockets, the OS sends a SIGPIPE to the server,
+         * killing it if no handler has been set for that signal. When ignoring it,
+         * write() and send() issued by the server to that no longer present client
+         * will return -1 and sent errno to EPIPE, which can be handled eleganrtly
+         * by the server, instead of the server process getting terminated.
+         */
     struct sigaction sa;
-		sa.sa_handler = SIG_IGN;
+        sa.sa_handler = SIG_IGN;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
-		if(sigaction(SIGPIPE, &sa, NULL) == -1){
+        if(sigaction(SIGPIPE, &sa, NULL) == -1){
         perror("[ERR] Server: Setting SIG_IGN disposition for SIGPIPE failed:");
-				exit(1);
-		}
+                exit(1);
+        }
     printf("[OK]  Server: Signal handler SIG_IGN for SIGPIPE has been set.\n");
 
     temp_handshake_buf = NULL;
@@ -44,12 +44,12 @@ u8 self_init()
     if(!privkey_dat){
         perror("[ERR] Server: couldn't open private key DAT file:\n");
         status = 1;
-	      goto label_cleanup;
+          goto label_cleanup;
     }
     if(fread(server_privkey, 1, PRIVKEY_LEN, privkey_dat) != PRIVKEY_LEN){
         printf("[ERR] Server: couldn't get private key from file. Aborting.\n");
         status = 1;
-	      goto label_cleanup;
+          goto label_cleanup;
     }
     else{
         printf("[OK]  Server: Successfully loaded private key.\n");
@@ -321,8 +321,8 @@ void* start_new_client_thread(void* ix_ptr)
                 login_not_finished = 0;
                 close(client_socket_fd[ix]);
                 if(ix < curr_free_user_ix){
-										curr_free_user_ix = ix;
-								}
+                                        curr_free_user_ix = ix;
+                                }
             }
             else{
                 remove_user_from_rosetta(ix);
@@ -352,11 +352,11 @@ void* start_new_client_thread(void* ix_ptr)
             temp_handshake_memory_region_isLocked = 0;
             if(!socket_closed){
                 close(client_socket_fd[ix]);
-						}
-						if(ix < curr_free_user_ix){
-								curr_free_user_ix = ix;
-						}
-						pthread_mutex_unlock(&mutex);
+                        }
+                        if(ix < curr_free_user_ix){
+                                curr_free_user_ix = ix;
+                        }
+                        pthread_mutex_unlock(&mutex);
             break;
         }
         if(status != 100 && status > 0){

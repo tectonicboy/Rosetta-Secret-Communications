@@ -23,20 +23,20 @@ public:
     wxButton* btn_joinroom_BACK = NULL;
     wxButton* btn_closeyourroom = NULL;
     wxButton* btn_leavetheroom  = NULL;
-	  wxButton* btn_send_msg      = NULL;
+      wxButton* btn_send_msg      = NULL;
 
     wxTextCtrl* msg_entries    = NULL;
     wxTextCtrl* ROSETTA_LABEL  = NULL;
     wxTextCtrl* password_input = NULL;
     wxTextCtrl* roomid_input   = NULL;
     wxTextCtrl* userid_input   = NULL;
-	  wxTextCtrl* usermsg_input  = NULL;
+      wxTextCtrl* usermsg_input  = NULL;
     wxTextCtrl* info_msg_box   = NULL;
 
     /* Events have types. wxCommandEvent is the type for a button click. */
     /* which in simple terms is the "do something" event.                */
 
-	  /* Login and Registration button events. */
+      /* Login and Registration button events. */
     void BtnClickLogin(wxCommandEvent &evt);
     void BtnClickRegister(wxCommandEvent &evt);
     void BtnClickLoginGo(wxCommandEvent &evt);
@@ -44,10 +44,10 @@ public:
     void BtnClickRegGo(wxCommandEvent &evt);
     void BtnClickRegBack(wxCommandEvent &evt);
 
-	  /* Quit button event. */
+      /* Quit button event. */
     void BtnClickQuit(wxCommandEvent &evt);
 
-	  /* Make / Join Room button events. */
+      /* Make / Join Room button events. */
     void BtnClickMakeRoom(wxCommandEvent &evt);
     void BtnClickJoinRoom(wxCommandEvent &evt);
     void BtnClickJoinRoomGo(wxCommandEvent &evt);

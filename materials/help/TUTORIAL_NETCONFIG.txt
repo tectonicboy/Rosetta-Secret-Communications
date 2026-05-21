@@ -48,7 +48,7 @@ TUTORIAL How to configure your own website + webserver on a Linux VM in VirtualB
 
 7. If you want to locally test your website without it having a URL and DDNS setup (i think), you
    can do that on Linux by writing in the file /etc/hosts and entering the following line:
-   127.0.1.1	myhost.local
+   127.0.1.1    myhost.local
    You will see other similar entries at the top of the file already present. Make sure the space
    between the digits and the words matches that of the existing entries. Then you can enter 
    127.0.1.1 as a URL in the web browser and it will act as if your machine has accessed your website.

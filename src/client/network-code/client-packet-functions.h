@@ -9,7 +9,7 @@ struct roommate{
     u8*    guest_KAB;
     u8*    guest_Nonce;
     u64    guest_nonce_counter_sending;
-		u64    guest_nonce_counter_receiving;
+        u64    guest_nonce_counter_receiving;
 };
 
 struct roommate roommates[ROOMMATES_ARR_SIZ];
@@ -528,8 +528,8 @@ label_cleanup:
 */
 u8 construct_msg_10(unsigned char* requested_userid,
                     unsigned char* requested_roomid,
-		                uint8_t**      msg_buf,
-		                uint64_t*      msg_len)
+                        uint8_t**      msg_buf,
+                        uint64_t*      msg_len)
 {
     bigint one;
     bigint aux1;
@@ -686,7 +686,7 @@ u8 process_msg_10(u8* msg)
 u8 construct_msg_20( unsigned char* requested_userid
                     ,unsigned char* requested_roomid
                     ,uint8_t**      msg_buf
-		                ,uint64_t*      msg_len)
+                        ,uint64_t*      msg_len)
 {
     bigint one;
     bigint aux1;
@@ -895,7 +895,7 @@ u8 process_msg_20(u8* msg, u64 msg_len)
                                MAX_USED_BITWIDTH, 0);
         get_mont_form(this_pubkey, &(roommates[i].guest_pubkey_mont), M);
         roommates[i].guest_nonce_counter_sending   = 0;
-				roommates[i].guest_nonce_counter_receiving = 0;
+                roommates[i].guest_nonce_counter_receiving = 0;
         bigint_nullify(&temp_shared_secret);
         /* Now compute a shared secret with the i-th guest to get our pair of
          * bidirectional session keys (KAB, KBA) and the symmetric ChaCha nonce.
@@ -1028,7 +1028,7 @@ void process_msg_21(u8* msg)
                            MAX_USED_BITWIDTH, 0);
     get_mont_form(this_pubkey, &(roommates[guest_ix].guest_pubkey_mont), M);
     roommates[guest_ix].guest_nonce_counter_sending   = 0;
-		roommates[guest_ix].guest_nonce_counter_receiving = 0;
+        roommates[guest_ix].guest_nonce_counter_receiving = 0;
     mont_pow_mod_m(&(roommates[guest_ix].guest_pubkey_mont), &own_privkey, M,
                    &temp_shared_secret);
     roommates[guest_ix].guest_KBA   = (u8*)calloc(1, SESSION_KEY_LEN);
@@ -1083,7 +1083,7 @@ label_cleanup:
 
 */
 u8 construct_msg_30( unsigned char* text_msg, u64  text_msg_len,
-		                 uint8_t**      msg_buf,  u64* msg_len)
+                         uint8_t**      msg_buf,  u64* msg_len)
 {
     u64 L = num_roommates * (SMALL_FIELD_LEN + ONE_TIME_KEY_LEN + text_msg_len);
     u64 AD_write_offset = 0;
@@ -1325,7 +1325,7 @@ void process_msg_30(u8* payload, u8* name_with_msg_string, u64* result_chars)
     gettimeofday(&tv2, NULL);
     //printf("CLIENT: process_30, client's signature_validate(): "
     //       "sec %lu -- micros %lu\n",
-	  //        tv2.tv_sec - tv1.tv_sec, tv2.tv_usec - tv1.tv_usec);
+      //        tv2.tv_sec - tv1.tv_sec, tv2.tv_usec - tv1.tv_usec);
     if(status) {
         printf("[ERR] Client: Invalid sender signature in msg_30 Drop.\n\n");
         goto label_cleanup;
@@ -1403,10 +1403,10 @@ void process_msg_30(u8* payload, u8* name_with_msg_string, u64* result_chars)
     memcpy(name_with_msg_string + SMALL_FIELD_LEN + 2, decrypted_msg, text_len);
     printf("[DEBUG] Client: OWN_IX: %lu ==> process_30 from guest[%lu] "
            "-- Now-Decrypted received TEXT MESSAGE: ", own_ix, sender_ix);
-		for(size_t kkk = 0; kkk < text_len; ++kkk){
+        for(size_t kkk = 0; kkk < text_len; ++kkk){
         printf("%c", decrypted_msg[kkk]);
-		}
-		printf("\n");
+        }
+        printf("\n");
 label_cleanup:
     if(recv_s != NULL){
         bigint_cleanup(recv_s);
@@ -1702,12 +1702,12 @@ void process_msg_51(u8* payload)
      * the main thread has installed a custom signal handler function. This call
      * is done only to unblock the main thread from its blocked scanf() call.
      * In the desktop GUI version, instead of this signal, a function pointer
-	   * is set to an event handler function that will be used to alert the GUI
+       * is set to an event handler function that will be used to alert the GUI
      * to draw an info box that the room the user is in was closed by the owner
      * and retract the GUI elements that allow the user to send text messages.
      */
     #ifndef USE_WX_GUI
-	  printf("\n-->[DEBUG] Client: got MSG_51: sending SIGNAL to main thread!\n");
+      printf("\n-->[DEBUG] Client: got MSG_51: sending SIGNAL to main thread!\n");
     pthread_kill(main_thread_id, SIGUSR1);
     #endif
 

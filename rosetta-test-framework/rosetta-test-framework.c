@@ -48,22 +48,22 @@ uint8_t start_automatic_user_simulation_test(uint64_t test_num)
     char* args[2];
     char* env[] = {NULL};
     char full_test_prog_path[1024];
-		memset(full_test_prog_path, 0x00, 1024);
+        memset(full_test_prog_path, 0x00, 1024);
     const char* base_test_prog_path =
-			AUTOMATIC_USER_SIMULATION_TEST_PROG_BASE_PATH;
-		size_t base_test_prog_path_len = strlen(base_test_prog_path);
+            AUTOMATIC_USER_SIMULATION_TEST_PROG_BASE_PATH;
+        size_t base_test_prog_path_len = strlen(base_test_prog_path);
     strncpy(full_test_prog_path, base_test_prog_path, base_test_prog_path_len);
     int n = sprintf
-			        (full_test_prog_path + base_test_prog_path_len, "%lu", test_num);
+                    (full_test_prog_path + base_test_prog_path_len, "%lu", test_num);
     if(!n){
         printf("[ERR] RTF: Failed to obtain full simulation test path.\n");
-				return 1;
-		}
+                return 1;
+        }
     printf("Starting an automatic test of the whole system.\n");
     /* Run an automatic test program, which spawns Rosetta users simulated by
-		 * local OS processes talking over inter-process communication sockets.
+         * local OS processes talking over inter-process communication sockets.
      * Call fork() and execve() with the selected automatic test program.
-		 * execve() expects args[] to be a null-terminated array of pointers to
+         * execve() expects args[] to be a null-terminated array of pointers to
      * null-terminated strings.
      */
     pid = fork();
@@ -71,16 +71,16 @@ uint8_t start_automatic_user_simulation_test(uint64_t test_num)
         perror("[ERR] RTF: fork() for User Spawner failed:");
         return 1;
     }
-		else if(pid > 0){
+        else if(pid > 0){
         printf("[OK]  RTF: Child process spawned. PID: %d\n", pid);
         return 0;
     }
     else{
         printf("[OK]  RTF: Inside child process now. Starting test...\n");
-				args[0] = (char*)full_test_prog_path;
+                args[0] = (char*)full_test_prog_path;
         args[1] = NULL;
-				printf("[OK]  RTF: Child process: calling execve() on path:\n%s\n",
-							 full_test_prog_path);
+                printf("[OK]  RTF: Child process: calling execve() on path:\n%s\n",
+                             full_test_prog_path);
         execve(full_test_prog_path, args, env);
         /* If execve returns at all, it means it has failed. */
         perror("[ERR] RTF: Child process: execve() failed: ");
@@ -95,7 +95,7 @@ void draw_menu_0()
     FILE* logo_file = fopen(RTF_LOGO_PATH, "r");
     unsigned char* logo_buf;
     unsigned int op_number;
-		uint64_t test_number;
+        uint64_t test_number;
     uint8_t status = 0;
 
     /* ========================= PART 1: Draw logo ========================== */

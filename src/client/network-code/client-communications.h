@@ -74,7 +74,7 @@ uint8_t tcp_init_communication()
     goto label_finished;
 
 label_error:
-		ret = 1;
+        ret = 1;
     if(own_socket_fd != -1){
         close(own_socket_fd);
     }
@@ -87,8 +87,8 @@ u8 tcp_transmit_payload(u8* msg_buf, u64 msg_len)
 {
     uint8_t ret = 0;
     if( __builtin_expect
-			 (send(own_socket_fd, msg_buf, msg_len, 0) != (ssize_t)msg_len, false))
-		{
+             (send(own_socket_fd, msg_buf, msg_len, 0) != (ssize_t)msg_len, false))
+        {
         ret = 1;
         perror("[ERR] Client: TCP send() call failed: ");
     }
@@ -133,10 +133,10 @@ void tcp_end_communication(void)
 {
     if(close(own_socket_fd) == -1){
         perror("[ERR] Client: TCP close() to end communication failed: ");
-		}
-		else{
+        }
+        else{
         printf("[OK]  Client: TCP closed communication with server.\n ");
-		}
+        }
     return;
 }
 
@@ -177,7 +177,7 @@ uint8_t ipc_init_communication()
     goto label_init_successful;
 
 label_error:
-		ret = 1;
+        ret = 1;
     if(own_socket_fd != -1){
         close(own_socket_fd);
     }
@@ -191,7 +191,7 @@ uint8_t ipc_transmit_payload(uint8_t* buf, size_t buf_len)
     uint8_t ret = 0;
 
     if( __builtin_expect
-			  (send(own_socket_fd, buf, buf_len, 0) != (ssize_t)buf_len, false)){
+              (send(own_socket_fd, buf, buf_len, 0) != (ssize_t)buf_len, false)){
         perror("[ERR] Client: AF_UNIX send() call failed: ");
         ret = 1;
     }
@@ -235,9 +235,9 @@ void ipc_end_communication(void)
 {
     if(close(own_socket_fd) == -1){
         perror("[ERR] Client: AF_UNIX close() call on the socket failed: ");
-		}
-		else{
+        }
+        else{
         printf("[OK]  Client: AF_UNIX closed socket successfully.\n");
-		}
+        }
     return;
 }

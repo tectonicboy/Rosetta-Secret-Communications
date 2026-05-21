@@ -1,7 +1,7 @@
 LITTLE-ENDIAN BINARY of test public key A's Montgomery representative, Am.
 Notice 3072 used bits for a 3070-bit public key A.
 This is in fact a valid Montgomery representative of test public key A because
-Am mod M = (A * (beta^L)) mod M 
+Am mod M = (A * (beta^L)) mod M
 did in fact hold true
 
 
@@ -63,7 +63,7 @@ did in fact hold true
 BIG-ENDIAN HEX of test public key A's Montgomery representative, Am.
 Notice 3072 used bits for a 3070-bit public key A.
 This is in fact a valid Montgomery representative of test public key A because
-Am mod M = (A * (beta^L)) mod M 
+Am mod M = (A * (beta^L)) mod M
 did in fact hold true.
 
 8293E45A6D2DD152898A3B494944DA3CD97407420EDA9BF59C942AA53823

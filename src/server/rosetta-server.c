@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
         printf("\n[OK] Server: SET curr_free_user_ix %lu\n", curr_free_user_ix);
 
 
-				/**********************************************************************/
+                /**********************************************************************/
 
         /* Block here until a newly seen client wants to log in to Rosetta. */
 

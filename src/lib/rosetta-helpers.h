@@ -34,7 +34,7 @@ __attribute__((no_reorder))  __attribute__((used))
 __attribute__((noinline))    __attribute__((optimize("O0")))
 void erase_mem_secure(volatile uint8_t* buf, uint64_t num_bytes_to_erase)
 {
-	  /* A zeroed out 256-bit vector register. */
+      /* A zeroed out 256-bit vector register. */
     __m256i zero_reg256 = _mm256_setzero_si256();
     size_t i = 0;
 
@@ -142,7 +142,7 @@ void print_buffer(uint8_t* buf, uint64_t len){
 #define DH_G_MONT_BITWIDTH       3071
 #define SERV_PUBKEY_BITWIDTH     3071
 #define SERV_PUBKEYMONT_BITWIDTH 3071
-#define SERV_PRIVKEY_BITWIDTH	   318
+#define SERV_PRIVKEY_BITWIDTH      318
 #define MAX_USED_BITWIDTH        12800
 
 #define MESSAGE_LINE_LEN     (SMALL_FIELD_LEN + strlen(": \0") + MAX_TXT_LEN)
@@ -161,15 +161,15 @@ void print_buffer(uint8_t* buf, uint64_t len){
 #define REAL_USER_SAVEFILE_PATH "user-save.dat"
 
 #define USER_SPAWNER_PROG_PATH \
-	"bin/manual-user-testing/user-spawner"
+    "bin/manual-user-testing/user-spawner"
 
 #define USER_SAVEFILES_DIR \
-	"rosetta-test-framework/test-accounts/"
+    "rosetta-test-framework/test-accounts/"
 
 #define AUTOMATIC_USER_SIMULATION_TEST_PROG_BASE_PATH \
-	"bin/automatic-user-testing/auto-simulated-user-test-"
+    "bin/automatic-user-testing/auto-simulated-user-test-"
 
 #define AUTOMATIC_USER_SIMULATION_AUTO_SPAWNER_BASE_PATH \
-	"bin/automatic-user-testing/auto-spawner"
+    "bin/automatic-user-testing/auto-spawner"
 
 #define ROSETTA_SERVER_PROG_PATH "bin/rosetta-server"

@@ -217,9 +217,9 @@ void remove_user_from_rosetta(u64 removing_user_ix)
 
     /* Update next free user slot if needed. */
     if(removing_user_ix < curr_free_user_ix){
-				curr_free_user_ix = removing_user_ix;
+                curr_free_user_ix = removing_user_ix;
         printf("[DEBUG] Server: Removed user. Set curr free user ix: %lu\n",
-							 removing_user_ix);
+                             removing_user_ix);
     }
 
     return;
@@ -1522,7 +1522,7 @@ void process_msg_40(u8* msg_buf, u32 user_ix)
             reply_write_offset += clients[poller_ix].pending_msg_sizes[i];
             memset(clients[poller_ix].pending_msgs[i], 0,
                    clients[poller_ix].pending_msg_sizes[i]);
-					 	clients[poller_ix].pending_msg_sizes[i] = 0;
+                        clients[poller_ix].pending_msg_sizes[i] = 0;
         }
         /* Compute a cryptographic signature so the client can authenticate us*/
         signature_generate(M, Q, Gm, reply_buf, reply_len - SIGNATURE_LEN,

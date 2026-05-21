@@ -206,11 +206,11 @@ static inline void
 chacha20_cyphertext_populate_full_blocks(uint8_t* __restrict__ outputs,
                                          uint8_t* __restrict__ plaintext,
                                          uint8_t* __restrict__ cyphertext,
-					                               uint32_t block_ix)
+                                                   uint32_t block_ix)
 {
     for(uint32_t j = 0; j < 64; ++j){
         cyphertext[(64 * block_ix) + j] =
-	        plaintext[(64 * block_ix) + j] ^ outputs[j];
+            plaintext[(64 * block_ix) + j] ^ outputs[j];
     }
     return;
 }
@@ -284,8 +284,8 @@ void chacha20( uint8_t*  plaintext, uint32_t txt_len
      */
     for(i = 0; i < full_txt_blocks; ++i){
         aux_ptr8_outputs = (uint8_t*)(outputs[i]);
-	      chacha20_cyphertext_populate_full_blocks
-	        (aux_ptr8_outputs, plaintext, cyphertext, i);
+          chacha20_cyphertext_populate_full_blocks
+            (aux_ptr8_outputs, plaintext, cyphertext, i);
     }
     if(have_last_block){
         aux_ptr8_outputs = (uint8_t*)(outputs[full_txt_blocks]);
@@ -1317,7 +1317,7 @@ uint8_t signature_validate( bigint* Gmont, bigint* Amont, bigint* M, bigint* Q
 
     if(bigint_compare2(s, Q) != CMP_SECOND_BIGGER){
         printf("[WARN] Cryptolib: sig_validate: input s != input Q.\n");
-	      retval = 1;
+          retval = 1;
         goto label_cleanup;
     }
 
@@ -1337,46 +1337,46 @@ uint8_t signature_validate( bigint* Gmont, bigint* Amont, bigint* M, bigint* Q
 
 
     /* Attempt an interleaved Montgomery multiplication to reduce stalls in the
-		 * Core-bound bucket of Top-down microarchitecture analysis.
-		 */
-		gettimeofday(&tv1,NULL);
+         * Core-bound bucket of Top-down microarchitecture analysis.
+         */
+        gettimeofday(&tv1,NULL);
     dual_mont_pow_mod_m(Gmont, s, M, &R_aux1, Amont, e, M, &R_aux2);
     gettimeofday(&tv2,NULL);
 
     if( __builtin_expect (tv2.tv_usec > tv1.tv_usec, true))
-		{
-		    measurements[nr_timepoints++] = tv2.tv_usec - tv1.tv_usec;
-				//printf("Total timepoints: %lu\n", nr_timepoints);
-				if(__builtin_expect (nr_timepoints == NR_TIMEPOINTS_TO_WRITE_AT, false))
-				{
+        {
+            measurements[nr_timepoints++] = tv2.tv_usec - tv1.tv_usec;
+                //printf("Total timepoints: %lu\n", nr_timepoints);
+                if(__builtin_expect (nr_timepoints == NR_TIMEPOINTS_TO_WRITE_AT, false))
+                {
             measurements_fd = fopen
-							("./performance-analysis/last-measurements.dat", "w");
-						if(measurements_fd == NULL){
+                            ("./performance-analysis/last-measurements.dat", "w");
+                        if(measurements_fd == NULL){
                 printf("[ERR] Crypt: Could not open measurements file.\n");
-								exit(1);
-						}
-						profiling_ret = fwrite(measurements, 1,
-																    nr_timepoints * sizeof(double),
-																		measurements_fd);
-						if(profiling_ret != nr_timepoints * sizeof(double)){
+                                exit(1);
+                        }
+                        profiling_ret = fwrite(measurements, 1,
+                                                                    nr_timepoints * sizeof(double),
+                                                                        measurements_fd);
+                        if(profiling_ret != nr_timepoints * sizeof(double)){
                 printf("[ERR] Crypt: Could not write to measurements file.\n");
-								fclose(measurements_fd);
-								exit(1);
-						}
-						else{
+                                fclose(measurements_fd);
+                                exit(1);
+                        }
+                        else{
                 printf("\n[OK]  Crypt: Wrote measurements file: %lu bytes.\n\n"
-											 ,nr_timepoints * sizeof(double));
-								fclose(measurements_fd);
-						}
+                                             ,nr_timepoints * sizeof(double));
+                                fclose(measurements_fd);
+                        }
             memset(measurements, 0x00, MAX_TIMEPOINTS * sizeof(double));
-						nr_timepoints = 0;
-				}
+                        nr_timepoints = 0;
+                }
         //printf("\n=========================================================\n");
         //printf( "CRYPT: verify_signature: DUAL_mont_pow TIME micros: %lu\n",
         //        tv2.tv_usec - tv1.tv_usec);
         //++nr_timepoints;
-				//printf("CRYPT: - - - - - - - - - - -  TOTAL MEASUREMENTS: %lf\n"
-				//			 ,nr_timepoints);
+                //printf("CRYPT: - - - - - - - - - - -  TOTAL MEASUREMENTS: %lf\n"
+                //           ,nr_timepoints);
         //printf("CRYPT: - - - - - - - - - - - - - - - - - AVERAGE: %lf\n"
         //       ,(total_times / nr_timepoints));
     }

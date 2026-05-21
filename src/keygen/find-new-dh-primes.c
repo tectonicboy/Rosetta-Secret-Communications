@@ -54,89 +54,89 @@ int main(int argc, char* argv[])
     size_t     counter = 0;
     uint8_t    keep_searching = 1;
     uint8_t    is_prime = 0;
-		uint8_t    unused_bits_m = 0;
-		uint8_t    unused_bits_q = 0;
-		uint8_t    unused_bits_aux = 0;
+        uint8_t    unused_bits_m = 0;
+        uint8_t    unused_bits_q = 0;
+        uint8_t    unused_bits_aux = 0;
     unsigned long q_bits;
-		unsigned long m_bits;
-		unsigned long num_threads;
-		unsigned long q_bytes;
-		__attribute__((unused)) unsigned long m_bytes;
-		unsigned long aux_bits;
-		unsigned long aux_bytes;
-		unsigned long max_reserved_bits;
+        unsigned long m_bits;
+        unsigned long num_threads;
+        unsigned long q_bytes;
+        __attribute__((unused)) unsigned long m_bytes;
+        unsigned long aux_bits;
+        unsigned long aux_bytes;
+        unsigned long max_reserved_bits;
 
 
-		/* These will now be taken as command-line arguments.
+        /* These will now be taken as command-line arguments.
      *
-		 * #define SIZE_Q_BITS         320
+         * #define SIZE_Q_BITS         320
      * #define SIZE_M_BITS         3072
      * #define RABIN_MILLER_PASSES 64
      * #define NUM_THREADS         24
-		 *
-		 * Then Q_bytes, M_bytes and MAX_FREE_BITS will be computed from these.
+         *
+         * Then Q_bytes, M_bytes and MAX_FREE_BITS will be computed from these.
      */
-		/* +1 because the shell already passes the first command-line argument, that
-		 * being the command with which the program was started. The rest are the
-		 * command-line arguments that the user actually passed when running it.
-		 */
+        /* +1 because the shell already passes the first command-line argument, that
+         * being the command with which the program was started. The rest are the
+         * command-line arguments that the user actually passed when running it.
+         */
     if(argc != REQ_NUM_CMD_LINE_ARGS + 1){
         printf(
-				  "To run the finder, please pass %u non-zero command-line arguments:\n"
-					"  - Required bitwidth of prime order Q;\n"
-					"  - Required bitwidth of modulus M, where Q exactly divides (M-1);\n"
-					"  - Rabin-Miller passes to run before considering a number prime;\n"
-					"  - Number of CPU threads (checks that many moduli in parallel).\n\n"
-					"Typical example: bin/keygen/find-new-dh-primes 320 3072 50 16\n\n",
-				  REQ_NUM_CMD_LINE_ARGS);
-				exit(1);
-		}
+                  "To run the finder, please pass %u non-zero command-line arguments:\n"
+                    "  - Required bitwidth of prime order Q;\n"
+                    "  - Required bitwidth of modulus M, where Q exactly divides (M-1);\n"
+                    "  - Rabin-Miller passes to run before considering a number prime;\n"
+                    "  - Number of CPU threads (checks that many moduli in parallel).\n\n"
+                    "Typical example: bin/keygen/find-new-dh-primes 320 3072 50 16\n\n",
+                  REQ_NUM_CMD_LINE_ARGS);
+                exit(1);
+        }
 
-		/* Parse the command-line arguments.
-		 * Since strtoul can actually return 0 or ULONG_MAX both on success and on
-		 * error, reset errno to 0 here, so the call can properly handle errors.
-		 */
-		errno = 0;
+        /* Parse the command-line arguments.
+         * Since strtoul can actually return 0 or ULONG_MAX both on success and on
+         * error, reset errno to 0 here, so the call can properly handle errors.
+         */
+        errno = 0;
     q_bits = strtoul(argv[1], NULL, 10);
-		m_bits = strtoul(argv[2], NULL, 10);
-		rabin_miller_passes = strtoul(argv[3], NULL, 10);
-		num_threads = strtoul(argv[4], NULL, 10);
+        m_bits = strtoul(argv[2], NULL, 10);
+        rabin_miller_passes = strtoul(argv[3], NULL, 10);
+        num_threads = strtoul(argv[4], NULL, 10);
     if(q_bits == 0 || m_bits == 0 ||
-			 rabin_miller_passes == 0 || num_threads == 0 ||
-			 errno != 0)
-		{
+             rabin_miller_passes == 0 || num_threads == 0 ||
+             errno != 0)
+        {
         printf("One or more command-line arguments are wrong. Try again.\n");
         exit(1);
-		}
-		{
-		    unsigned long temp_m_bits = m_bits;
-				unsigned long temp_q_bits = q_bits;
-			  while(temp_m_bits++ % 8 != 0){
-				    ++unused_bits_m;
-				}
-			 	m_bytes = temp_m_bits / 8;
-				while(temp_q_bits++ % 8 != 0){
-				    ++unused_bits_q;
-				}
-				q_bytes = temp_q_bits / 8;
-				max_reserved_bits = m_bits * 8;
-		}
+        }
+        {
+            unsigned long temp_m_bits = m_bits;
+                unsigned long temp_q_bits = q_bits;
+              while(temp_m_bits++ % 8 != 0){
+                    ++unused_bits_m;
+                }
+                m_bytes = temp_m_bits / 8;
+                while(temp_q_bits++ % 8 != 0){
+                    ++unused_bits_q;
+                }
+                q_bytes = temp_q_bits / 8;
+                max_reserved_bits = m_bits * 8;
+        }
 
     thread_func_inputs  = (void**)    malloc(num_threads * sizeof(void*));
     thread_ids          = (pthread_t*)malloc(num_threads * sizeof(pthread_t));
     test_Ms             = (bigint*)   malloc(num_threads * sizeof(bigint));
-		is_dh_modulus_found = (uint64_t*) malloc(num_threads * sizeof(uint64_t));
+        is_dh_modulus_found = (uint64_t*) malloc(num_threads * sizeof(uint64_t));
 
     pthread_mutex_init(&M_finders_mutex, NULL);
 
-		bigint_create_from_u32(&M,   max_reserved_bits, 0);
+        bigint_create_from_u32(&M,   max_reserved_bits, 0);
     bigint_create_from_u32(&Q,   max_reserved_bits, 0);
     bigint_create_from_u32(&one, max_reserved_bits, 1);
     bigint_create_from_u32(&two, max_reserved_bits, 2);
     bigint_create_from_u32(&tmp, max_reserved_bits, 0);
     bigint_create_from_u32(&aux, max_reserved_bits, 0);
 
-		for(uint64_t i = 0; i < num_threads; ++i){
+        for(uint64_t i = 0; i < num_threads; ++i){
         bigint_create_from_u32(&(test_Ms[i]), max_reserved_bits, 0);
         thread_func_inputs[i] = calloc( 1, sizeof(uint64_t) + sizeof(bigint) );
         is_dh_modulus_found[i] = 0;
@@ -157,11 +157,11 @@ int main(int argc, char* argv[])
         printf("[ERR]  Q  fread() failed.\n");
         goto label_cleanup;
     }
-		/* Clear all bits more significant than the bitwidth requested. */
-		/* Set the most significant requested bit too. */
+        /* Clear all bits more significant than the bitwidth requested. */
+        /* Set the most significant requested bit too. */
     for(uint8_t i = 1; i <= unused_bits_q; ++i){
         Q.bits[q_bytes - 1] &= ~(1 << (7 - unused_bits_q + i));
-		}
+        }
     Q.bits[q_bytes - 1] |= (1 << (7 - unused_bits_q));
     Q.bits[0] |= (1 << 0);
     Q.used_bits = get_used_bits(Q.bits, q_bytes);
@@ -183,13 +183,13 @@ int main(int argc, char* argv[])
     /* For finding M. */
     counter  = 0;
     aux_bits = m_bits - q_bits + 1;
-		{
-			  unsigned long temp_aux_bits = aux_bits;
-			  while(temp_aux_bits++ % 8 != 0){
+        {
+              unsigned long temp_aux_bits = aux_bits;
+              while(temp_aux_bits++ % 8 != 0){
             ++unused_bits_aux;
-			  }
-				aux_bytes = temp_aux_bits / 8;
-		}
+              }
+                aux_bytes = temp_aux_bits / 8;
+        }
     printf("\n\n============ STARTING TO FIND 3072-BIT  M  ==============\n\n");
 
 label_keep_searching:
@@ -209,9 +209,9 @@ label_keep_searching:
             printf("[ERR]  AUX  fread() failed.\n");
             goto label_cleanup;
         }
-				for(uint8_t x = 1; x <= unused_bits_aux; ++x){
+                for(uint8_t x = 1; x <= unused_bits_aux; ++x){
             aux.bits[aux_bytes - 1] &= ~(1 << (7 - unused_bits_aux + x));
-				}
+                }
         aux.bits[aux_bytes - 1] |= (1 << (7 - unused_bits_aux));
         aux.bits[0] &= ~(1 << 0);
         aux.used_bits = get_used_bits(aux.bits, aux_bytes);
@@ -255,7 +255,7 @@ label_keep_searching:
     SET_PRINT_BG_BLACK
 
     printf("All %lu threads finished.\n"
-					 "Discoveries: [", num_threads);
+                     "Discoveries: [", num_threads);
 
     for(uint64_t i = 0; i < num_threads; ++i){
         printf(" %lu ", is_dh_modulus_found[i]);
@@ -278,7 +278,7 @@ label_keep_searching:
 label_cleanup:
     if(rand_fd != NULL){
         fclose(rand_fd);
-		}
+        }
     bigint_cleanup(&M);
     bigint_cleanup(&Q);
     bigint_cleanup(&two);
@@ -292,6 +292,6 @@ label_cleanup:
     free(thread_func_inputs);
     free(thread_ids);
     free(test_Ms);
-		free(is_dh_modulus_found);
+        free(is_dh_modulus_found);
     return 0;
 }
