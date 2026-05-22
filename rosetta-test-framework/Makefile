@@ -5,7 +5,7 @@
 #
 # MAKEFILE ENTRIES COMMON TO ALL 3 PROJECT MAKEFILES ARE IN config.mk
 
-include ../config.mk
+include ../common-build-config.mk
 
 PRIMARY_TARGETS += test_framework
 PRIMARY_TARGETS += manual_user_spawner
