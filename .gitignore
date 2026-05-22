@@ -1,5 +1,7 @@
 bin/
 **/user-save.dat
+perf.data
+perf.data.old
 *.swp
 src/rosetta-test-framework/test-accounts/*
 tags
@@ -17,8 +19,6 @@ src/tests/correctness-tests/test-cryptography/test-blake2b/calc-results/*
 src/tests/correctness-tests/test-cryptography/test-chacha20/calc-results/*
 src/tests/correctness-tests/test-cryptography/test-signatures/calc-results/*
 correctness-tests/add-bigint/my-gen-results
-src/rosetta-test-framework/perf.data
-src/rosetta-test-framework/perf.data.old
 src/rosetta-test-framework/rtf-debug
 src/rosetta-test-framework/test-server-debug
 src/rosetta-test-framework/user-spawner-debug
