@@ -61,14 +61,11 @@ ARCHITECTURE_FLAGS = -march=native
 # INFO: -pipe
 # Causes the build process to use pipes between build stages, not temp. files.
 
-# Ask GCC to tell us of any vectorization and loop optimizations it performed
-# when we build the server and the client sources.
+# Ask GCC to tell us of any vectorization and loop optimizations it performed.
 COMPILER_OPTIMIZATION_REPORT += -fopt-info-vec-optimized
 COMPILER_OPTIMIZATION_REPORT += -fopt-info-loop-optimized
 
 BIN_DIR                    = ../bin
-ROSETTA_SERVER_SRC         = ../src/server/rosetta-server.c
-ROSETTA_SERVER_BIN         = rosetta-server
 ROSETTA_TEST_FRAMEWORK_SRC = rosetta-test-framework.c
 ROSETTA_TEST_FRAMEWORK_BIN = rosetta-test-framework
 MANUAL_USER_SPAWNER_SRC    = manual-user-testing/manual-user-spawner.c
