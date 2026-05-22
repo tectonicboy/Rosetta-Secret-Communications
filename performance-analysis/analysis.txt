@@ -28,7 +28,7 @@ analysis methodology) was attributed to my Montgomery Modular Multiplication
 function, montgomery_mul(), under the "self" column.
 
 This is also the function that takes up the most time of anything else in the
-running communication server, since it has to validate a cryptographic signaure
+running communication server, since it has to validate a cryptographic signature
 on each message it receives, which involves the following modular powering:
 
 R1 = (G^s) mod M
@@ -145,6 +145,8 @@ the C standard library, syscalls and standard GCC compiler functionality.
 
 Running on a 13th Gen Intel Core i7 CPU, singlethreaded, on a GNU/Linux system
 locally installed, kernel 6.19, compiled by GCC 15.2.1 with -O3 -march=native.
+Isolating the process to run on P-cores only with taskset had no effect on
+neither latency measurements, nor the reported TMA metrics for P-cores.
 
 --------------------------------------------------------------------------------
 
@@ -218,19 +220,20 @@ out-of-order execution of the other multiplication stream's micro-ops.
 The first dose of validation comes from comparing the profile given for each
 version by the Top-down microarchitecture analysis methodology (TMA).
 
-1. TMA profile of non-interleaved version:
+III.1. TMA profile of non-interleaved version:
 
-1.1. Percentage of cycles during which the pipeline was considered by TMA to be
-     stalled due to poor utilization of execution ports in the CPU backend.
+III.1.1. Percentage of cycles in which the pipeline was considered by TMA to be
+         stalled due to poor utilization of execution ports in the CPU backend.
 
 perf record -e cpu_core/exe_activity.1_ports_util/ -g -- bin/rosetta-server
 perf report
 
 The above commands reported ~61% attributed to montgomery_mul() itself,
-excluding functions that it calls. A more detaile explanation of what this
-percentage means is given in 2.1 when comparing with the interleaved version.
+excluding functions that it calls. A more detailed explanation of what this
+percentage means is given in III.2.1 when comparing this with the interleaved
+version.
 
-1.2. Overall TMA profile.
+III.1.2. Overall TMA profile.
 
 Level-1 and Level-2 TMA buckets:
 -----------------------------
@@ -245,13 +248,14 @@ TMA ports utilization  : 12.0%
 L1 data cache miss rate: 0.0067%
 
 Note: A difference of plus or minus 0.5-1% is reported for each TMA metric in
-      consecutive runs of the Linux perf commands.
+      consecutive runs of the Linux perf commands. Since not all counters can
+      be measured at once, a small discrepancy is possible and not a mistake.
 
 
-2. TMA profile of interleaved version:
+III.2. TMA profile of interleaved version:
 
-2.1. Percentage of cycles during which the pipeline was considered by TMA to be
-     stalled due to poor utilization of execution ports in the CPU backend.
+III.2.1. Percentage of cycles in which the pipeline was considered by TMA to be
+         stalled due to poor utilization of execution ports in the CPU backend.
 
 perf record -e cpu_core/exe_activity.1_ports_util/ -g -- bin/rosetta-server
 perf report
@@ -275,7 +279,7 @@ This is an early indicator that the interleaved version is more efficient.
 The context of the entire TMA profile for the two versions has to be taken into
 account before this can be verified as a certain performance win here, though.
 
-2.2. Overall TMA profile.
+III.2.2. Overall TMA profile.
 
 Level-1 and Level-2 TMA buckets:
 -----------------------------
@@ -289,7 +293,7 @@ Other metrics:
 TMA ports utilization  : 11.2%
 L1 data cache miss rate: 0.0058%
 
-3. Conclusion of TMA profile comparison.
+III.3. Conclusion of TMA profiles comparison.
 
 When comparing Montgomery Multiplication's share of instructions during which
 the entire running system was stalled due to under-utilized CPU execution ports
@@ -309,7 +313,10 @@ versions to see their overall TMA profiles, we can see that the interleaved
 version has a smaller Core_Bound metric and a larger Memory_Bound metric,
 leading to an overall higher Backend-Bound bucket. This does not mean that
 the system in the interleaved version is utilizing the CPU backend less
-optimally. It means the entire system, all parts of it, are now having
+optimally. The 3% jump in the level-2 Memory-Bound bucket of Backend-Bound is
+expected, due to the increase register spilling, as we have a basic block of
+code that is much larger now for the compiler to juggle the few available
+registers between. It means the entire system, all parts of it, are now having
 a 13% share of cycles stalled due to sub-optimal usage of the CPU backend.
 All other parts of the system contribute to this percentage. The aim was to
 decrease the core_bound metric and make Montgomery Powering faster, which the
@@ -323,8 +330,8 @@ is utilizing the CPU backend, more specifically the micro-op execution ports,
 more optimally than the non-interleaved version of the two powering calls.
 
 This is just an initial, coarsely-grained insight. A detailed simulation of
-the CPU micro-architecture while running the workload sheds more light on
-the precise reason that the interleaved version runs faster. Read on.
+the CPU micro-architecture pipeline while running the workload sheds more light
+on the precise reason that the interleaved version runs faster. Read on.
 
 --------------------------------------------------------------------------------
 
@@ -337,15 +344,15 @@ Thus, simulating the microarchitecture pipeline in LLVM Machine Code Analyzer to
 repeatedly run the instructions of the inner loop of both versions of Montgomery
 multiplication gave deeper, more fine-grained and revealing insights:
 
-1. How many cycles per iteration each execution port was being used in.
+III.4. How many cycles per iteration each execution port was being used in.
 
-   We can use this to calculate a percentage increase/decrease in port
-     utilization for both versions. We take total cycles, total iterations
-     and compute total cycles per iteration, then percentage utilization of
-     each port, since LLVM MCA tells us how many cycles it was active in.
+We can use this to calculate a percentage increase/decrease in port
+utilization for both versions. We take total cycles, total iterations
+and compute total cycles per iteration, then percentage utilization of
+each port, since LLVM MCA tells us how many cycles it was active in.
 
-     These percentages showed that the interleaved version BETTER utilizes the
-     CPU backend's execution ports overall:
+These percentages showed that the interleaved version BETTER utilizes the
+CPU backend's execution ports overall:
 
 ______________________________________________________________________________
 |PORT NUMBER    :| 00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 | 11 |
@@ -355,52 +362,66 @@ ______________________________________________________________________________
 |Difference     :|-3.2|+3.2|+8.6|+8.6|+1.4|+3.2|-2.6|+1.4|+1.4|+1.4|+8.6|+3.2|
 ------------------------------------------------------------------------------
 
-   This observation validates my hypothesis - where the CPU backend's execution
-   ports were sitting idle, despite the Reservation Station having micro-ops
-     ready for them, due to depending on results from currently-executed micro-ops
-     in other ports, these idle ports are now being filled with out-of-order work
-     from the other Multiply chain's micro-ops. This is a win for performance.
+This observation validates my hypothesis - where the CPU backend's execution
+ports were sitting idle, despite the Reservation Station having micro-ops
+ready for them, due to depending on results from currently-executed micro-ops
+in other ports, these idle ports are now being filled with out-of-order work
+from the other Multiply chain's micro-ops. This is a win for performance.
 
 
-2. Number of Assembly instructions occupying the CPU backend in parallel.
+III.5. Number of Assembly instructions occupying the CPU backend in parallel.
 
 From the pipeline simulation Timeline view, I can see that the interleaved
 version gets more instructions residing in the CPU backend at various stages
 in their execution (waiting in the Reservation Station to be fed to execution
 port(s), being executed in port(s), or waiting in the Reorder Buffer, with their
 result visible to the pipeline, to be retired in-order). Taking the length in
-cycles of one of the longest-residing instructions (it's a recurring pattern,
-the same instruction keeps being the longest residing one), I can see:
+cycles of one of the longest-residing instructions, I can see:
 
 NOTE: Instructions per iteration start at index 0.
+
+NOTE: The two instructions in both illustrations are cherry picked to show the
+      the window with the highest number of instructions in both versions.
 
 Interleaved version:
 
 ----------------------------------------------------------------------------
 D===================eeeeeeeeeeeeER  mov qword ptr [rdx + 400], rsi
-                ...
-                                D=eE-------------------------R  cmp rax, 48
+... skipped instructions ...
+                                 D=eE-------------------------R  cmp rax, 48
 ----------------------------------------------------------------------------
 
-Iteration 9, instruction 30 and iteration 10, instruction 72 are what is
-displayed above, with 73 instructions per loop iteration: 117 instructions
-being processed by the CPU backend in parallel, in the best case.
+In the displayed timeline exerpt:
+
+First: Iteration  9, instruction 30
+Last : iteration 10, instruction 72
+
+Instructions per loop iteration: 73  (0 to 72).
+
+Doing the math, we reach the insight that 117 instructions are being processed
+by the CPU backend in parallel, in the best case, for the interleaved version.
 
 Non-interleaved version:
 
 ----------------------------------------------------------------------------
 D==============eeeeeeeeeeeeER  mov qword ptr [rax + 400], rcx
-                ...
-                           D======E------------------R  movzx  esi, sil
+... skipped instructions ...
+                            D======E------------------R  movzx  esi, sil
 ----------------------------------------------------------------------------
 
-Iteration 21, instruction 31 and iteration 24, instruction 17 are what is
-displayed above, with 40 instructions per loop iteration: 108 instructions
-being processed by the CPU backend in parallel, in the best case.
+In the displayed timeline exerpt:
+
+First: Iteration 21, instruction 31
+Last : iteration 24, instruction 17
+
+Instructions per loop iteration: 40  (0 to 39).
+
+Thus, 108 instructions are being processed by the CPU backend in parallel,
+again for the best case, in the non-interleaved version.
 
 Timeline diagram context:
 
-- Each character from D to R is one cycle.
+- Each character from D to R is one cycle. Time in cycles moves to the right.
 - D: Instruction was given to the Reservation Station by the CPU Frontend.
 - =: Instruction waits in RS, can't yet go to its required execution port(s).
 - e: Instruction's micro-ops are being worked on by execution port(s).
@@ -429,9 +450,9 @@ case here, we are far from reaching such a bottleneck for this inner loop.
 In conclusion, what we've observed in the Timeline diagram is a clear win here.
 
 
-3. Properties of the assembly instructions emitted by the compiler.
+III.6. Properties of the assembly instructions emitted by the compiler.
 
-3.1. Total instructions emitted for the inner loop:
+III.6.1. Total instructions emitted for the inner loop:
 
 Non-interleaved: 40 instructions PER ITERATION, 2 work units = 80 instructions.
 Interleaved  x2: 73 instructions PER ITERATION, 2 work units = 73 instructions.
@@ -441,7 +462,7 @@ Same amount of work in fewer assembly instructions. Definitely a win.
 A unit of work here is having processed one 64-bit batch (limb) of a Big
 Integer's bits in the montgomery modular multiplication algorithm.
 
-3.2. Instructions reported to have a latency of 0 cycles.
+III.6.2. Instructions reported to have a latency of 0 cycles.
 
 Instructions that LLVM Machine Code Analyzer reports as having a latency of 0
 cycles are not handled by execution ports in the CPU backend at all. Instead,
@@ -510,12 +531,20 @@ even more. Be careful of which micro-op execution ports are used to handle
 vector register to general purpose register moves, not to stall ports that are
 already the most utilized.
 
+This could speed the loop even more, especially in the interleaved version that
+experiences heavier register spilling to the stack, because, given the right
+circumstances (e.g. not using execution ports that already under heavy load),
+reading values from the physical vector registers back into physical general
+purpose registers can be faster than touching even L1 cache memory. In and of
+itself, the fact that memory doesn't have to be touched at all can explain
+such a speedup, if observed.
+
 There are current efforts in LLVM and GCC to add optimization semantics
 that will automatically spill to vector registers, but it's not there yet
 from what I could gather.
 
 
-   --------------------------------------------------------------------------
+--------------------------------------------------------------------------
 
 Collected Top-down microarchitecture analysis metrics for both versions:
 
@@ -609,26 +638,26 @@ some execution ports cuz they were waiting on the result of the dep. chain.
 Try the following optimization ideas for the interleaved Montgomery_MUL:
 
 - Get rid of pointer to 3-limb variable T, as it's stored inside R's buffer.
-  Each active pointer consumes a register. x64 only has 16 of them.
+Each active pointer consumes a register. x64 only has 16 of them.
 
 - Don't pass N as an arg, as it's constant and the same for both MUL streams.
 
 - Factor out inner loop into a function that takes ->bits pointers directly
-  as __restrict__ for both MUL streams, takes the two streams' q (1-limb var.
-    that remains constant for the inner loop) as const u64 arguments AND the
-    inner loop interleaves the code for the 2 MUL streams by doing iteration I
-    for stream 1 and then REUSING FOR STREAM 2 ANY REGISTER-SIZED TEMPORARIES
-    that do not matter for iteration I+1. These are at least the following:
-    Uh, Ul, Vh, Vl, carryC, carryD, W. Don't have a "version2" variable of them
-    for the 2nd MUL stream, simply reuse the same variables to perform iteration I
-    for the 2nd MUL stream too, as they are overwritten at the start of
-    iteration I+1 anyway.
+as __restrict__ for both MUL streams, takes the two streams' q (1-limb var.
+that remains constant for the inner loop) as const u64 arguments AND the
+inner loop interleaves the code for the 2 MUL streams by doing iteration I
+for stream 1 and then REUSING FOR STREAM 2 ANY REGISTER-SIZED TEMPORARIES
+that do not matter for iteration I+1. These are at least the following:
+Uh, Ul, Vh, Vl, carryC, carryD, W. Don't have a "version2" variable of them
+for the 2nd MUL stream, simply reuse the same variables to perform iteration I
+for the 2nd MUL stream too, as they are overwritten at the start of
+iteration I+1 anyway.
 
 RESULT: It works like a charm.
-        Non-interleaved went from 5200 to 4703 microseconds.
-                Interleaved     went from 5000 to 4213 microseconds.
+Non-interleaved went from 5200 to 4703 microseconds.
+Interleaved     went from 5000 to 4213 microseconds.
 
-   --------------------------------------------------------------------------
+--------------------------------------------------------------------------
 To ask objdump to give the assembly code in Intel syntax of a function:
 
 objdump -d -M intel bin/rosetta-server \
@@ -637,17 +666,17 @@ objdump -d -M intel bin/rosetta-server \
 
 objdump uses a blank line to end a function's code and <FUNCTION_NAME>: labels
 to mark the beginning of the assembly code of a function.
-   --------------------------------------------------------------------------
+--------------------------------------------------------------------------
 
 Next step: Use CPU pipeline simulation to confirm that this speedup really is
-           caused by the execution units having more out-of-order work to do
-                     from the 2nd interleaved operand set, and were sitting idle with
-                     the single operand set in the non-interleaved version, despite the
-                     reservation station already having micro-ops ready for the execution
-                     units, cuz these micro-ops had to wait for the results of another
-                     instruction (MULX?).
+caused by the execution units having more out-of-order work to do
+from the 2nd interleaved operand set, and were sitting idle with
+the single operand set in the non-interleaved version, despite the
+reservation station already having micro-ops ready for the execution
+units, cuz these micro-ops had to wait for the results of another
+instruction (MULX?).
 
-     --------------------------------------------------------------------------
+--------------------------------------------------------------------------
 
 IMPORTANT:
 
@@ -659,8 +688,8 @@ for LLVM Machine Code Analyzer. It takes an assembly code snippet and gives:
 - how many micro-ops each instruction is decomposed into;
 - latency of each instruction;
 - Reciprocal throughput of each instruction (RThroughput).
-  For example, Rthroughput = 0.20 means there are enough execution ports in the
-    CPU backend to be executing 5 of that instruction in parallel.
+For example, Rthroughput = 0.20 means there are enough execution ports in the
+CPU backend to be executing 5 of that instruction in parallel.
 - Total cycles to run your assembly code. For all interations, if loop.
 - Total number of instructions and uOPs executed. For all iterations, if loop.
 
@@ -677,24 +706,24 @@ IPC:               3.61
 Block RThroughput: 9.5
 
 Explanation: It took a total of 1920 instructions and 2736 micro-ops to be
-             executed by the CPU's pipeline to run 48 iterations in a loop
-                         of the assembly code in the input file. It took 532 CPU cycles.
+executed by the CPU's pipeline to run 48 iterations in a loop
+of the assembly code in the input file. It took 532 CPU cycles.
 
-                         6 is the maximum number of uOPs that can be moved from the
-                         CPU Frontend to the reservation station and ROB, OR from the
-                         reservation station to the execution ports, depending on who
-                         uses the term. Issue Width is used interchangeably sometimes.
-                         Must clarify what it means in LLVM-MCA.
+6 is the maximum number of uOPs that can be moved from the
+CPU Frontend to the reservation station and ROB, OR from the
+reservation station to the execution ports, depending on who
+uses the term. Issue Width is used interchangeably sometimes.
+Must clarify what it means in LLVM-MCA.
 
-                         Our actual code was running on average 5.14 uOPs per cycle,
-                         given the maximum of 6. This is a high utilization %, good.
+Our actual code was running on average 5.14 uOPs per cycle,
+given the maximum of 6. This is a high utilization %, good.
 
-                         3.61 is how many instructions are retired per cycle, on average.
-                         IPC is to be maximized for high performance optimizations.
+3.61 is how many instructions are retired per cycle, on average.
+IPC is to be maximized for high performance optimizations.
 
-                         9.5 cycles is the theoretical minimum number of cycles it can take
-                         to run the assembly code in the input file, given the specific
-                         CPU microarchitecture the simulation was told to run on.
+9.5 cycles is the theoretical minimum number of cycles it can take
+to run the assembly code in the input file, given the specific
+CPU microarchitecture the simulation was told to run on.
 
 To run:
 
@@ -704,9 +733,9 @@ mont-mul-inner-loop-noninterleaved.s \
 > llvm-mca-output-noninterleaved-montmul-innerloop.txt
 
 NOTE: Alder Lake is 12th gen. Mine is 13th gen Raptor Lake, but it is simply
-      a "refresh" update of the same microarchitecture that Alder Lake has.
-            So the cycle by cycle simulation is still a good source of insights.
-            Both use the same Golden Cove P-cores.
+a "refresh" update of the same microarchitecture that Alder Lake has.
+So the cycle by cycle simulation is still a good source of insights.
+Both use the same Golden Cove P-cores.
 
 EXAMPLE assembly code file:
 
@@ -715,46 +744,46 @@ EXAMPLE assembly code file:
 
 # LLVM-MCA-BEGIN MontgomeryLoop
 loop_start:
-    mov    rsi, QWORD PTR [r10+rdx*8]
-    mov    rdi, rdx
-    mov    rdx, rsi
-    mulx   rsi, rbx, r12
-    mov    rdx, QWORD PTR [r9]
-    mulx   rcx, rdx, QWORD PTR [r11+rdi*8]
-    mov    QWORD PTR [rsp+0x48], rsi
-    mov    QWORD PTR [rsp+0x40], rbx
-    mov    rsi, QWORD PTR [rsp+0x40]
-    add    rsi, QWORD PTR [rax+rdi*8]
-    mov    QWORD PTR [rsp+0x30], rdx
-    mov    r15, rsi
-    mov    QWORD PTR [rsp+0x38], rcx
-    setb   sil
-    mov    rcx, QWORD PTR [rsp+0x30]
-    mov    QWORD PTR [rsp+0x58], r15
-    add    rcx, QWORD PTR [rax+0x190]
-    movzx  esi, sil
-    mov    QWORD PTR [rsp+0x60], rcx
-    setb   r8b
-    add    rcx, r15
-    mov    QWORD PTR [rax+0x188], rcx
-    mov    rcx, QWORD PTR [rsp+0x38]
-    setb   r15b
-    add    rsi, QWORD PTR [rsp+0x48]
-    add    r8b, 0xff
-    adc    rcx, rsi
-    mov    QWORD PTR [rsp+0x68], rcx
-    setb   sil
-    add    r15b, 0xff
-    adc    rcx, QWORD PTR [rax+0x198]
-    mov    QWORD PTR [rax+0x190], rcx
-    movzx  esi, sil
-    mov    rcx, QWORD PTR [rax+0x188]
-    adc    rsi, 0x0
-    mov    QWORD PTR [rax+0x198], rsi
-    mov    QWORD PTR [rax+rdi*8-0x8], rcx
-    add    rdi, 0x1
-    cmp    rdi, 0x30
-    mov    rdx, rdi
+mov    rsi, QWORD PTR [r10+rdx*8]
+mov    rdi, rdx
+mov    rdx, rsi
+mulx   rsi, rbx, r12
+mov    rdx, QWORD PTR [r9]
+mulx   rcx, rdx, QWORD PTR [r11+rdi*8]
+mov    QWORD PTR [rsp+0x48], rsi
+mov    QWORD PTR [rsp+0x40], rbx
+mov    rsi, QWORD PTR [rsp+0x40]
+add    rsi, QWORD PTR [rax+rdi*8]
+mov    QWORD PTR [rsp+0x30], rdx
+mov    r15, rsi
+mov    QWORD PTR [rsp+0x38], rcx
+setb   sil
+mov    rcx, QWORD PTR [rsp+0x30]
+mov    QWORD PTR [rsp+0x58], r15
+add    rcx, QWORD PTR [rax+0x190]
+movzx  esi, sil
+mov    QWORD PTR [rsp+0x60], rcx
+setb   r8b
+add    rcx, r15
+mov    QWORD PTR [rax+0x188], rcx
+mov    rcx, QWORD PTR [rsp+0x38]
+setb   r15b
+add    rsi, QWORD PTR [rsp+0x48]
+add    r8b, 0xff
+adc    rcx, rsi
+mov    QWORD PTR [rsp+0x68], rcx
+setb   sil
+add    r15b, 0xff
+adc    rcx, QWORD PTR [rax+0x198]
+mov    QWORD PTR [rax+0x190], rcx
+movzx  esi, sil
+mov    rcx, QWORD PTR [rax+0x188]
+adc    rsi, 0x0
+mov    QWORD PTR [rax+0x198], rsi
+mov    QWORD PTR [rax+rdi*8-0x8], rcx
+add    rdi, 0x1
+cmp    rdi, 0x30
+mov    rdx, rdi
 # LLVM-MCA-END
 ################################################################################
 
@@ -832,7 +861,7 @@ CPU PIPELINE TIMELINE VIEW:
 
 
 Timeline view:
-                    0123456789          0123456789          0123456789
+0123456789          0123456789          0123456789
 Index     0123456789          0123456789          0123456789
 
 [0,0]     DeeeeeER  .    .    .    .    mov    rsi, qword ptr [r10 + 8*rdx]
@@ -865,7 +894,7 @@ code finished its work in cycle 8, but had to WAIT for previous assembly
 instructions TO BE READY TO BE RETIRED, before IT can retire, marked by E------
 and same for instruction [0,9] and [0,11]. All of them retired in cycle 24.
 
-   --------------------------------------------------------------------------
+--------------------------------------------------------------------------
 
 Now to use this CPU pipeline simulator to prove the hypothesis in my
 performance analysis that the interleaved montgomery multiplications were
@@ -880,18 +909,18 @@ sitting idle waiting for dependencies, AND this benefit was larger than the
 increased number of stack spill mov instructions.
 
 Outcome: We can definitely see that after a few iterations of this inner
-         loop, the instructions for the first line of code start being
-                 executed and have their result ready (E) several cycles BEFORE
-                 they do that in the old non-interleaved version.
+loop, the instructions for the first line of code start being
+executed and have their result ready (E) several cycles BEFORE
+they do that in the old non-interleaved version.
 
-                 Further vertical analysis cycle-by-cycle, comparing the two runs,
-                 to obtain counts for insns STARTED_EXECUTING, FINISHED_EXECUTING,
-                 RETIRED, NR_INSNS_CURRENTLY_EXECUTING is needed to see whether
-                 the interleaved version consistently has more instructions being
-                 executed cycle for cycle than the non-interleaved version and
-                 whether it's retiring more of them cycle-for-cycle. Do this in
-                 the middle of the loop run, at iterations 12/24 respectively.
-                 This is near the end of the displayed timeline for the current usage.
+Further vertical analysis cycle-by-cycle, comparing the two runs,
+to obtain counts for insns STARTED_EXECUTING, FINISHED_EXECUTING,
+RETIRED, NR_INSNS_CURRENTLY_EXECUTING is needed to see whether
+the interleaved version consistently has more instructions being
+executed cycle for cycle than the non-interleaved version and
+whether it's retiring more of them cycle-for-cycle. Do this in
+the middle of the loop run, at iterations 12/24 respectively.
+This is near the end of the displayed timeline for the current usage.
 
 ********************************************************************************
 ********************************************************************************
@@ -921,13 +950,13 @@ sudo taskset -c 2,4,6,8 bin/rosetta-server 1
 
 Pinning the process to a certain subset of the machine's CPUs, such that no set
 of 2 threads uses 2 cores of the same hyperthreaded processor (and thus share
-a CPU cache) appears to not make a difference.
+   a CPU cache) appears to not make a difference.
 
 Improving latency measurement by properly calculating what the min. and max. of
 the outliers range should be, using 25th and 75th percentile on all measurements
 taken in a sorted batch and calculating better averages using this, in python.
 
-   -------------------------------------------------------------------------
+-------------------------------------------------------------------------
 
 Profiling harness automated to run Simulation 1 128 times for 128 averages.
 Each average is made up of 500 completely organic calls of the montgomery
@@ -953,7 +982,7 @@ Lastly, a final average is calculated of the 128 stabilized averages.
 These are the results displayed here.
 
 Each set takes ~ 1 hour to obtain.
-    ------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 OK, so the mystery has been solved on why waking up in a new days suddenly
 made averages go up by several micros. It was caused by changing the desktop
@@ -994,7 +1023,7 @@ It turns out automatic user chat room simulation tests in Rosetta Test Framework
 give exactly the same results as manual testing.
 
 ALSO: Repeating TMA analysis several times gives the same results. Percentages
-      only fluctuate by about half a % up or down in all 4 main buckets.
+only fluctuate by about half a % up or down in all 4 main buckets.
 --------------------------------------------------------------------------
 sudo perf stat -e cpu_core/cycles/ -M \
 tma_divider,tma_ports_utilization -- bin/rosetta-server 1

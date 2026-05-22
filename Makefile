@@ -32,7 +32,8 @@ CFLAGS += -Wno-write-strings
 # Use only the stack pointer for managing function-local variables.
 # Do not waste an entire register for the unnecessary frame pointer.
 # On x86-64, this frees up the rbp register.
-GNU_OPTIMIZATION_FLAGS += -fomit-frame-pointer
+GNU_OPTIMIZATION_FLAGS =
+#GNU_OPTIMIZATION_FLAGS += -fomit-frame-pointer
 
 #INFO: To check the segment sizes (like .data, .text) of an ELF binary:
 #      size my_file
@@ -46,10 +47,10 @@ GNU_OPTIMIZATION_FLAGS += -fomit-frame-pointer
 #
 # LDFLAGS += -Wl,--gc-sections is required to instruct the linker to
 # perform the actual removal.
-GNU_OPTIMIZATION_FLAGS += -ffunction-sections
-GNU_OPTIMIZATION_FLAGS += -fdata-sections
+#GNU_OPTIMIZATION_FLAGS += -ffunction-sections
+#GNU_OPTIMIZATION_FLAGS += -fdata-sections
 
-LDFLAGS += -Wl,--gc-sections
+#LDFLAGS += -Wl,--gc-sections
 LDFLAGS += -lm
 LDFLAGS += -pthread
 

@@ -1,7 +1,34 @@
 Linux Perf tool commands used:
 -----------------------------
 
-To obtain TMA methodology metrics:
+Obtaining flamegraphs:
+
+# Install FlameGraph on Fedora:
+
+sudo dnf install perl-core
+cd <directory_for_flamegraph_repo>
+git clone https://github.com/brendangregg/FlameGraph
+cd FlameGraph
+echo 'export PATH=$PATH:<directory_for_flamegraph_repo>/FlameGraph' >> ~/.bashrc
+source ~/.bashrc
+
+# Verify it was installed and callable:
+
+stackcollapse-perf.pl --help
+
+# Emit a flamegraph in SVG format with Perf tool and open it in a web browser:
+
+sudo perf record -g -- bin/rosetta-server
+sudo perf script | stackcollapse-perf.pl | flamegraph.pl > my-flamegraph.svg
+
+# Optionally, if ssh'd to Fedora laptop from WSL, send it to Windows machine:
+
+scp hypervisor123@<fedora-ip>:~/tmp/repos/Rosetta-Secure-Texting/flame.svg \
+/mnt/c/Users/summoner99/Documents/my-flamegraph.svg
+
+--------------------------------------------------------------------------------
+
+Obtaining TMA methodology metrics:
 
 sudo perf stat --topdown -- bin/rosetta-server 1
 sudo perf stat -M tma_core_bound,tma_memory_bound -- bin/rosetta-server 1
