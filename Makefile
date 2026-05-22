@@ -1,5 +1,5 @@
 # -*- MakeFile -*-
-.PHONY: build_dir all server server_asan client client_asan clean
+.PHONY: build_dir all server server_asan client client_asan clean test_framework
 
 CFLAGS += -D_GNU_SOURCE
 CFLAGS += -Wall
@@ -65,7 +65,7 @@ ARCHITECTURE_FLAGS += -march=native
 ADDRESS_SANITIZER_FLAGS += -fsanitize=address -static-libasan -g -fstack-usage
 
 # INFO: -pipe
-# Causes the build process to use pipes between build stages, not temp. files.
+# Causes the build to use pipes between build stages, not temporary files.
 
 # Ask GCC to tell us of any vectorization and loop optimizations it performed
 # when building the server and client sources.
@@ -84,28 +84,34 @@ ROSETTA_CLIENT_SRC      += src/client/gui-code/cMain.cpp
 ROSETTA_CLIENT_BIN      =  rosetta-client
 ROSETTA_CLIENT_ASAN_BIN =  rosetta-client-asan
 
-prod: server client
+all: build_dir server client test_framework
+
+test_framework: build_dir
+	$(MAKE) -C ./rosetta-test-framework
+
+
+# INFO: -p will do nothing if the directory exists and will return code 0.
 
 build_dir:
 	@mkdir -p bin/manual-user-testing bin/automatic-user-testing bin/keygen
 
-server:
+server: build_dir
 	$(CC) $(ROSETTA_SERVER_SRC) -pipe -o $(BIN_DIR)/$(ROSETTA_SERVER_BIN) \
 	$(OPTIMIZATION_LEVEL) $(COMPILER_OPTIMIZATION_REPORT) \
 	$(LDFLAGS) $(CFLAGS) $(CSTD) $(ARCHITECTURE_FLAGS) $(GNU_OPTIMIZATION_FLAGS)
 
-client:
+client: build_dir
 	$(CXX) $(ROSETTA_CLIENT_SRC) -pipe -o $(BIN_DIR)/$(ROSETTA_CLIENT_BIN) \
 	$(OPTIMIZATION_LEVEL) $(COMPILER_OPTIMIZATION_REPORT) $(CFLAGS) $(LDFLAGS) \
 	$(ARCHITECTURE_FLAGS) $(GNU_OPTIMIZATION_FLAGS) $(WX_WIDGETS_SPECIFIC)
 
-server_asan:
+server_asan: build_dir
 	$(CC) $(ROSETTA_SERVER_SRC) -pipe -o $(BIN_DIR)/$(ROSETTA_SERVER_ASAN_BIN) \
 	$(OPTIMIZATION_LEVEL) $(COMPILER_OPTIMIZATION_REPORT) \
 	$(LDFLAGS) $(CFLAGS) $(CSTD) $(ARCHITECTURE_FLAGS) \
 	$(ADDRESS_SANITIZER_FLAGS)
 
-client_asan:
+client_asan: build_dir
 	$(CXX) $(ROSETTA_CLIENT_SRC) -pipe -o $(BIN_DIR)/$(ROSETTA_CLIENT_ASAN_BIN) \
 	$(OPTIMIZATION_LEVEL) $(COMPILER_OPTIMIZATION_REPORT) $(CFLAGS) $(LDFLAGS) \
 	$(ARCHITECTURE_FLAGS) $(ADDRESS_SANITIZER_FLAGS) $(WX_WIDGETS_SPECIFIC)
