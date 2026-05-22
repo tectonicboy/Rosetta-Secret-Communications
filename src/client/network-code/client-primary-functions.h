@@ -60,7 +60,7 @@ void (*force_user_out_of_room)(void);
 /* Initialize stuff needed for the Unix Sockets API. */
 /* Attempt to establish a connection with the Rosetta server. */
 /* Initialize polling mutex. */
-u8 self_init(u8* password, int password_len, char* save_dir)
+u8 self_init(u8* password, int password_len, const char* save_dir)
 {
     const u32 chacha_key_len = 32;
     u32 pw_bytes_for_zeroing = PASSWORD_BUF_SIZ - password_len;
@@ -501,7 +501,7 @@ void start_polling_thread()
     }
 }
 
-u8 reg(u8* password, int password_len, char* save_dir)
+u8 reg(u8* password, int password_len, const char* save_dir)
 {
     const u32 chacha_key_len = 32;
           u32 pw_bytes_for_zeroing = PASSWORD_BUF_SIZ - password_len;
@@ -651,7 +651,7 @@ label_cleanup:
  * It means that the Rosetta server has told us to try logging again later
  * because there is no more space for any more logged in users right now.
  */
-u8 login(u8* password, int password_len, char* save_dir)
+u8 login(u8* password, int password_len, const char* save_dir)
 {
     u8      status = 0;
     u8*     msg_buf = NULL;

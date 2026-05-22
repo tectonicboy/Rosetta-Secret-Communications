@@ -2,68 +2,19 @@
 
 # INTENDED TO BE CALLED BY THE PRIMARY PROJECT MAKEFILE IN THE TOP-LEVEL DIR.
 # IN A SEPARATE MAKEFILE HERE FOR READABILITY AND MODULARITY.
+#
+# MAKEFILE ENTRIES COMMON TO ALL 3 PROJECT MAKEFILES ARE IN config.mk
 
-.PHONY: all clean
+include ../config.mk
 
-CFLAGS += -Wall
-CFLAGS += -Wextra
-CFLAGS += -Waggregate-return
-CFLAGS += -Wcast-align
-CFLAGS += -Wfloat-equal
-CFLAGS += -Wformat=2
-CFLAGS += -Wlogical-op
-CFLAGS += -Wmissing-include-dirs
-CFLAGS += -Wpointer-arith
-CFLAGS += -Wredundant-decls
-CFLAGS += -Wsequence-point
-CFLAGS += -Wshadow
-CFLAGS += -Wswitch
-CFLAGS += -Wundef
-CFLAGS += -Wunreachable-code
-CFLAGS += -Wunused-but-set-parameter
-CFLAGS += -Wunused
-CFLAGS += -Wwrite-strings
-CFLAGS += -Wno-unused-label
-CFLAGS += -Wno-unused-result
-CFLAGS += -Wstrict-aliasing
-CFLAGS += -Wformat-security
-CFLAGS += -Wno-stringop-truncation
-CFLAGS += -Wno-cast-qual
-CFLAGS += -Wno-discarded-qualifiers
+PRIMARY_TARGETS += test_framework
+PRIMARY_TARGETS += manual_user_spawner
+PRIMARY_TARGETS += auto_user_simulation_test_1
+PRIMARY_TARGETS += simulation_1_auto_user_spawner_1
+PRIMARY_TARGETS += simulation_1_auto_user_spawner_2
+PRIMARY_TARGETS += simulation_1_auto_user_spawner_3
 
-# Some of these may not be available outside GCC.
-
-# Use the stack pointer only for managing function-local storage.
-# Do not waste an entire register for the unnecessary frame pointer.
-# On x86-64, this frees up the rbp register.
-GNU_OPTIMIZATION_FLAGS += -fomit-frame-pointer
-
-#INFO: To check the segment sizes (like .data, .text) of an ELF binary:
-#      size my_file
-
-# Eliminate the code for functions that are never called.
-# This includes inlined functions which the compiler emitted a non-inlined
-# copy of, just in case an unpredictable external call to them happened.
-# With this option turned on, we let the linker remove such functions.
-# The data-sections ones does the same but for unused globals.
-# LDFLAGS += -Wl,--gc-sections is required to instruct the linker to
-# perform the actual removal.
-GNU_OPTIMIZATION_FLAGS += -ffunction-sections
-GNU_OPTIMIZATION_FLAGS += -fdata-sections
-
-LDFLAGS += -Wl,--gc-sections
-LDFLAGS += -pthread
-LDFLAGS += -lm
-CC = cc
-OPTIMIZATION_LEVEL = -O3
-ARCHITECTURE_FLAGS = -march=native
-
-# INFO: -pipe
-# Causes the build process to use pipes between build stages, not temp. files.
-
-# Ask GCC to tell us of any vectorization and loop optimizations it performed.
-COMPILER_OPTIMIZATION_REPORT += -fopt-info-vec-optimized
-COMPILER_OPTIMIZATION_REPORT += -fopt-info-loop-optimized
+.PHONY: all clean $(PRIMARY_TARGETS)
 
 BIN_DIR                    = ../bin
 ROSETTA_TEST_FRAMEWORK_SRC = rosetta-test-framework.c
@@ -79,31 +30,49 @@ SIMULATION_1_SPAWNER_2_BIN = automatic-user-testing/auto-spawner2
 SIMULATION_1_SPAWNER_3_SRC = automatic-user-testing/auto-spawner3.c
 SIMULATION_1_SPAWNER_3_BIN = automatic-user-testing/auto-spawner3
 
-all:
+all: $(PRIMARY_TARGETS)
+
+test_framework:
 	$(CC) $(ROSETTA_TEST_FRAMEWORK_SRC) \
 	-o $(BIN_DIR)/$(ROSETTA_TEST_FRAMEWORK_BIN) \
 	$(COMPILER_OPTIMIZATION_REPORT) $(GNU_OPTIMIZATION_FLAGS) \
-	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
-	&& \
+	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(CSTD) \
+	$(EXTRA_FLAGS) $(LDFLAGS) $(LDLIBS)
+
+manual_user_spawner:
 	$(CC) $(MANUAL_USER_SPAWNER_SRC) \
-	-o $(BIN_DIR)/$(MANUAL_USER_SPAWNER_BIN) $(GNU_OPTIMIZATION_FLAGS) \
-	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
-	&& \
+	-o $(BIN_DIR)/$(MANUAL_USER_SPAWNER_BIN) \
+	$(GNU_OPTIMIZATION_FLAGS) $(CSTD) $(EXTRA_FLAGS) \
+	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) \
+	$(LDFLAGS) $(LDLIBS)
+
+auto_user_simulation_test_1:
 	$(CC) $(USER_SIMULATION_TEST_1_SRC) \
-	-o $(BIN_DIR)/$(USER_SIMULATION_TEST_1_BIN) $(GNU_OPTIMIZATION_FLAGS) \
-	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
-	&& \
+	-o $(BIN_DIR)/$(USER_SIMULATION_TEST_1_BIN) \
+	$(GNU_OPTIMIZATION_FLAGS) $(CSTD) $(EXTRA_FLAGS) \
+	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) \
+	$(LDFLAGS) $(LDLIBS)
+
+simulation_1_auto_user_spawner_1:
 	$(CC) $(SIMULATION_1_SPAWNER_1_SRC) \
-	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_1_BIN)  $(GNU_OPTIMIZATION_FLAGS) \
-	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
-	&& \
+	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_1_BIN) \
+	$(GNU_OPTIMIZATION_FLAGS) $(CSTD) $(EXTRA_FLAGS) \
+	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) \
+	$(LDFLAGS) $(LDLIBS)
+
+simulation_1_auto_user_spawner_2:
 	$(CC) $(SIMULATION_1_SPAWNER_2_SRC) \
-	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_2_BIN) $(GNU_OPTIMIZATION_FLAGS) \
-	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS) \
-	&& \
+	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_2_BIN) \
+	$(GNU_OPTIMIZATION_FLAGS) $(CSTD) $(EXTRA_FLAGS) \
+	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) \
+	$(LDFLAGS) $(LDLIBS)
+
+simulation_1_auto_user_spawner_3:
 	$(CC) $(SIMULATION_1_SPAWNER_3_SRC) \
-	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_3_BIN) $(GNU_OPTIMIZATION_FLAGS) \
-	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) $(LDFLAGS)
+	-o $(BIN_DIR)/$(SIMULATION_1_SPAWNER_3_BIN) \
+	$(GNU_OPTIMIZATION_FLAGS) $(CSTD) $(EXTRA_FLAGS) \
+	$(CFLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZATION_LEVEL) \
+	$(LDFLAGS) $(LDLIBS)
 
 clean:
 	rm -rf $(BIN_DIR)/$(ROSETTA_TEST_FRAMEWORK_BIN) && \

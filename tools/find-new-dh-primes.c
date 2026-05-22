@@ -1,5 +1,5 @@
-#include "../lib/rosetta-helpers.h"
-#include "../lib/bigint.h"
+#include "../src/lib/rosetta-helpers.h"
+#include "../src/lib/bigint.h"
 
 //#define MAXIMUM_BITS        12000
 //#define SIZE_Q_BITS         320
