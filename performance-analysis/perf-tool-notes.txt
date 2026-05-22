@@ -23,7 +23,7 @@ sudo perf script | stackcollapse-perf.pl | flamegraph.pl > my-flamegraph.svg
 
 # Optionally, if ssh'd to Fedora laptop from WSL, send it to Windows machine:
 
-scp hypervisor123@<fedora-ip>:~/tmp/repos/Rosetta-Secure-Texting/flame.svg \
+scp hypervisor123@IP_ADDR:~/tmp/repos/Rosetta-Secure-Texting/my-flamegraph.svg \
 /mnt/c/Users/summoner99/Documents/my-flamegraph.svg
 
 --------------------------------------------------------------------------------
