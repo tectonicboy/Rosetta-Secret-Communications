@@ -1,8 +1,55 @@
+GHIDRA:
+
+Run from WSL while ssh'd to fedora laptop:
+
+Step 1. Run an X11 app to see if it displays on the windows monitor, like:
+xclock
+
+Step 2. ssh with -Y:
+ssh -Y hypervisor123@<fedora_laptop_ip>
+
+Step 3. Run with explicit java options, since Ghidra is written in java:
+_JAVA_OPTIONS="-Dsun.java2d.xrender=false" ./ghidraRun
+
+   --------------------------------------------------------------------------
+
+Inside Ghidra, you import the binary file and double click its name to open
+the code analyzer. Under Symbol Tree find the function whose assembly
+instructions you want to modify.
+
+
+
+
 ================================================================================
+
+CPU Core isolation. Efficiency and Performance cores.
+
+   --------------------------------------------------------------------------
 
 Making the kernel run the process on selected CPUs:
 
 sudo taskset -c 2,4,6,8 bin/rosetta-server
+
+Making perf itself run on a subset of cores:
+
+perf stat -C 0-11  ...  ...  ...
+
+Combined:
+
+sudo perf stat -C 0-11 --topdown -- \
+taskset -c 0-11 bin/tools/find-new-dh-primes 320 3072 50 1
+
+   --------------------------------------------------------------------------
+
+Check which core indices are P-cores and E-cores:
+
+grep . /sys/devices/cpu_atom/cpus
+12-15
+
+grep . /sys/devices/cpu_core/cpus
+0-11
+
+   --------------------------------------------------------------------------
 
 ================================================================================
 

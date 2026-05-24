@@ -1,771 +1,772 @@
-000000000040bcd0 <dual_montgomery_mul>:
-  40bcd0:	55                   	push   rbp
-  40bcd1:	48 89 e5             	mov    rbp,rsp
-  40bcd4:	41 57                	push   r15
-  40bcd6:	41 56                	push   r14
-  40bcd8:	49 89 ce             	mov    r14,rcx
-  40bcdb:	41 55                	push   r13
-  40bcdd:	41 54                	push   r12
-  40bcdf:	49 89 d4             	mov    r12,rdx
-  40bce2:	53                   	push   rbx
-  40bce3:	48 83 e4 e0          	and    rsp,0xffffffffffffffe0
-  40bce7:	48 81 ec 00 01 00 00 	sub    rsp,0x100
-  40bcee:	4c 8b 7d 10          	mov    r15,QWORD PTR [rbp+0x10]
-  40bcf2:	48 89 74 24 28       	mov    QWORD PTR [rsp+0x28],rsi
-  40bcf7:	8b 71 08             	mov    esi,DWORD PTR [rcx+0x8]
-  40bcfa:	48 89 7c 24 30       	mov    QWORD PTR [rsp+0x30],rdi
-  40bcff:	48 8d bc 24 e0 00 00 	lea    rdi,[rsp+0xe0]
-  40bd06:	00 
-  40bd07:	4c 89 44 24 20       	mov    QWORD PTR [rsp+0x20],r8
-  40bd0c:	4c 89 4c 24 60       	mov    QWORD PTR [rsp+0x60],r9
-  40bd11:	48 89 54 24 18       	mov    QWORD PTR [rsp+0x18],rdx
-  40bd16:	e8 45 67 ff ff       	call   402460 <bigint_create_from_u32.constprop.1>
-  40bd1b:	41 8b 77 08          	mov    esi,DWORD PTR [r15+0x8]
-  40bd1f:	48 8d bc 24 f0 00 00 	lea    rdi,[rsp+0xf0]
-  40bd26:	00 
-  40bd27:	48 8b 9c 24 e0 00 00 	mov    rbx,QWORD PTR [rsp+0xe0]
-  40bd2e:	00 
-  40bd2f:	e8 2c 67 ff ff       	call   402460 <bigint_create_from_u32.constprop.1>
-  40bd34:	41 8b 56 08          	mov    edx,DWORD PTR [r14+0x8]
-  40bd38:	49 8b 3e             	mov    rdi,QWORD PTR [r14]
-  40bd3b:	31 f6                	xor    esi,esi
-  40bd3d:	4c 8b ac 24 f0 00 00 	mov    r13,QWORD PTR [rsp+0xf0]
-  40bd44:	00 
-  40bd45:	c1 ea 03             	shr    edx,0x3
-  40bd48:	e8 03 47 ff ff       	call   400450 <memset@plt>
-  40bd4d:	41 8b 57 08          	mov    edx,DWORD PTR [r15+0x8]
-  40bd51:	49 8b 3f             	mov    rdi,QWORD PTR [r15]
-  40bd54:	31 f6                	xor    esi,esi
-  40bd56:	41 c7 46 0c 00 00 00 	mov    DWORD PTR [r14+0xc],0x0
-  40bd5d:	00 
-  40bd5e:	c1 ea 03             	shr    edx,0x3
-  40bd61:	e8 ea 46 ff ff       	call   400450 <memset@plt>
-  40bd66:	4d 8b 06             	mov    r8,QWORD PTR [r14]
-  40bd69:	49 8b 37             	mov    rsi,QWORD PTR [r15]
-  40bd6c:	48 89 5c 24 10       	mov    QWORD PTR [rsp+0x10],rbx
-  40bd71:	4c 89 6c 24 08       	mov    QWORD PTR [rsp+0x8],r13
-  40bd76:	c5 f9 ef c0          	vpxor  xmm0,xmm0,xmm0
-  40bd7a:	41 c7 47 0c 00 00 00 	mov    DWORD PTR [r15+0xc],0x0
-  40bd81:	00 
-  40bd82:	48 89 f7             	mov    rdi,rsi
-  40bd85:	4d 89 c1             	mov    r9,r8
-  40bd88:	49 c7 80 98 01 00 00 	mov    QWORD PTR [r8+0x198],0x0
-  40bd8f:	00 00 00 00 
-  40bd93:	c4 c1 7a 7f 80 88 01 	vmovdqu XMMWORD PTR [r8+0x188],xmm0
-  40bd9a:	00 00 
-  40bd9c:	45 31 c0             	xor    r8d,r8d
-  40bd9f:	48 c7 86 98 01 00 00 	mov    QWORD PTR [rsi+0x198],0x0
-  40bda6:	00 00 00 00 
-  40bdaa:	c5 fa 7f 86 88 01 00 	vmovdqu XMMWORD PTR [rsi+0x188],xmm0
-  40bdb1:	00 
-  40bdb2:	4c 89 e6             	mov    rsi,r12
-  40bdb5:	0f 1f 00             	nop    DWORD PTR [rax]
-  40bdb8:	48 8b 5c 24 28       	mov    rbx,QWORD PTR [rsp+0x28]
-  40bdbd:	4c 8b 54 24 30       	mov    r10,QWORD PTR [rsp+0x30]
-  40bdc2:	48 8b 03             	mov    rax,QWORD PTR [rbx]
-  40bdc5:	4e 8b 1c 00          	mov    r11,QWORD PTR [rax+r8*1]
-  40bdc9:	49 8b 02             	mov    rax,QWORD PTR [r10]
-  40bdcc:	4c 89 da             	mov    rdx,r11
-  40bdcf:	c4 62 f3 f6 20       	mulx   r12,rcx,QWORD PTR [rax]
-  40bdd4:	49 8b 06             	mov    rax,QWORD PTR [r14]
-  40bdd7:	48 ba a5 0c 38 13 84 	movabs rdx,0x4c97bc8413380ca5
-  40bdde:	bc 97 4c 
-  40bde1:	48 03 08             	add    rcx,QWORD PTR [rax]
-  40bde4:	c4 e1 f9 6e f1       	vmovq  xmm6,rcx
-  40bde9:	48 89 8c 24 b8 00 00 	mov    QWORD PTR [rsp+0xb8],rcx
-  40bdf0:	00 
-  40bdf1:	49 c7 81 98 01 00 00 	mov    QWORD PTR [r9+0x198],0x0
-  40bdf8:	00 00 00 00 
-  40bdfc:	4c 89 e0             	mov    rax,r12
-  40bdff:	c4 62 a3 f6 e1       	mulx   r12,r11,rcx
-  40be04:	48 83 d0 00          	adc    rax,0x0
-  40be08:	c4 e3 c9 22 c0 01    	vpinsrq xmm0,xmm6,rax,0x1
-  40be0e:	48 8b 06             	mov    rax,QWORD PTR [rsi]
-  40be11:	c4 c1 7a 7f 81 88 01 	vmovdqu XMMWORD PTR [r9+0x188],xmm0
-  40be18:	00 00 
-  40be1a:	48 8b 00             	mov    rax,QWORD PTR [rax]
-  40be1d:	4c 89 5c 24 70       	mov    QWORD PTR [rsp+0x70],r11
-  40be22:	4c 89 64 24 78       	mov    QWORD PTR [rsp+0x78],r12
-  40be27:	49 f7 e3             	mul    r11
-  40be2a:	48 01 c1             	add    rcx,rax
-  40be2d:	49 11 91 90 01 00 00 	adc    QWORD PTR [r9+0x190],rdx
-  40be34:	49 89 89 88 01 00 00 	mov    QWORD PTR [r9+0x188],rcx
-  40be3b:	48 8b 44 24 60       	mov    rax,QWORD PTR [rsp+0x60]
-  40be40:	4c 8b 6c 24 20       	mov    r13,QWORD PTR [rsp+0x20]
-  40be45:	49 83 91 98 01 00 00 	adc    QWORD PTR [r9+0x198],0x0
-  40be4c:	00 
-  40be4d:	48 8b 00             	mov    rax,QWORD PTR [rax]
-  40be50:	4e 8b 1c 00          	mov    r11,QWORD PTR [rax+r8*1]
-  40be54:	49 8b 45 00          	mov    rax,QWORD PTR [r13+0x0]
-  40be58:	4c 89 da             	mov    rdx,r11
-  40be5b:	c4 62 f3 f6 20       	mulx   r12,rcx,QWORD PTR [rax]
-  40be60:	49 8b 07             	mov    rax,QWORD PTR [r15]
-  40be63:	48 ba a5 0c 38 13 84 	movabs rdx,0x4c97bc8413380ca5
-  40be6a:	bc 97 4c 
-  40be6d:	48 03 08             	add    rcx,QWORD PTR [rax]
-  40be70:	c4 e1 f9 6e f9       	vmovq  xmm7,rcx
-  40be75:	48 89 8c 24 c0 00 00 	mov    QWORD PTR [rsp+0xc0],rcx
-  40be7c:	00 
-  40be7d:	48 c7 87 98 01 00 00 	mov    QWORD PTR [rdi+0x198],0x0
-  40be84:	00 00 00 00 
-  40be88:	4c 89 e0             	mov    rax,r12
-  40be8b:	c4 62 a3 f6 e1       	mulx   r12,r11,rcx
-  40be90:	48 83 d0 00          	adc    rax,0x0
-  40be94:	c4 e3 c1 22 c0 01    	vpinsrq xmm0,xmm7,rax,0x1
-  40be9a:	48 8b 06             	mov    rax,QWORD PTR [rsi]
-  40be9d:	c5 fa 7f 87 88 01 00 	vmovdqu XMMWORD PTR [rdi+0x188],xmm0
-  40bea4:	00 
-  40bea5:	48 8b 00             	mov    rax,QWORD PTR [rax]
-  40bea8:	4c 89 9c 24 80 00 00 	mov    QWORD PTR [rsp+0x80],r11
-  40beaf:	00 
-  40beb0:	4c 89 a4 24 88 00 00 	mov    QWORD PTR [rsp+0x88],r12
-  40beb7:	00 
-  40beb8:	49 f7 e3             	mul    r11
-  40bebb:	48 01 c1             	add    rcx,rax
-  40bebe:	48 11 97 90 01 00 00 	adc    QWORD PTR [rdi+0x190],rdx
-  40bec5:	48 89 8f 88 01 00 00 	mov    QWORD PTR [rdi+0x188],rcx
-  40becc:	48 8b 44 24 60       	mov    rax,QWORD PTR [rsp+0x60]
-  40bed1:	49 8b 16             	mov    rdx,QWORD PTR [r14]
-  40bed4:	48 8b 1b             	mov    rbx,QWORD PTR [rbx]
-  40bed7:	4c 89 4c 24 58       	mov    QWORD PTR [rsp+0x58],r9
-  40bedc:	4c 8b 18             	mov    r11,QWORD PTR [rax]
-  40bedf:	48 89 7c 24 50       	mov    QWORD PTR [rsp+0x50],rdi
-  40bee4:	b8 01 00 00 00       	mov    eax,0x1
-  40bee9:	48 89 54 24 68       	mov    QWORD PTR [rsp+0x68],rdx
-  40beee:	4d 8b 22             	mov    r12,QWORD PTR [r10]
-  40bef1:	4c 89 44 24 48       	mov    QWORD PTR [rsp+0x48],r8
-  40bef6:	4d 8b 6d 00          	mov    r13,QWORD PTR [r13+0x0]
-  40befa:	4c 8b 16             	mov    r10,QWORD PTR [rsi]
-  40befd:	49 8b 0f             	mov    rcx,QWORD PTR [r15]
-  40bf00:	4c 89 7d 10          	mov    QWORD PTR [rbp+0x10],r15
-  40bf04:	48 89 74 24 40       	mov    QWORD PTR [rsp+0x40],rsi
-  40bf09:	4c 89 74 24 38       	mov    QWORD PTR [rsp+0x38],r14
-  40bf0e:	48 83 97 98 01 00 00 	adc    QWORD PTR [rdi+0x198],0x0
-  40bf15:	00 
-  40bf16:	4c 01 c3             	add    rbx,r8
-  40bf19:	4d 01 c3             	add    r11,r8
-  40bf1c:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
-  40bf20:	4d 8b 04 c2          	mov    r8,QWORD PTR [r10+rax*8]
-  40bf24:	48 8b 54 24 70       	mov    rdx,QWORD PTR [rsp+0x70]
-  40bf29:	c4 c2 cb f6 f8       	mulx   rdi,rsi,r8
-  40bf2e:	48 8b 13             	mov    rdx,QWORD PTR [rbx]
-  40bf31:	48 89 b4 24 a0 00 00 	mov    QWORD PTR [rsp+0xa0],rsi
-  40bf38:	00 
-  40bf39:	4c 8b b4 24 a0 00 00 	mov    r14,QWORD PTR [rsp+0xa0]
-  40bf40:	00 
-  40bf41:	48 89 bc 24 a8 00 00 	mov    QWORD PTR [rsp+0xa8],rdi
-  40bf48:	00 
-  40bf49:	c4 c2 cb f6 3c c4    	mulx   rdi,rsi,QWORD PTR [r12+rax*8]
-  40bf4f:	48 8b 54 24 68       	mov    rdx,QWORD PTR [rsp+0x68]
-  40bf54:	4c 03 34 c2          	add    r14,QWORD PTR [rdx+rax*8]
-  40bf58:	4c 89 b4 24 c8 00 00 	mov    QWORD PTR [rsp+0xc8],r14
-  40bf5f:	00 
-  40bf60:	41 0f 92 c0          	setb   r8b
-  40bf64:	48 89 b4 24 90 00 00 	mov    QWORD PTR [rsp+0x90],rsi
+000000000040bdc0 <dual_montgomery_mul>:
+  40bdc0:	55                   	push   rbp
+  40bdc1:	48 89 e5             	mov    rbp,rsp
+  40bdc4:	41 57                	push   r15
+  40bdc6:	41 56                	push   r14
+  40bdc8:	49 89 ce             	mov    r14,rcx
+  40bdcb:	41 55                	push   r13
+  40bdcd:	41 54                	push   r12
+  40bdcf:	49 89 d4             	mov    r12,rdx
+  40bdd2:	53                   	push   rbx
+  40bdd3:	48 83 e4 e0          	and    rsp,0xffffffffffffffe0
+  40bdd7:	48 81 ec 00 01 00 00 	sub    rsp,0x100
+  40bdde:	4c 8b 7d 10          	mov    r15,QWORD PTR [rbp+0x10]
+  40bde2:	48 89 74 24 28       	mov    QWORD PTR [rsp+0x28],rsi
+  40bde7:	8b 71 08             	mov    esi,DWORD PTR [rcx+0x8]
+  40bdea:	48 89 7c 24 30       	mov    QWORD PTR [rsp+0x30],rdi
+  40bdef:	48 8d bc 24 e0 00 00 	lea    rdi,[rsp+0xe0]
+  40bdf6:	00 
+  40bdf7:	4c 89 44 24 20       	mov    QWORD PTR [rsp+0x20],r8
+  40bdfc:	4c 89 4c 24 60       	mov    QWORD PTR [rsp+0x60],r9
+  40be01:	48 89 54 24 18       	mov    QWORD PTR [rsp+0x18],rdx
+  40be06:	e8 75 66 ff ff       	call   402480 <bigint_create_from_u32.constprop.1>
+  40be0b:	41 8b 77 08          	mov    esi,DWORD PTR [r15+0x8]
+  40be0f:	48 8d bc 24 f0 00 00 	lea    rdi,[rsp+0xf0]
+  40be16:	00 
+  40be17:	48 8b 9c 24 e0 00 00 	mov    rbx,QWORD PTR [rsp+0xe0]
+  40be1e:	00 
+  40be1f:	e8 5c 66 ff ff       	call   402480 <bigint_create_from_u32.constprop.1>
+  40be24:	41 8b 56 08          	mov    edx,DWORD PTR [r14+0x8]
+  40be28:	49 8b 3e             	mov    rdi,QWORD PTR [r14]
+  40be2b:	31 f6                	xor    esi,esi
+  40be2d:	4c 8b ac 24 f0 00 00 	mov    r13,QWORD PTR [rsp+0xf0]
+  40be34:	00 
+  40be35:	c1 ea 03             	shr    edx,0x3
+  40be38:	e8 13 46 ff ff       	call   400450 <memset@plt>
+  40be3d:	41 8b 57 08          	mov    edx,DWORD PTR [r15+0x8]
+  40be41:	49 8b 3f             	mov    rdi,QWORD PTR [r15]
+  40be44:	31 f6                	xor    esi,esi
+  40be46:	41 c7 46 0c 00 00 00 	mov    DWORD PTR [r14+0xc],0x0
+  40be4d:	00 
+  40be4e:	c1 ea 03             	shr    edx,0x3
+  40be51:	e8 fa 45 ff ff       	call   400450 <memset@plt>
+  40be56:	4d 8b 06             	mov    r8,QWORD PTR [r14]
+  40be59:	49 8b 37             	mov    rsi,QWORD PTR [r15]
+  40be5c:	48 89 5c 24 10       	mov    QWORD PTR [rsp+0x10],rbx
+  40be61:	4c 89 6c 24 08       	mov    QWORD PTR [rsp+0x8],r13
+  40be66:	c5 f9 ef c0          	vpxor  xmm0,xmm0,xmm0
+  40be6a:	45 31 c9             	xor    r9d,r9d
+  40be6d:	41 c7 47 0c 00 00 00 	mov    DWORD PTR [r15+0xc],0x0
+  40be74:	00 
+  40be75:	48 89 f7             	mov    rdi,rsi
+  40be78:	49 c7 80 98 01 00 00 	mov    QWORD PTR [r8+0x198],0x0
+  40be7f:	00 00 00 00 
+  40be83:	c4 c1 7a 7f 80 88 01 	vmovdqu XMMWORD PTR [r8+0x188],xmm0
+  40be8a:	00 00 
+  40be8c:	48 c7 86 98 01 00 00 	mov    QWORD PTR [rsi+0x198],0x0
+  40be93:	00 00 00 00 
+  40be97:	c5 fa 7f 86 88 01 00 	vmovdqu XMMWORD PTR [rsi+0x188],xmm0
+  40be9e:	00 
+  40be9f:	4c 89 c6             	mov    rsi,r8
+  40bea2:	4d 89 e0             	mov    r8,r12
+  40bea5:	0f 1f 00             	nop    DWORD PTR [rax]
+  40bea8:	48 8b 5c 24 28       	mov    rbx,QWORD PTR [rsp+0x28]
+  40bead:	4c 8b 54 24 30       	mov    r10,QWORD PTR [rsp+0x30]
+  40beb2:	48 8b 03             	mov    rax,QWORD PTR [rbx]
+  40beb5:	4e 8b 1c 08          	mov    r11,QWORD PTR [rax+r9*1]
+  40beb9:	49 8b 02             	mov    rax,QWORD PTR [r10]
+  40bebc:	4c 89 da             	mov    rdx,r11
+  40bebf:	c4 62 f3 f6 20       	mulx   r12,rcx,QWORD PTR [rax]
+  40bec4:	49 8b 06             	mov    rax,QWORD PTR [r14]
+  40bec7:	48 ba a5 0c 38 13 84 	movabs rdx,0x4c97bc8413380ca5
+  40bece:	bc 97 4c 
+  40bed1:	48 03 08             	add    rcx,QWORD PTR [rax]
+  40bed4:	c4 e1 f9 6e f1       	vmovq  xmm6,rcx
+  40bed9:	48 89 8c 24 b8 00 00 	mov    QWORD PTR [rsp+0xb8],rcx
+  40bee0:	00 
+  40bee1:	48 c7 86 98 01 00 00 	mov    QWORD PTR [rsi+0x198],0x0
+  40bee8:	00 00 00 00 
+  40beec:	4c 89 e0             	mov    rax,r12
+  40beef:	c4 62 a3 f6 e1       	mulx   r12,r11,rcx
+  40bef4:	48 83 d0 00          	adc    rax,0x0
+  40bef8:	c4 e3 c9 22 c0 01    	vpinsrq xmm0,xmm6,rax,0x1
+  40befe:	49 8b 00             	mov    rax,QWORD PTR [r8]
+  40bf01:	c5 fa 7f 86 88 01 00 	vmovdqu XMMWORD PTR [rsi+0x188],xmm0
+  40bf08:	00 
+  40bf09:	48 8b 00             	mov    rax,QWORD PTR [rax]
+  40bf0c:	4c 89 5c 24 70       	mov    QWORD PTR [rsp+0x70],r11
+  40bf11:	4c 89 64 24 78       	mov    QWORD PTR [rsp+0x78],r12
+  40bf16:	49 f7 e3             	mul    r11
+  40bf19:	48 01 c1             	add    rcx,rax
+  40bf1c:	48 11 96 90 01 00 00 	adc    QWORD PTR [rsi+0x190],rdx
+  40bf23:	48 89 8e 88 01 00 00 	mov    QWORD PTR [rsi+0x188],rcx
+  40bf2a:	48 8b 44 24 60       	mov    rax,QWORD PTR [rsp+0x60]
+  40bf2f:	4c 8b 6c 24 20       	mov    r13,QWORD PTR [rsp+0x20]
+  40bf34:	48 83 96 98 01 00 00 	adc    QWORD PTR [rsi+0x198],0x0
+  40bf3b:	00 
+  40bf3c:	48 8b 00             	mov    rax,QWORD PTR [rax]
+  40bf3f:	4e 8b 1c 08          	mov    r11,QWORD PTR [rax+r9*1]
+  40bf43:	49 8b 45 00          	mov    rax,QWORD PTR [r13+0x0]
+  40bf47:	4c 89 da             	mov    rdx,r11
+  40bf4a:	c4 62 f3 f6 20       	mulx   r12,rcx,QWORD PTR [rax]
+  40bf4f:	49 8b 07             	mov    rax,QWORD PTR [r15]
+  40bf52:	48 ba a5 0c 38 13 84 	movabs rdx,0x4c97bc8413380ca5
+  40bf59:	bc 97 4c 
+  40bf5c:	48 03 08             	add    rcx,QWORD PTR [rax]
+  40bf5f:	c4 e1 f9 6e f9       	vmovq  xmm7,rcx
+  40bf64:	48 89 8c 24 c0 00 00 	mov    QWORD PTR [rsp+0xc0],rcx
   40bf6b:	00 
-  40bf6c:	48 8b b4 24 90 00 00 	mov    rsi,QWORD PTR [rsp+0x90]
-  40bf73:	00 
-  40bf74:	48 03 b2 90 01 00 00 	add    rsi,QWORD PTR [rdx+0x190]
-  40bf7b:	48 89 bc 24 98 00 00 	mov    QWORD PTR [rsp+0x98],rdi
-  40bf82:	00 
-  40bf83:	48 89 b4 24 d0 00 00 	mov    QWORD PTR [rsp+0xd0],rsi
-  40bf8a:	00 
-  40bf8b:	41 0f 92 c6          	setb   r14b
-  40bf8f:	48 03 b4 24 c8 00 00 	add    rsi,QWORD PTR [rsp+0xc8]
-  40bf96:	00 
-  40bf97:	48 89 b2 88 01 00 00 	mov    QWORD PTR [rdx+0x188],rsi
-  40bf9e:	41 0f 92 c7          	setb   r15b
-  40bfa2:	41 0f b6 f0          	movzx  esi,r8b
-  40bfa6:	48 8b bc 24 98 00 00 	mov    rdi,QWORD PTR [rsp+0x98]
-  40bfad:	00 
-  40bfae:	48 03 b4 24 a8 00 00 	add    rsi,QWORD PTR [rsp+0xa8]
-  40bfb5:	00 
-  40bfb6:	41 80 c6 ff          	add    r14b,0xff
-  40bfba:	48 11 fe             	adc    rsi,rdi
-  40bfbd:	48 89 b4 24 d8 00 00 	mov    QWORD PTR [rsp+0xd8],rsi
-  40bfc4:	00 
-  40bfc5:	40 0f 92 c7          	setb   dil
-  40bfc9:	41 80 c7 ff          	add    r15b,0xff
-  40bfcd:	48 13 b2 98 01 00 00 	adc    rsi,QWORD PTR [rdx+0x198]
-  40bfd4:	48 89 b2 90 01 00 00 	mov    QWORD PTR [rdx+0x190],rsi
-  40bfdb:	40 0f b6 ff          	movzx  edi,dil
-  40bfdf:	4d 8b 04 c2          	mov    r8,QWORD PTR [r10+rax*8]
-  40bfe3:	48 8b b2 88 01 00 00 	mov    rsi,QWORD PTR [rdx+0x188]
-  40bfea:	48 83 d7 00          	adc    rdi,0x0
-  40bfee:	48 89 ba 98 01 00 00 	mov    QWORD PTR [rdx+0x198],rdi
-  40bff5:	48 89 74 c2 f8       	mov    QWORD PTR [rdx+rax*8-0x8],rsi
-  40bffa:	48 8b 94 24 80 00 00 	mov    rdx,QWORD PTR [rsp+0x80]
-  40c001:	00 
-  40c002:	c4 c2 cb f6 f8       	mulx   rdi,rsi,r8
-  40c007:	49 8b 13             	mov    rdx,QWORD PTR [r11]
-  40c00a:	48 89 b4 24 a0 00 00 	mov    QWORD PTR [rsp+0xa0],rsi
-  40c011:	00 
-  40c012:	4c 8b 84 24 a0 00 00 	mov    r8,QWORD PTR [rsp+0xa0]
-  40c019:	00 
-  40c01a:	48 89 bc 24 a8 00 00 	mov    QWORD PTR [rsp+0xa8],rdi
-  40c021:	00 
-  40c022:	c4 c2 cb f6 7c c5 00 	mulx   rdi,rsi,QWORD PTR [r13+rax*8+0x0]
-  40c029:	4c 03 04 c1          	add    r8,QWORD PTR [rcx+rax*8]
-  40c02d:	4c 89 84 24 c8 00 00 	mov    QWORD PTR [rsp+0xc8],r8
-  40c034:	00 
-  40c035:	41 0f 92 c0          	setb   r8b
-  40c039:	48 89 b4 24 90 00 00 	mov    QWORD PTR [rsp+0x90],rsi
-  40c040:	00 
-  40c041:	48 8b b4 24 90 00 00 	mov    rsi,QWORD PTR [rsp+0x90]
-  40c048:	00 
-  40c049:	48 03 b1 90 01 00 00 	add    rsi,QWORD PTR [rcx+0x190]
-  40c050:	48 89 bc 24 98 00 00 	mov    QWORD PTR [rsp+0x98],rdi
-  40c057:	00 
-  40c058:	48 89 b4 24 d0 00 00 	mov    QWORD PTR [rsp+0xd0],rsi
-  40c05f:	00 
-  40c060:	41 0f 92 c6          	setb   r14b
-  40c064:	48 03 b4 24 c8 00 00 	add    rsi,QWORD PTR [rsp+0xc8]
-  40c06b:	00 
-  40c06c:	48 89 b1 88 01 00 00 	mov    QWORD PTR [rcx+0x188],rsi
-  40c073:	41 0f 92 c7          	setb   r15b
-  40c077:	41 0f b6 f0          	movzx  esi,r8b
-  40c07b:	48 8b bc 24 98 00 00 	mov    rdi,QWORD PTR [rsp+0x98]
-  40c082:	00 
-  40c083:	48 03 b4 24 a8 00 00 	add    rsi,QWORD PTR [rsp+0xa8]
-  40c08a:	00 
-  40c08b:	41 80 c6 ff          	add    r14b,0xff
-  40c08f:	48 11 fe             	adc    rsi,rdi
-  40c092:	48 89 b4 24 d8 00 00 	mov    QWORD PTR [rsp+0xd8],rsi
-  40c099:	00 
-  40c09a:	40 0f 92 c7          	setb   dil
-  40c09e:	41 80 c7 ff          	add    r15b,0xff
-  40c0a2:	48 13 b1 98 01 00 00 	adc    rsi,QWORD PTR [rcx+0x198]
-  40c0a9:	48 89 b1 90 01 00 00 	mov    QWORD PTR [rcx+0x190],rsi
-  40c0b0:	40 0f b6 ff          	movzx  edi,dil
-  40c0b4:	48 8b b1 88 01 00 00 	mov    rsi,QWORD PTR [rcx+0x188]
-  40c0bb:	48 83 d7 00          	adc    rdi,0x0
-  40c0bf:	48 89 b9 98 01 00 00 	mov    QWORD PTR [rcx+0x198],rdi
-  40c0c6:	48 89 74 c1 f8       	mov    QWORD PTR [rcx+rax*8-0x8],rsi
-  40c0cb:	48 83 c0 01          	add    rax,0x1
-  40c0cf:	48 83 f8 30          	cmp    rax,0x30
-  40c0d3:	0f 85 47 fe ff ff    	jne    40bf20 <dual_montgomery_mul+0x250>
-  40c0d9:	4c 8b 74 24 38       	mov    r14,QWORD PTR [rsp+0x38]
-  40c0de:	4c 8b 4c 24 58       	mov    r9,QWORD PTR [rsp+0x58]
-  40c0e3:	48 8b 7c 24 50       	mov    rdi,QWORD PTR [rsp+0x50]
-  40c0e8:	4c 8b 7d 10          	mov    r15,QWORD PTR [rbp+0x10]
-  40c0ec:	49 8b 06             	mov    rax,QWORD PTR [r14]
-  40c0ef:	4c 8b 44 24 48       	mov    r8,QWORD PTR [rsp+0x48]
-  40c0f4:	48 8b 74 24 40       	mov    rsi,QWORD PTR [rsp+0x40]
-  40c0f9:	48 8b 80 80 01 00 00 	mov    rax,QWORD PTR [rax+0x180]
-  40c100:	49 03 81 90 01 00 00 	add    rax,QWORD PTR [r9+0x190]
-  40c107:	49 89 81 88 01 00 00 	mov    QWORD PTR [r9+0x188],rax
-  40c10e:	49 8b 81 98 01 00 00 	mov    rax,QWORD PTR [r9+0x198]
-  40c115:	49 c7 81 98 01 00 00 	mov    QWORD PTR [r9+0x198],0x0
-  40c11c:	00 00 00 00 
-  40c120:	48 83 d0 00          	adc    rax,0x0
-  40c124:	49 89 81 90 01 00 00 	mov    QWORD PTR [r9+0x190],rax
-  40c12b:	49 8b 06             	mov    rax,QWORD PTR [r14]
-  40c12e:	c4 c1 7a 6f 81 88 01 	vmovdqu xmm0,XMMWORD PTR [r9+0x188]
-  40c135:	00 00 
-  40c137:	c5 fa 7f 80 78 01 00 	vmovdqu XMMWORD PTR [rax+0x178],xmm0
-  40c13e:	00 
-  40c13f:	49 8b 07             	mov    rax,QWORD PTR [r15]
-  40c142:	48 8b 80 80 01 00 00 	mov    rax,QWORD PTR [rax+0x180]
-  40c149:	48 03 87 90 01 00 00 	add    rax,QWORD PTR [rdi+0x190]
-  40c150:	48 89 87 88 01 00 00 	mov    QWORD PTR [rdi+0x188],rax
-  40c157:	48 8b 87 98 01 00 00 	mov    rax,QWORD PTR [rdi+0x198]
-  40c15e:	48 c7 87 98 01 00 00 	mov    QWORD PTR [rdi+0x198],0x0
-  40c165:	00 00 00 00 
-  40c169:	48 83 d0 00          	adc    rax,0x0
-  40c16d:	49 83 c0 08          	add    r8,0x8
-  40c171:	48 89 87 90 01 00 00 	mov    QWORD PTR [rdi+0x190],rax
-  40c178:	49 8b 07             	mov    rax,QWORD PTR [r15]
-  40c17b:	49 81 f8 80 01 00 00 	cmp    r8,0x180
-  40c182:	c5 fa 6f 87 88 01 00 	vmovdqu xmm0,XMMWORD PTR [rdi+0x188]
+  40bf6c:	48 c7 87 98 01 00 00 	mov    QWORD PTR [rdi+0x198],0x0
+  40bf73:	00 00 00 00 
+  40bf77:	4c 89 e0             	mov    rax,r12
+  40bf7a:	c4 62 a3 f6 e1       	mulx   r12,r11,rcx
+  40bf7f:	48 83 d0 00          	adc    rax,0x0
+  40bf83:	c4 e3 c1 22 c0 01    	vpinsrq xmm0,xmm7,rax,0x1
+  40bf89:	49 8b 00             	mov    rax,QWORD PTR [r8]
+  40bf8c:	c5 fa 7f 87 88 01 00 	vmovdqu XMMWORD PTR [rdi+0x188],xmm0
+  40bf93:	00 
+  40bf94:	48 8b 00             	mov    rax,QWORD PTR [rax]
+  40bf97:	4c 89 9c 24 80 00 00 	mov    QWORD PTR [rsp+0x80],r11
+  40bf9e:	00 
+  40bf9f:	4c 89 a4 24 88 00 00 	mov    QWORD PTR [rsp+0x88],r12
+  40bfa6:	00 
+  40bfa7:	49 f7 e3             	mul    r11
+  40bfaa:	48 01 c1             	add    rcx,rax
+  40bfad:	48 11 97 90 01 00 00 	adc    QWORD PTR [rdi+0x190],rdx
+  40bfb4:	48 89 8f 88 01 00 00 	mov    QWORD PTR [rdi+0x188],rcx
+  40bfbb:	48 8b 44 24 60       	mov    rax,QWORD PTR [rsp+0x60]
+  40bfc0:	49 8b 16             	mov    rdx,QWORD PTR [r14]
+  40bfc3:	48 8b 1b             	mov    rbx,QWORD PTR [rbx]
+  40bfc6:	48 89 74 24 58       	mov    QWORD PTR [rsp+0x58],rsi
+  40bfcb:	4c 8b 18             	mov    r11,QWORD PTR [rax]
+  40bfce:	48 89 7c 24 50       	mov    QWORD PTR [rsp+0x50],rdi
+  40bfd3:	b8 01 00 00 00       	mov    eax,0x1
+  40bfd8:	48 89 54 24 68       	mov    QWORD PTR [rsp+0x68],rdx
+  40bfdd:	4d 8b 22             	mov    r12,QWORD PTR [r10]
+  40bfe0:	4c 89 4c 24 48       	mov    QWORD PTR [rsp+0x48],r9
+  40bfe5:	4d 8b 6d 00          	mov    r13,QWORD PTR [r13+0x0]
+  40bfe9:	4d 8b 10             	mov    r10,QWORD PTR [r8]
+  40bfec:	49 8b 0f             	mov    rcx,QWORD PTR [r15]
+  40bfef:	4c 89 7d 10          	mov    QWORD PTR [rbp+0x10],r15
+  40bff3:	4c 89 44 24 40       	mov    QWORD PTR [rsp+0x40],r8
+  40bff8:	4c 89 74 24 38       	mov    QWORD PTR [rsp+0x38],r14
+  40bffd:	48 83 97 98 01 00 00 	adc    QWORD PTR [rdi+0x198],0x0
+  40c004:	00 
+  40c005:	4c 01 cb             	add    rbx,r9
+  40c008:	4d 01 cb             	add    r11,r9
+  40c00b:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+  40c010:	4d 8b 04 c2          	mov    r8,QWORD PTR [r10+rax*8]
+  40c014:	48 8b 54 24 70       	mov    rdx,QWORD PTR [rsp+0x70]
+  40c019:	c4 c2 cb f6 f8       	mulx   rdi,rsi,r8
+  40c01e:	48 8b 13             	mov    rdx,QWORD PTR [rbx]
+  40c021:	48 89 b4 24 a0 00 00 	mov    QWORD PTR [rsp+0xa0],rsi
+  40c028:	00 
+  40c029:	4c 8b b4 24 a0 00 00 	mov    r14,QWORD PTR [rsp+0xa0]
+  40c030:	00 
+  40c031:	48 89 bc 24 a8 00 00 	mov    QWORD PTR [rsp+0xa8],rdi
+  40c038:	00 
+  40c039:	c4 c2 cb f6 3c c4    	mulx   rdi,rsi,QWORD PTR [r12+rax*8]
+  40c03f:	48 8b 54 24 68       	mov    rdx,QWORD PTR [rsp+0x68]
+  40c044:	4c 03 34 c2          	add    r14,QWORD PTR [rdx+rax*8]
+  40c048:	4c 89 b4 24 c8 00 00 	mov    QWORD PTR [rsp+0xc8],r14
+  40c04f:	00 
+  40c050:	41 0f 92 c0          	setb   r8b
+  40c054:	48 89 b4 24 90 00 00 	mov    QWORD PTR [rsp+0x90],rsi
+  40c05b:	00 
+  40c05c:	48 8b b4 24 90 00 00 	mov    rsi,QWORD PTR [rsp+0x90]
+  40c063:	00 
+  40c064:	48 03 b2 90 01 00 00 	add    rsi,QWORD PTR [rdx+0x190]
+  40c06b:	48 89 bc 24 98 00 00 	mov    QWORD PTR [rsp+0x98],rdi
+  40c072:	00 
+  40c073:	48 89 b4 24 d0 00 00 	mov    QWORD PTR [rsp+0xd0],rsi
+  40c07a:	00 
+  40c07b:	41 0f 92 c6          	setb   r14b
+  40c07f:	48 03 b4 24 c8 00 00 	add    rsi,QWORD PTR [rsp+0xc8]
+  40c086:	00 
+  40c087:	48 89 b2 88 01 00 00 	mov    QWORD PTR [rdx+0x188],rsi
+  40c08e:	41 0f 92 c7          	setb   r15b
+  40c092:	41 0f b6 f0          	movzx  esi,r8b
+  40c096:	48 8b bc 24 98 00 00 	mov    rdi,QWORD PTR [rsp+0x98]
+  40c09d:	00 
+  40c09e:	48 03 b4 24 a8 00 00 	add    rsi,QWORD PTR [rsp+0xa8]
+  40c0a5:	00 
+  40c0a6:	41 80 c6 ff          	add    r14b,0xff
+  40c0aa:	48 11 fe             	adc    rsi,rdi
+  40c0ad:	48 89 b4 24 d8 00 00 	mov    QWORD PTR [rsp+0xd8],rsi
+  40c0b4:	00 
+  40c0b5:	40 0f 92 c7          	setb   dil
+  40c0b9:	41 80 c7 ff          	add    r15b,0xff
+  40c0bd:	48 13 b2 98 01 00 00 	adc    rsi,QWORD PTR [rdx+0x198]
+  40c0c4:	48 89 b2 90 01 00 00 	mov    QWORD PTR [rdx+0x190],rsi
+  40c0cb:	40 0f b6 ff          	movzx  edi,dil
+  40c0cf:	4d 8b 04 c2          	mov    r8,QWORD PTR [r10+rax*8]
+  40c0d3:	48 8b b2 88 01 00 00 	mov    rsi,QWORD PTR [rdx+0x188]
+  40c0da:	48 83 d7 00          	adc    rdi,0x0
+  40c0de:	48 89 ba 98 01 00 00 	mov    QWORD PTR [rdx+0x198],rdi
+  40c0e5:	48 89 74 c2 f8       	mov    QWORD PTR [rdx+rax*8-0x8],rsi
+  40c0ea:	48 8b 94 24 80 00 00 	mov    rdx,QWORD PTR [rsp+0x80]
+  40c0f1:	00 
+  40c0f2:	c4 c2 cb f6 f8       	mulx   rdi,rsi,r8
+  40c0f7:	49 8b 13             	mov    rdx,QWORD PTR [r11]
+  40c0fa:	48 89 b4 24 a0 00 00 	mov    QWORD PTR [rsp+0xa0],rsi
+  40c101:	00 
+  40c102:	4c 8b 84 24 a0 00 00 	mov    r8,QWORD PTR [rsp+0xa0]
+  40c109:	00 
+  40c10a:	48 89 bc 24 a8 00 00 	mov    QWORD PTR [rsp+0xa8],rdi
+  40c111:	00 
+  40c112:	c4 c2 cb f6 7c c5 00 	mulx   rdi,rsi,QWORD PTR [r13+rax*8+0x0]
+  40c119:	4c 03 04 c1          	add    r8,QWORD PTR [rcx+rax*8]
+  40c11d:	4c 89 84 24 c8 00 00 	mov    QWORD PTR [rsp+0xc8],r8
+  40c124:	00 
+  40c125:	41 0f 92 c0          	setb   r8b
+  40c129:	48 89 b4 24 90 00 00 	mov    QWORD PTR [rsp+0x90],rsi
+  40c130:	00 
+  40c131:	48 8b b4 24 90 00 00 	mov    rsi,QWORD PTR [rsp+0x90]
+  40c138:	00 
+  40c139:	48 03 b1 90 01 00 00 	add    rsi,QWORD PTR [rcx+0x190]
+  40c140:	48 89 bc 24 98 00 00 	mov    QWORD PTR [rsp+0x98],rdi
+  40c147:	00 
+  40c148:	48 89 b4 24 d0 00 00 	mov    QWORD PTR [rsp+0xd0],rsi
+  40c14f:	00 
+  40c150:	41 0f 92 c6          	setb   r14b
+  40c154:	48 03 b4 24 c8 00 00 	add    rsi,QWORD PTR [rsp+0xc8]
+  40c15b:	00 
+  40c15c:	48 89 b1 88 01 00 00 	mov    QWORD PTR [rcx+0x188],rsi
+  40c163:	41 0f 92 c7          	setb   r15b
+  40c167:	41 0f b6 f0          	movzx  esi,r8b
+  40c16b:	48 8b bc 24 98 00 00 	mov    rdi,QWORD PTR [rsp+0x98]
+  40c172:	00 
+  40c173:	48 03 b4 24 a8 00 00 	add    rsi,QWORD PTR [rsp+0xa8]
+  40c17a:	00 
+  40c17b:	41 80 c6 ff          	add    r14b,0xff
+  40c17f:	48 11 fe             	adc    rsi,rdi
+  40c182:	48 89 b4 24 d8 00 00 	mov    QWORD PTR [rsp+0xd8],rsi
   40c189:	00 
-  40c18a:	c5 fa 7f 80 78 01 00 	vmovdqu XMMWORD PTR [rax+0x178],xmm0
-  40c191:	00 
-  40c192:	0f 85 20 fc ff ff    	jne    40bdb8 <dual_montgomery_mul+0xe8>
-  40c198:	c5 f9 ef c0          	vpxor  xmm0,xmm0,xmm0
-  40c19c:	41 ba 2f 00 00 00    	mov    r10d,0x2f
-  40c1a2:	48 8b 5c 24 10       	mov    rbx,QWORD PTR [rsp+0x10]
-  40c1a7:	49 c7 81 98 01 00 00 	mov    QWORD PTR [r9+0x198],0x0
-  40c1ae:	00 00 00 00 
-  40c1b2:	c4 c1 7a 7f 81 88 01 	vmovdqu XMMWORD PTR [r9+0x188],xmm0
-  40c1b9:	00 00 
-  40c1bb:	4c 8b 6c 24 08       	mov    r13,QWORD PTR [rsp+0x8]
-  40c1c0:	48 c7 87 98 01 00 00 	mov    QWORD PTR [rdi+0x198],0x0
-  40c1c7:	00 00 00 00 
-  40c1cb:	c5 fa 7f 87 88 01 00 	vmovdqu XMMWORD PTR [rdi+0x188],xmm0
-  40c1d2:	00 
-  40c1d3:	41 8b 46 08          	mov    eax,DWORD PTR [r14+0x8]
-  40c1d7:	49 8b 36             	mov    rsi,QWORD PTR [r14]
-  40c1da:	89 c2                	mov    edx,eax
-  40c1dc:	83 e0 f8             	and    eax,0xfffffff8
-  40c1df:	c1 ea 03             	shr    edx,0x3
-  40c1e2:	83 ea 01             	sub    edx,0x1
-  40c1e5:	4c 8d 4a e1          	lea    r9,[rdx-0x1f]
-  40c1e9:	49 89 d0             	mov    r8,rdx
-  40c1ec:	4a 8d 3c 0e          	lea    rdi,[rsi+r9*1]
-  40c1f0:	83 e7 1f             	and    edi,0x1f
-  40c1f3:	48 8d 4f 20          	lea    rcx,[rdi+0x20]
-  40c1f7:	4c 39 d1             	cmp    rcx,r10
-  40c1fa:	49 0f 42 ca          	cmovb  rcx,r10
-  40c1fe:	48 39 ca             	cmp    rdx,rcx
-  40c201:	0f 82 fa 01 00 00    	jb     40c401 <dual_montgomery_mul+0x731>
-  40c207:	48 85 ff             	test   rdi,rdi
-  40c20a:	74 5c                	je     40c268 <dual_montgomery_mul+0x598>
-  40c20c:	49 89 d2             	mov    r10,rdx
-  40c20f:	49 29 fa             	sub    r10,rdi
-  40c212:	0f b6 0c 16          	movzx  ecx,BYTE PTR [rsi+rdx*1]
-  40c216:	84 c9                	test   cl,cl
-  40c218:	0f 88 3f 02 00 00    	js     40c45d <dual_montgomery_mul+0x78d>
-  40c21e:	f6 c1 40             	test   cl,0x40
-  40c221:	0f 85 e4 05 00 00    	jne    40c80b <dual_montgomery_mul+0xb3b>
-  40c227:	f6 c1 20             	test   cl,0x20
-  40c22a:	0f 85 e3 05 00 00    	jne    40c813 <dual_montgomery_mul+0xb43>
-  40c230:	f6 c1 10             	test   cl,0x10
-  40c233:	0f 85 e2 05 00 00    	jne    40c81b <dual_montgomery_mul+0xb4b>
-  40c239:	f6 c1 08             	test   cl,0x8
-  40c23c:	0f 85 e1 05 00 00    	jne    40c823 <dual_montgomery_mul+0xb53>
-  40c242:	f6 c1 04             	test   cl,0x4
-  40c245:	0f 85 5e 06 00 00    	jne    40c8a9 <dual_montgomery_mul+0xbd9>
-  40c24b:	f6 c1 02             	test   cl,0x2
-  40c24e:	0f 85 3d 06 00 00    	jne    40c891 <dual_montgomery_mul+0xbc1>
-  40c254:	84 c9                	test   cl,cl
-  40c256:	0f 85 25 06 00 00    	jne    40c881 <dual_montgomery_mul+0xbb1>
-  40c25c:	48 83 ea 01          	sub    rdx,0x1
-  40c260:	83 e8 08             	sub    eax,0x8
-  40c263:	49 39 d2             	cmp    r10,rdx
-  40c266:	75 aa                	jne    40c212 <dual_montgomery_mul+0x542>
-  40c268:	4c 89 c9             	mov    rcx,r9
-  40c26b:	c4 e1 f9 6e ea       	vmovq  xmm5,rdx
-  40c270:	c5 f9 6e e0          	vmovd  xmm4,eax
-  40c274:	49 83 c0 01          	add    r8,0x1
-  40c278:	49 29 f8             	sub    r8,rdi
-  40c27b:	c4 e2 7d 59 dd       	vpbroadcastq ymm3,xmm5
-  40c280:	c4 e2 7d 58 e4       	vpbroadcastd ymm4,xmm4
-  40c285:	48 29 f9             	sub    rcx,rdi
-  40c288:	bf 40 40 40 40       	mov    edi,0x40404040
-  40c28d:	48 01 f1             	add    rcx,rsi
-  40c290:	c4 41 2d 76 d2       	vpcmpeqd ymm10,ymm10,ymm10
-  40c295:	4d 89 c1             	mov    r9,r8
-  40c298:	c5 79 6e cf          	vmovd  xmm9,edi
-  40c29c:	bf 20 20 20 20       	mov    edi,0x20202020
-  40c2a1:	49 83 e1 e0          	and    r9,0xffffffffffffffe0
-  40c2a5:	49 89 ca             	mov    r10,rcx
-  40c2a8:	c5 79 6e c7          	vmovd  xmm8,edi
-  40c2ac:	bf 10 10 10 10       	mov    edi,0x10101010
-  40c2b1:	c5 d5 76 ed          	vpcmpeqd ymm5,ymm5,ymm5
-  40c2b5:	c5 fd 6f 35 e3 ee 00 	vmovdqa ymm6,YMMWORD PTR [rip+0xeee3]        # 41b1a0 <BLAKE2B_IV+0x180>
-  40c2bc:	00 
-  40c2bd:	c5 f9 6e ff          	vmovd  xmm7,edi
-  40c2c1:	c4 42 7d 1c d2       	vpabsb ymm10,ymm10
-  40c2c6:	c5 f1 ef c9          	vpxor  xmm1,xmm1,xmm1
-  40c2ca:	4d 29 ca             	sub    r10,r9
-  40c2cd:	c4 42 7d 58 c9       	vpbroadcastd ymm9,xmm9
-  40c2d2:	c4 42 7d 58 c0       	vpbroadcastd ymm8,xmm8
-  40c2d7:	c4 e2 7d 58 ff       	vpbroadcastd ymm7,xmm7
-  40c2dc:	c5 dd fe 25 7c ee 00 	vpaddd ymm4,ymm4,YMMWORD PTR [rip+0xee7c]        # 41b160 <BLAKE2B_IV+0x140>
-  40c2e3:	00 
-  40c2e4:	c5 e5 d4 1d 94 ee 00 	vpaddq ymm3,ymm3,YMMWORD PTR [rip+0xee94]        # 41b180 <BLAKE2B_IV+0x160>
-  40c2eb:	00 
-  40c2ec:	c5 d5 72 f5 08       	vpslld ymm5,ymm5,0x8
-  40c2f1:	c5 fd 6f 01          	vmovdqa ymm0,YMMWORD PTR [rcx]
-  40c2f5:	c4 e3 7d 46 c0 01    	vperm2i128 ymm0,ymm0,ymm0,0x1
-  40c2fb:	c4 e2 7d 00 c6       	vpshufb ymm0,ymm0,ymm6
-  40c300:	c5 ed 71 d0 07       	vpsrlw ymm2,ymm0,0x7
-  40c305:	c5 ad db d2          	vpand  ymm2,ymm10,ymm2
-  40c309:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c30d:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c311:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c316:	0f 85 dc 00 00 00    	jne    40c3f8 <dual_montgomery_mul+0x728>
-  40c31c:	c4 c1 7d db d1       	vpand  ymm2,ymm0,ymm9
-  40c321:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c325:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c329:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c32e:	0f 85 c4 00 00 00    	jne    40c3f8 <dual_montgomery_mul+0x728>
-  40c334:	c4 c1 7d db d0       	vpand  ymm2,ymm0,ymm8
-  40c339:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c33d:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c341:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c346:	0f 85 ac 00 00 00    	jne    40c3f8 <dual_montgomery_mul+0x728>
-  40c34c:	c5 fd db d7          	vpand  ymm2,ymm0,ymm7
-  40c350:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c354:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c358:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c35d:	0f 85 95 00 00 00    	jne    40c3f8 <dual_montgomery_mul+0x728>
-  40c363:	bf 08 08 08 08       	mov    edi,0x8080808
-  40c368:	c5 f9 6e d7          	vmovd  xmm2,edi
-  40c36c:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
-  40c371:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
-  40c375:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c379:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c37d:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c382:	75 74                	jne    40c3f8 <dual_montgomery_mul+0x728>
-  40c384:	bf 04 04 04 04       	mov    edi,0x4040404
-  40c389:	c5 f9 6e d7          	vmovd  xmm2,edi
-  40c38d:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
-  40c392:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
-  40c396:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c39a:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c39e:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c3a3:	75 53                	jne    40c3f8 <dual_montgomery_mul+0x728>
-  40c3a5:	bf 02 02 02 02       	mov    edi,0x2020202
-  40c3aa:	c5 f9 6e d7          	vmovd  xmm2,edi
-  40c3ae:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
-  40c3b3:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
-  40c3b7:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c3bb:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c3bf:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c3c4:	75 32                	jne    40c3f8 <dual_montgomery_mul+0x728>
-  40c3c6:	c5 fd 74 c1          	vpcmpeqb ymm0,ymm0,ymm1
-  40c3ca:	c5 fd 74 c1          	vpcmpeqb ymm0,ymm0,ymm1
-  40c3ce:	c4 e2 7d 17 c0       	vptest ymm0,ymm0
-  40c3d3:	75 23                	jne    40c3f8 <dual_montgomery_mul+0x728>
-  40c3d5:	c4 e2 7d 59 05 42 f0 	vpbroadcastq ymm0,QWORD PTR [rip+0xf042]        # 41b420 <BLAKE2B_IV+0x400>
-  40c3dc:	00 00 
-  40c3de:	48 83 e9 20          	sub    rcx,0x20
-  40c3e2:	4c 39 d1             	cmp    rcx,r10
-  40c3e5:	c5 e5 d4 d8          	vpaddq ymm3,ymm3,ymm0
-  40c3e9:	0f 84 3c 04 00 00    	je     40c82b <dual_montgomery_mul+0xb5b>
-  40c3ef:	c5 dd fe e5          	vpaddd ymm4,ymm4,ymm5
-  40c3f3:	e9 f9 fe ff ff       	jmp    40c2f1 <dual_montgomery_mul+0x621>
-  40c3f8:	c4 e1 f9 7e da       	vmovq  rdx,xmm3
-  40c3fd:	c5 f9 7e e0          	vmovd  eax,xmm4
-  40c401:	48 01 f2             	add    rdx,rsi
-  40c404:	0f b6 0a             	movzx  ecx,BYTE PTR [rdx]
-  40c407:	84 c9                	test   cl,cl
-  40c409:	78 52                	js     40c45d <dual_montgomery_mul+0x78d>
-  40c40b:	f6 c1 40             	test   cl,0x40
-  40c40e:	0f 85 f7 03 00 00    	jne    40c80b <dual_montgomery_mul+0xb3b>
-  40c414:	f6 c1 20             	test   cl,0x20
-  40c417:	0f 85 f6 03 00 00    	jne    40c813 <dual_montgomery_mul+0xb43>
-  40c41d:	f6 c1 10             	test   cl,0x10
-  40c420:	0f 85 f5 03 00 00    	jne    40c81b <dual_montgomery_mul+0xb4b>
-  40c426:	f6 c1 08             	test   cl,0x8
-  40c429:	0f 85 f4 03 00 00    	jne    40c823 <dual_montgomery_mul+0xb53>
-  40c42f:	f6 c1 04             	test   cl,0x4
-  40c432:	0f 85 71 04 00 00    	jne    40c8a9 <dual_montgomery_mul+0xbd9>
-  40c438:	f6 c1 02             	test   cl,0x2
-  40c43b:	0f 85 50 04 00 00    	jne    40c891 <dual_montgomery_mul+0xbc1>
-  40c441:	84 c9                	test   cl,cl
-  40c443:	0f 85 38 04 00 00    	jne    40c881 <dual_montgomery_mul+0xbb1>
-  40c449:	83 e8 08             	sub    eax,0x8
-  40c44c:	48 39 f2             	cmp    rdx,rsi
-  40c44f:	74 0c                	je     40c45d <dual_montgomery_mul+0x78d>
-  40c451:	0f b6 4a ff          	movzx  ecx,BYTE PTR [rdx-0x1]
-  40c455:	48 83 ea 01          	sub    rdx,0x1
-  40c459:	84 c9                	test   cl,cl
-  40c45b:	79 ae                	jns    40c40b <dual_montgomery_mul+0x73b>
-  40c45d:	41 89 46 0c          	mov    DWORD PTR [r14+0xc],eax
-  40c461:	41 8b 47 08          	mov    eax,DWORD PTR [r15+0x8]
-  40c465:	41 bb 2f 00 00 00    	mov    r11d,0x2f
-  40c46b:	4d 8b 07             	mov    r8,QWORD PTR [r15]
-  40c46e:	89 c2                	mov    edx,eax
-  40c470:	83 e0 f8             	and    eax,0xfffffff8
-  40c473:	c1 ea 03             	shr    edx,0x3
-  40c476:	83 ea 01             	sub    edx,0x1
-  40c479:	4c 8d 52 e1          	lea    r10,[rdx-0x1f]
-  40c47d:	49 89 d1             	mov    r9,rdx
-  40c480:	4b 8d 3c 10          	lea    rdi,[r8+r10*1]
-  40c484:	83 e7 1f             	and    edi,0x1f
-  40c487:	48 8d 4f 20          	lea    rcx,[rdi+0x20]
-  40c48b:	4c 39 d9             	cmp    rcx,r11
-  40c48e:	49 0f 42 cb          	cmovb  rcx,r11
-  40c492:	48 39 ca             	cmp    rdx,rcx
-  40c495:	0f 82 fb 01 00 00    	jb     40c696 <dual_montgomery_mul+0x9c6>
-  40c49b:	48 85 ff             	test   rdi,rdi
-  40c49e:	74 5d                	je     40c4fd <dual_montgomery_mul+0x82d>
-  40c4a0:	49 89 d3             	mov    r11,rdx
-  40c4a3:	49 29 fb             	sub    r11,rdi
-  40c4a6:	41 0f b6 0c 10       	movzx  ecx,BYTE PTR [r8+rdx*1]
-  40c4ab:	84 c9                	test   cl,cl
-  40c4ad:	0f 88 3f 02 00 00    	js     40c6f2 <dual_montgomery_mul+0xa22>
-  40c4b3:	f6 c1 40             	test   cl,0x40
-  40c4b6:	0f 85 8a 03 00 00    	jne    40c846 <dual_montgomery_mul+0xb76>
-  40c4bc:	f6 c1 20             	test   cl,0x20
-  40c4bf:	0f 85 89 03 00 00    	jne    40c84e <dual_montgomery_mul+0xb7e>
-  40c4c5:	f6 c1 10             	test   cl,0x10
-  40c4c8:	0f 85 88 03 00 00    	jne    40c856 <dual_montgomery_mul+0xb86>
-  40c4ce:	f6 c1 08             	test   cl,0x8
-  40c4d1:	0f 85 87 03 00 00    	jne    40c85e <dual_montgomery_mul+0xb8e>
-  40c4d7:	f6 c1 04             	test   cl,0x4
-  40c4da:	0f 85 b9 03 00 00    	jne    40c899 <dual_montgomery_mul+0xbc9>
-  40c4e0:	f6 c1 02             	test   cl,0x2
-  40c4e3:	0f 85 a0 03 00 00    	jne    40c889 <dual_montgomery_mul+0xbb9>
-  40c4e9:	84 c9                	test   cl,cl
-  40c4eb:	0f 85 b0 03 00 00    	jne    40c8a1 <dual_montgomery_mul+0xbd1>
-  40c4f1:	48 83 ea 01          	sub    rdx,0x1
-  40c4f5:	83 e8 08             	sub    eax,0x8
-  40c4f8:	4c 39 da             	cmp    rdx,r11
-  40c4fb:	75 a9                	jne    40c4a6 <dual_montgomery_mul+0x7d6>
-  40c4fd:	4c 89 d1             	mov    rcx,r10
-  40c500:	c4 e1 f9 6e ea       	vmovq  xmm5,rdx
-  40c505:	c5 f9 6e e0          	vmovd  xmm4,eax
-  40c509:	49 83 c1 01          	add    r9,0x1
-  40c50d:	49 29 f9             	sub    r9,rdi
-  40c510:	c4 e2 7d 59 dd       	vpbroadcastq ymm3,xmm5
-  40c515:	c4 e2 7d 58 e4       	vpbroadcastd ymm4,xmm4
-  40c51a:	48 29 f9             	sub    rcx,rdi
-  40c51d:	bf 40 40 40 40       	mov    edi,0x40404040
-  40c522:	4c 01 c1             	add    rcx,r8
-  40c525:	c4 41 2d 76 d2       	vpcmpeqd ymm10,ymm10,ymm10
-  40c52a:	4d 89 ca             	mov    r10,r9
-  40c52d:	c5 79 6e cf          	vmovd  xmm9,edi
-  40c531:	bf 20 20 20 20       	mov    edi,0x20202020
-  40c536:	49 83 e2 e0          	and    r10,0xffffffffffffffe0
-  40c53a:	49 89 cb             	mov    r11,rcx
-  40c53d:	c5 79 6e c7          	vmovd  xmm8,edi
-  40c541:	bf 10 10 10 10       	mov    edi,0x10101010
-  40c546:	c5 d5 76 ed          	vpcmpeqd ymm5,ymm5,ymm5
-  40c54a:	c5 fd 6f 35 4e ec 00 	vmovdqa ymm6,YMMWORD PTR [rip+0xec4e]        # 41b1a0 <BLAKE2B_IV+0x180>
-  40c551:	00 
-  40c552:	c5 f9 6e ff          	vmovd  xmm7,edi
-  40c556:	c4 42 7d 1c d2       	vpabsb ymm10,ymm10
-  40c55b:	c5 f1 ef c9          	vpxor  xmm1,xmm1,xmm1
-  40c55f:	4d 29 d3             	sub    r11,r10
-  40c562:	c4 42 7d 58 c9       	vpbroadcastd ymm9,xmm9
-  40c567:	c4 42 7d 58 c0       	vpbroadcastd ymm8,xmm8
-  40c56c:	c4 e2 7d 58 ff       	vpbroadcastd ymm7,xmm7
-  40c571:	c5 dd fe 25 e7 eb 00 	vpaddd ymm4,ymm4,YMMWORD PTR [rip+0xebe7]        # 41b160 <BLAKE2B_IV+0x140>
-  40c578:	00 
-  40c579:	c5 e5 d4 1d ff eb 00 	vpaddq ymm3,ymm3,YMMWORD PTR [rip+0xebff]        # 41b180 <BLAKE2B_IV+0x160>
-  40c580:	00 
-  40c581:	c5 d5 72 f5 08       	vpslld ymm5,ymm5,0x8
-  40c586:	c5 fd 6f 01          	vmovdqa ymm0,YMMWORD PTR [rcx]
-  40c58a:	c4 e3 7d 46 c0 01    	vperm2i128 ymm0,ymm0,ymm0,0x1
-  40c590:	c4 e2 7d 00 c6       	vpshufb ymm0,ymm0,ymm6
-  40c595:	c5 ed 71 d0 07       	vpsrlw ymm2,ymm0,0x7
-  40c59a:	c5 ad db d2          	vpand  ymm2,ymm10,ymm2
-  40c59e:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c5a2:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c5a6:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c5ab:	0f 85 dc 00 00 00    	jne    40c68d <dual_montgomery_mul+0x9bd>
-  40c5b1:	c4 c1 7d db d1       	vpand  ymm2,ymm0,ymm9
-  40c5b6:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c5ba:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c5be:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c5c3:	0f 85 c4 00 00 00    	jne    40c68d <dual_montgomery_mul+0x9bd>
-  40c5c9:	c4 c1 7d db d0       	vpand  ymm2,ymm0,ymm8
-  40c5ce:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c5d2:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c5d6:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c5db:	0f 85 ac 00 00 00    	jne    40c68d <dual_montgomery_mul+0x9bd>
-  40c5e1:	c5 fd db d7          	vpand  ymm2,ymm0,ymm7
-  40c5e5:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c5e9:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c5ed:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c5f2:	0f 85 95 00 00 00    	jne    40c68d <dual_montgomery_mul+0x9bd>
-  40c5f8:	bf 08 08 08 08       	mov    edi,0x8080808
-  40c5fd:	c5 f9 6e d7          	vmovd  xmm2,edi
-  40c601:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
-  40c606:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
-  40c60a:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c60e:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c612:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c617:	75 74                	jne    40c68d <dual_montgomery_mul+0x9bd>
-  40c619:	bf 04 04 04 04       	mov    edi,0x4040404
-  40c61e:	c5 f9 6e d7          	vmovd  xmm2,edi
-  40c622:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
-  40c627:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
-  40c62b:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c62f:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c633:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c638:	75 53                	jne    40c68d <dual_montgomery_mul+0x9bd>
-  40c63a:	bf 02 02 02 02       	mov    edi,0x2020202
-  40c63f:	c5 f9 6e d7          	vmovd  xmm2,edi
-  40c643:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
-  40c648:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
-  40c64c:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c650:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
-  40c654:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
-  40c659:	75 32                	jne    40c68d <dual_montgomery_mul+0x9bd>
-  40c65b:	c5 fd 74 c1          	vpcmpeqb ymm0,ymm0,ymm1
-  40c65f:	c5 fd 74 c1          	vpcmpeqb ymm0,ymm0,ymm1
-  40c663:	c4 e2 7d 17 c0       	vptest ymm0,ymm0
-  40c668:	75 23                	jne    40c68d <dual_montgomery_mul+0x9bd>
-  40c66a:	c4 e2 7d 59 05 ad ed 	vpbroadcastq ymm0,QWORD PTR [rip+0xedad]        # 41b420 <BLAKE2B_IV+0x400>
-  40c671:	00 00 
-  40c673:	48 83 e9 20          	sub    rcx,0x20
-  40c677:	49 39 cb             	cmp    r11,rcx
-  40c67a:	c5 e5 d4 d8          	vpaddq ymm3,ymm3,ymm0
-  40c67e:	0f 84 e2 01 00 00    	je     40c866 <dual_montgomery_mul+0xb96>
-  40c684:	c5 dd fe e5          	vpaddd ymm4,ymm4,ymm5
-  40c688:	e9 f9 fe ff ff       	jmp    40c586 <dual_montgomery_mul+0x8b6>
-  40c68d:	c4 e1 f9 7e da       	vmovq  rdx,xmm3
-  40c692:	c5 f9 7e e0          	vmovd  eax,xmm4
-  40c696:	4c 01 c2             	add    rdx,r8
-  40c699:	0f b6 0a             	movzx  ecx,BYTE PTR [rdx]
-  40c69c:	84 c9                	test   cl,cl
-  40c69e:	78 52                	js     40c6f2 <dual_montgomery_mul+0xa22>
-  40c6a0:	f6 c1 40             	test   cl,0x40
-  40c6a3:	0f 85 9d 01 00 00    	jne    40c846 <dual_montgomery_mul+0xb76>
-  40c6a9:	f6 c1 20             	test   cl,0x20
-  40c6ac:	0f 85 9c 01 00 00    	jne    40c84e <dual_montgomery_mul+0xb7e>
-  40c6b2:	f6 c1 10             	test   cl,0x10
-  40c6b5:	0f 85 9b 01 00 00    	jne    40c856 <dual_montgomery_mul+0xb86>
-  40c6bb:	f6 c1 08             	test   cl,0x8
-  40c6be:	0f 85 9a 01 00 00    	jne    40c85e <dual_montgomery_mul+0xb8e>
-  40c6c4:	f6 c1 04             	test   cl,0x4
-  40c6c7:	0f 85 cc 01 00 00    	jne    40c899 <dual_montgomery_mul+0xbc9>
-  40c6cd:	f6 c1 02             	test   cl,0x2
-  40c6d0:	0f 85 b3 01 00 00    	jne    40c889 <dual_montgomery_mul+0xbb9>
-  40c6d6:	84 c9                	test   cl,cl
-  40c6d8:	0f 85 c3 01 00 00    	jne    40c8a1 <dual_montgomery_mul+0xbd1>
-  40c6de:	83 e8 08             	sub    eax,0x8
-  40c6e1:	49 39 d0             	cmp    r8,rdx
-  40c6e4:	74 0c                	je     40c6f2 <dual_montgomery_mul+0xa22>
-  40c6e6:	0f b6 4a ff          	movzx  ecx,BYTE PTR [rdx-0x1]
-  40c6ea:	48 83 ea 01          	sub    rdx,0x1
-  40c6ee:	84 c9                	test   cl,cl
-  40c6f0:	79 ae                	jns    40c6a0 <dual_montgomery_mul+0x9d0>
-  40c6f2:	41 89 47 0c          	mov    DWORD PTR [r15+0xc],eax
-  40c6f6:	48 83 be 80 01 00 00 	cmp    QWORD PTR [rsi+0x180],0x0
-  40c6fd:	00 
-  40c6fe:	4d 8b a0 80 01 00 00 	mov    r12,QWORD PTR [r8+0x180]
-  40c705:	0f 85 92 00 00 00    	jne    40c79d <dual_montgomery_mul+0xacd>
-  40c70b:	c5 f8 77             	vzeroupper
-  40c70e:	4d 85 e4             	test   r12,r12
-  40c711:	75 1f                	jne    40c732 <dual_montgomery_mul+0xa62>
-  40c713:	48 89 df             	mov    rdi,rbx
-  40c716:	e8 55 3c ff ff       	call   400370 <free@plt>
-  40c71b:	4c 89 ef             	mov    rdi,r13
-  40c71e:	e8 4d 3c ff ff       	call   400370 <free@plt>
-  40c723:	48 8d 65 d8          	lea    rsp,[rbp-0x28]
-  40c727:	5b                   	pop    rbx
-  40c728:	41 5c                	pop    r12
-  40c72a:	41 5d                	pop    r13
-  40c72c:	41 5e                	pop    r14
-  40c72e:	41 5f                	pop    r15
-  40c730:	5d                   	pop    rbp
-  40c731:	c3                   	ret
-  40c732:	8b 94 24 f8 00 00 00 	mov    edx,DWORD PTR [rsp+0xf8]
-  40c739:	41 8b 47 0c          	mov    eax,DWORD PTR [r15+0xc]
-  40c73d:	39 c2                	cmp    edx,eax
-  40c73f:	0f 82 bc 01 00 00    	jb     40c901 <dual_montgomery_mul+0xc31>
-  40c745:	c1 ea 03             	shr    edx,0x3
-  40c748:	31 f6                	xor    esi,esi
-  40c74a:	85 c0                	test   eax,eax
-  40c74c:	4c 89 ef             	mov    rdi,r13
-  40c74f:	0f 84 74 01 00 00    	je     40c8c9 <dual_montgomery_mul+0xbf9>
-  40c755:	e8 f6 3c ff ff       	call   400450 <memset@plt>
-  40c75a:	41 8b 57 0c          	mov    edx,DWORD PTR [r15+0xc]
-  40c75e:	f6 c2 07             	test   dl,0x7
-  40c761:	89 d0                	mov    eax,edx
-  40c763:	74 07                	je     40c76c <dual_montgomery_mul+0xa9c>
-  40c765:	83 c0 01             	add    eax,0x1
-  40c768:	a8 07                	test   al,0x7
-  40c76a:	75 f9                	jne    40c765 <dual_montgomery_mul+0xa95>
-  40c76c:	89 94 24 fc 00 00 00 	mov    DWORD PTR [rsp+0xfc],edx
-  40c773:	49 8b 37             	mov    rsi,QWORD PTR [r15]
-  40c776:	89 c2                	mov    edx,eax
-  40c778:	4c 89 ef             	mov    rdi,r13
-  40c77b:	c1 ea 03             	shr    edx,0x3
-  40c77e:	e8 1d 3d ff ff       	call   4004a0 <memcpy@plt>
-  40c783:	48 8b 74 24 18       	mov    rsi,QWORD PTR [rsp+0x18]
-  40c788:	4c 89 fa             	mov    rdx,r15
-  40c78b:	48 8d bc 24 f0 00 00 	lea    rdi,[rsp+0xf0]
-  40c792:	00 
-  40c793:	e8 98 aa ff ff       	call   407230 <bigint_sub_fast>
-  40c798:	e9 76 ff ff ff       	jmp    40c713 <dual_montgomery_mul+0xa43>
-  40c79d:	8b 94 24 e8 00 00 00 	mov    edx,DWORD PTR [rsp+0xe8]
-  40c7a4:	41 8b 46 0c          	mov    eax,DWORD PTR [r14+0xc]
-  40c7a8:	39 c2                	cmp    edx,eax
-  40c7aa:	0f 82 60 01 00 00    	jb     40c910 <dual_montgomery_mul+0xc40>
-  40c7b0:	c1 ea 03             	shr    edx,0x3
-  40c7b3:	31 f6                	xor    esi,esi
-  40c7b5:	85 c0                	test   eax,eax
-  40c7b7:	48 89 df             	mov    rdi,rbx
-  40c7ba:	0f 84 f1 00 00 00    	je     40c8b1 <dual_montgomery_mul+0xbe1>
-  40c7c0:	c5 f8 77             	vzeroupper
-  40c7c3:	e8 88 3c ff ff       	call   400450 <memset@plt>
-  40c7c8:	41 8b 56 0c          	mov    edx,DWORD PTR [r14+0xc]
-  40c7cc:	f6 c2 07             	test   dl,0x7
-  40c7cf:	89 d0                	mov    eax,edx
-  40c7d1:	74 07                	je     40c7da <dual_montgomery_mul+0xb0a>
-  40c7d3:	83 c0 01             	add    eax,0x1
-  40c7d6:	a8 07                	test   al,0x7
-  40c7d8:	75 f9                	jne    40c7d3 <dual_montgomery_mul+0xb03>
-  40c7da:	89 94 24 ec 00 00 00 	mov    DWORD PTR [rsp+0xec],edx
-  40c7e1:	49 8b 36             	mov    rsi,QWORD PTR [r14]
-  40c7e4:	89 c2                	mov    edx,eax
-  40c7e6:	48 89 df             	mov    rdi,rbx
-  40c7e9:	c1 ea 03             	shr    edx,0x3
-  40c7ec:	e8 af 3c ff ff       	call   4004a0 <memcpy@plt>
-  40c7f1:	48 8b 74 24 18       	mov    rsi,QWORD PTR [rsp+0x18]
-  40c7f6:	4c 89 f2             	mov    rdx,r14
-  40c7f9:	48 8d bc 24 e0 00 00 	lea    rdi,[rsp+0xe0]
-  40c800:	00 
-  40c801:	e8 2a aa ff ff       	call   407230 <bigint_sub_fast>
-  40c806:	e9 03 ff ff ff       	jmp    40c70e <dual_montgomery_mul+0xa3e>
-  40c80b:	83 e8 01             	sub    eax,0x1
-  40c80e:	e9 4a fc ff ff       	jmp    40c45d <dual_montgomery_mul+0x78d>
-  40c813:	83 e8 02             	sub    eax,0x2
-  40c816:	e9 42 fc ff ff       	jmp    40c45d <dual_montgomery_mul+0x78d>
-  40c81b:	83 e8 03             	sub    eax,0x3
-  40c81e:	e9 3a fc ff ff       	jmp    40c45d <dual_montgomery_mul+0x78d>
-  40c823:	83 e8 04             	sub    eax,0x4
-  40c826:	e9 32 fc ff ff       	jmp    40c45d <dual_montgomery_mul+0x78d>
-  40c82b:	4d 39 c1             	cmp    r9,r8
-  40c82e:	0f 84 aa 00 00 00    	je     40c8de <dual_montgomery_mul+0xc0e>
-  40c834:	42 8d 0c cd 00 00 00 	lea    ecx,[r9*8+0x0]
-  40c83b:	00 
-  40c83c:	4c 29 ca             	sub    rdx,r9
-  40c83f:	29 c8                	sub    eax,ecx
-  40c841:	e9 bb fb ff ff       	jmp    40c401 <dual_montgomery_mul+0x731>
-  40c846:	83 e8 01             	sub    eax,0x1
-  40c849:	e9 a4 fe ff ff       	jmp    40c6f2 <dual_montgomery_mul+0xa22>
-  40c84e:	83 e8 02             	sub    eax,0x2
-  40c851:	e9 9c fe ff ff       	jmp    40c6f2 <dual_montgomery_mul+0xa22>
-  40c856:	83 e8 03             	sub    eax,0x3
-  40c859:	e9 94 fe ff ff       	jmp    40c6f2 <dual_montgomery_mul+0xa22>
-  40c85e:	83 e8 04             	sub    eax,0x4
-  40c861:	e9 8c fe ff ff       	jmp    40c6f2 <dual_montgomery_mul+0xa22>
-  40c866:	4d 39 ca             	cmp    r10,r9
-  40c869:	0f 84 b3 00 00 00    	je     40c922 <dual_montgomery_mul+0xc52>
-  40c86f:	42 8d 0c d5 00 00 00 	lea    ecx,[r10*8+0x0]
-  40c876:	00 
-  40c877:	4c 29 d2             	sub    rdx,r10
-  40c87a:	29 c8                	sub    eax,ecx
-  40c87c:	e9 15 fe ff ff       	jmp    40c696 <dual_montgomery_mul+0x9c6>
-  40c881:	83 e8 07             	sub    eax,0x7
-  40c884:	e9 d4 fb ff ff       	jmp    40c45d <dual_montgomery_mul+0x78d>
-  40c889:	83 e8 06             	sub    eax,0x6
-  40c88c:	e9 61 fe ff ff       	jmp    40c6f2 <dual_montgomery_mul+0xa22>
-  40c891:	83 e8 06             	sub    eax,0x6
-  40c894:	e9 c4 fb ff ff       	jmp    40c45d <dual_montgomery_mul+0x78d>
-  40c899:	83 e8 05             	sub    eax,0x5
-  40c89c:	e9 51 fe ff ff       	jmp    40c6f2 <dual_montgomery_mul+0xa22>
-  40c8a1:	83 e8 07             	sub    eax,0x7
-  40c8a4:	e9 49 fe ff ff       	jmp    40c6f2 <dual_montgomery_mul+0xa22>
-  40c8a9:	83 e8 05             	sub    eax,0x5
-  40c8ac:	e9 ac fb ff ff       	jmp    40c45d <dual_montgomery_mul+0x78d>
-  40c8b1:	c5 f8 77             	vzeroupper
-  40c8b4:	e8 97 3b ff ff       	call   400450 <memset@plt>
-  40c8b9:	c7 84 24 ec 00 00 00 	mov    DWORD PTR [rsp+0xec],0x0
-  40c8c0:	00 00 00 00 
-  40c8c4:	e9 28 ff ff ff       	jmp    40c7f1 <dual_montgomery_mul+0xb21>
-  40c8c9:	e8 82 3b ff ff       	call   400450 <memset@plt>
-  40c8ce:	c7 84 24 fc 00 00 00 	mov    DWORD PTR [rsp+0xfc],0x0
-  40c8d5:	00 00 00 00 
-  40c8d9:	e9 a5 fe ff ff       	jmp    40c783 <dual_montgomery_mul+0xab3>
-  40c8de:	b8 38 ff ff ff       	mov    eax,0xffffff38
-  40c8e3:	c5 f9 6e c0          	vmovd  xmm0,eax
-  40c8e7:	c4 e2 7d 58 c0       	vpbroadcastd ymm0,xmm0
-  40c8ec:	c5 dd fe c0          	vpaddd ymm0,ymm4,ymm0
-  40c8f0:	c4 e3 7d 39 c0 01    	vextracti128 xmm0,ymm0,0x1
-  40c8f6:	c4 e3 79 16 c0 03    	vpextrd eax,xmm0,0x3
-  40c8fc:	e9 5c fb ff ff       	jmp    40c45d <dual_montgomery_mul+0x78d>
-  40c901:	bf c8 94 41 00       	mov    edi,0x4194c8
-  40c906:	e8 c5 3a ff ff       	call   4003d0 <puts@plt>
-  40c90b:	e9 73 fe ff ff       	jmp    40c783 <dual_montgomery_mul+0xab3>
-  40c910:	bf c8 94 41 00       	mov    edi,0x4194c8
-  40c915:	c5 f8 77             	vzeroupper
-  40c918:	e8 b3 3a ff ff       	call   4003d0 <puts@plt>
-  40c91d:	e9 cf fe ff ff       	jmp    40c7f1 <dual_montgomery_mul+0xb21>
-  40c922:	b8 38 ff ff ff       	mov    eax,0xffffff38
-  40c927:	c5 f9 6e c0          	vmovd  xmm0,eax
-  40c92b:	c4 e2 7d 58 c0       	vpbroadcastd ymm0,xmm0
-  40c930:	c5 dd fe c0          	vpaddd ymm0,ymm4,ymm0
-  40c934:	c4 e3 7d 39 c0 01    	vextracti128 xmm0,ymm0,0x1
-  40c93a:	c4 e3 79 16 c0 03    	vpextrd eax,xmm0,0x3
-  40c940:	e9 ad fd ff ff       	jmp    40c6f2 <dual_montgomery_mul+0xa22>
-  40c945:	66 66 2e 0f 1f 84 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
-  40c94c:	00 00 00 00 
+  40c18a:	40 0f 92 c7          	setb   dil
+  40c18e:	41 80 c7 ff          	add    r15b,0xff
+  40c192:	48 13 b1 98 01 00 00 	adc    rsi,QWORD PTR [rcx+0x198]
+  40c199:	48 89 b1 90 01 00 00 	mov    QWORD PTR [rcx+0x190],rsi
+  40c1a0:	40 0f b6 ff          	movzx  edi,dil
+  40c1a4:	48 8b b1 88 01 00 00 	mov    rsi,QWORD PTR [rcx+0x188]
+  40c1ab:	48 83 d7 00          	adc    rdi,0x0
+  40c1af:	48 89 b9 98 01 00 00 	mov    QWORD PTR [rcx+0x198],rdi
+  40c1b6:	48 89 74 c1 f8       	mov    QWORD PTR [rcx+rax*8-0x8],rsi
+  40c1bb:	48 83 c0 01          	add    rax,0x1
+  40c1bf:	48 83 f8 30          	cmp    rax,0x30
+  40c1c3:	0f 85 47 fe ff ff    	jne    40c010 <dual_montgomery_mul+0x250>
+  40c1c9:	4c 8b 74 24 38       	mov    r14,QWORD PTR [rsp+0x38]
+  40c1ce:	48 8b 74 24 58       	mov    rsi,QWORD PTR [rsp+0x58]
+  40c1d3:	48 8b 7c 24 50       	mov    rdi,QWORD PTR [rsp+0x50]
+  40c1d8:	4c 8b 7d 10          	mov    r15,QWORD PTR [rbp+0x10]
+  40c1dc:	49 8b 06             	mov    rax,QWORD PTR [r14]
+  40c1df:	4c 8b 4c 24 48       	mov    r9,QWORD PTR [rsp+0x48]
+  40c1e4:	4c 8b 44 24 40       	mov    r8,QWORD PTR [rsp+0x40]
+  40c1e9:	48 8b 80 80 01 00 00 	mov    rax,QWORD PTR [rax+0x180]
+  40c1f0:	48 03 86 90 01 00 00 	add    rax,QWORD PTR [rsi+0x190]
+  40c1f7:	48 89 86 88 01 00 00 	mov    QWORD PTR [rsi+0x188],rax
+  40c1fe:	48 8b 86 98 01 00 00 	mov    rax,QWORD PTR [rsi+0x198]
+  40c205:	48 c7 86 98 01 00 00 	mov    QWORD PTR [rsi+0x198],0x0
+  40c20c:	00 00 00 00 
+  40c210:	48 83 d0 00          	adc    rax,0x0
+  40c214:	48 89 86 90 01 00 00 	mov    QWORD PTR [rsi+0x190],rax
+  40c21b:	49 8b 06             	mov    rax,QWORD PTR [r14]
+  40c21e:	c5 fa 6f 86 88 01 00 	vmovdqu xmm0,XMMWORD PTR [rsi+0x188]
+  40c225:	00 
+  40c226:	c5 fa 7f 80 78 01 00 	vmovdqu XMMWORD PTR [rax+0x178],xmm0
+  40c22d:	00 
+  40c22e:	49 8b 07             	mov    rax,QWORD PTR [r15]
+  40c231:	48 8b 80 80 01 00 00 	mov    rax,QWORD PTR [rax+0x180]
+  40c238:	48 03 87 90 01 00 00 	add    rax,QWORD PTR [rdi+0x190]
+  40c23f:	48 89 87 88 01 00 00 	mov    QWORD PTR [rdi+0x188],rax
+  40c246:	48 8b 87 98 01 00 00 	mov    rax,QWORD PTR [rdi+0x198]
+  40c24d:	48 c7 87 98 01 00 00 	mov    QWORD PTR [rdi+0x198],0x0
+  40c254:	00 00 00 00 
+  40c258:	48 83 d0 00          	adc    rax,0x0
+  40c25c:	49 83 c1 08          	add    r9,0x8
+  40c260:	48 89 87 90 01 00 00 	mov    QWORD PTR [rdi+0x190],rax
+  40c267:	49 8b 07             	mov    rax,QWORD PTR [r15]
+  40c26a:	49 81 f9 80 01 00 00 	cmp    r9,0x180
+  40c271:	c5 fa 6f 87 88 01 00 	vmovdqu xmm0,XMMWORD PTR [rdi+0x188]
+  40c278:	00 
+  40c279:	c5 fa 7f 80 78 01 00 	vmovdqu XMMWORD PTR [rax+0x178],xmm0
+  40c280:	00 
+  40c281:	0f 85 21 fc ff ff    	jne    40bea8 <dual_montgomery_mul+0xe8>
+  40c287:	c5 f9 ef c0          	vpxor  xmm0,xmm0,xmm0
+  40c28b:	41 ba 2f 00 00 00    	mov    r10d,0x2f
+  40c291:	48 8b 5c 24 10       	mov    rbx,QWORD PTR [rsp+0x10]
+  40c296:	48 c7 86 98 01 00 00 	mov    QWORD PTR [rsi+0x198],0x0
+  40c29d:	00 00 00 00 
+  40c2a1:	c5 fa 7f 86 88 01 00 	vmovdqu XMMWORD PTR [rsi+0x188],xmm0
+  40c2a8:	00 
+  40c2a9:	4c 8b 6c 24 08       	mov    r13,QWORD PTR [rsp+0x8]
+  40c2ae:	48 c7 87 98 01 00 00 	mov    QWORD PTR [rdi+0x198],0x0
+  40c2b5:	00 00 00 00 
+  40c2b9:	c5 fa 7f 87 88 01 00 	vmovdqu XMMWORD PTR [rdi+0x188],xmm0
+  40c2c0:	00 
+  40c2c1:	41 8b 46 08          	mov    eax,DWORD PTR [r14+0x8]
+  40c2c5:	49 8b 36             	mov    rsi,QWORD PTR [r14]
+  40c2c8:	89 c2                	mov    edx,eax
+  40c2ca:	83 e0 f8             	and    eax,0xfffffff8
+  40c2cd:	c1 ea 03             	shr    edx,0x3
+  40c2d0:	83 ea 01             	sub    edx,0x1
+  40c2d3:	4c 8d 4a e1          	lea    r9,[rdx-0x1f]
+  40c2d7:	49 89 d0             	mov    r8,rdx
+  40c2da:	4a 8d 3c 0e          	lea    rdi,[rsi+r9*1]
+  40c2de:	83 e7 1f             	and    edi,0x1f
+  40c2e1:	48 8d 4f 20          	lea    rcx,[rdi+0x20]
+  40c2e5:	4c 39 d1             	cmp    rcx,r10
+  40c2e8:	49 0f 42 ca          	cmovb  rcx,r10
+  40c2ec:	48 39 ca             	cmp    rdx,rcx
+  40c2ef:	0f 82 fa 01 00 00    	jb     40c4ef <dual_montgomery_mul+0x72f>
+  40c2f5:	48 85 ff             	test   rdi,rdi
+  40c2f8:	74 5c                	je     40c356 <dual_montgomery_mul+0x596>
+  40c2fa:	49 89 d2             	mov    r10,rdx
+  40c2fd:	49 29 fa             	sub    r10,rdi
+  40c300:	0f b6 0c 16          	movzx  ecx,BYTE PTR [rsi+rdx*1]
+  40c304:	84 c9                	test   cl,cl
+  40c306:	0f 88 3f 02 00 00    	js     40c54b <dual_montgomery_mul+0x78b>
+  40c30c:	f6 c1 40             	test   cl,0x40
+  40c30f:	0f 85 e4 05 00 00    	jne    40c8f9 <dual_montgomery_mul+0xb39>
+  40c315:	f6 c1 20             	test   cl,0x20
+  40c318:	0f 85 e3 05 00 00    	jne    40c901 <dual_montgomery_mul+0xb41>
+  40c31e:	f6 c1 10             	test   cl,0x10
+  40c321:	0f 85 e2 05 00 00    	jne    40c909 <dual_montgomery_mul+0xb49>
+  40c327:	f6 c1 08             	test   cl,0x8
+  40c32a:	0f 85 e1 05 00 00    	jne    40c911 <dual_montgomery_mul+0xb51>
+  40c330:	f6 c1 04             	test   cl,0x4
+  40c333:	0f 85 5e 06 00 00    	jne    40c997 <dual_montgomery_mul+0xbd7>
+  40c339:	f6 c1 02             	test   cl,0x2
+  40c33c:	0f 85 3d 06 00 00    	jne    40c97f <dual_montgomery_mul+0xbbf>
+  40c342:	84 c9                	test   cl,cl
+  40c344:	0f 85 25 06 00 00    	jne    40c96f <dual_montgomery_mul+0xbaf>
+  40c34a:	48 83 ea 01          	sub    rdx,0x1
+  40c34e:	83 e8 08             	sub    eax,0x8
+  40c351:	49 39 d2             	cmp    r10,rdx
+  40c354:	75 aa                	jne    40c300 <dual_montgomery_mul+0x540>
+  40c356:	4c 89 c9             	mov    rcx,r9
+  40c359:	c4 e1 f9 6e ea       	vmovq  xmm5,rdx
+  40c35e:	c5 f9 6e e0          	vmovd  xmm4,eax
+  40c362:	49 83 c0 01          	add    r8,0x1
+  40c366:	49 29 f8             	sub    r8,rdi
+  40c369:	c4 e2 7d 59 dd       	vpbroadcastq ymm3,xmm5
+  40c36e:	c4 e2 7d 58 e4       	vpbroadcastd ymm4,xmm4
+  40c373:	48 29 f9             	sub    rcx,rdi
+  40c376:	bf 40 40 40 40       	mov    edi,0x40404040
+  40c37b:	48 01 f1             	add    rcx,rsi
+  40c37e:	c4 41 2d 76 d2       	vpcmpeqd ymm10,ymm10,ymm10
+  40c383:	4d 89 c1             	mov    r9,r8
+  40c386:	c5 79 6e cf          	vmovd  xmm9,edi
+  40c38a:	bf 20 20 20 20       	mov    edi,0x20202020
+  40c38f:	49 83 e1 e0          	and    r9,0xffffffffffffffe0
+  40c393:	49 89 ca             	mov    r10,rcx
+  40c396:	c5 79 6e c7          	vmovd  xmm8,edi
+  40c39a:	bf 10 10 10 10       	mov    edi,0x10101010
+  40c39f:	c5 d5 76 ed          	vpcmpeqd ymm5,ymm5,ymm5
+  40c3a3:	c5 fd 6f 35 f5 ed 00 	vmovdqa ymm6,YMMWORD PTR [rip+0xedf5]        # 41b1a0 <BLAKE2B_IV+0x180>
+  40c3aa:	00 
+  40c3ab:	c5 f9 6e ff          	vmovd  xmm7,edi
+  40c3af:	c4 42 7d 1c d2       	vpabsb ymm10,ymm10
+  40c3b4:	c5 f1 ef c9          	vpxor  xmm1,xmm1,xmm1
+  40c3b8:	4d 29 ca             	sub    r10,r9
+  40c3bb:	c4 42 7d 58 c9       	vpbroadcastd ymm9,xmm9
+  40c3c0:	c4 42 7d 58 c0       	vpbroadcastd ymm8,xmm8
+  40c3c5:	c4 e2 7d 58 ff       	vpbroadcastd ymm7,xmm7
+  40c3ca:	c5 dd fe 25 8e ed 00 	vpaddd ymm4,ymm4,YMMWORD PTR [rip+0xed8e]        # 41b160 <BLAKE2B_IV+0x140>
+  40c3d1:	00 
+  40c3d2:	c5 e5 d4 1d a6 ed 00 	vpaddq ymm3,ymm3,YMMWORD PTR [rip+0xeda6]        # 41b180 <BLAKE2B_IV+0x160>
+  40c3d9:	00 
+  40c3da:	c5 d5 72 f5 08       	vpslld ymm5,ymm5,0x8
+  40c3df:	c5 fd 6f 01          	vmovdqa ymm0,YMMWORD PTR [rcx]
+  40c3e3:	c4 e3 7d 46 c0 01    	vperm2i128 ymm0,ymm0,ymm0,0x1
+  40c3e9:	c4 e2 7d 00 c6       	vpshufb ymm0,ymm0,ymm6
+  40c3ee:	c5 ed 71 d0 07       	vpsrlw ymm2,ymm0,0x7
+  40c3f3:	c5 ad db d2          	vpand  ymm2,ymm10,ymm2
+  40c3f7:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c3fb:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c3ff:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c404:	0f 85 dc 00 00 00    	jne    40c4e6 <dual_montgomery_mul+0x726>
+  40c40a:	c4 c1 7d db d1       	vpand  ymm2,ymm0,ymm9
+  40c40f:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c413:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c417:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c41c:	0f 85 c4 00 00 00    	jne    40c4e6 <dual_montgomery_mul+0x726>
+  40c422:	c4 c1 7d db d0       	vpand  ymm2,ymm0,ymm8
+  40c427:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c42b:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c42f:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c434:	0f 85 ac 00 00 00    	jne    40c4e6 <dual_montgomery_mul+0x726>
+  40c43a:	c5 fd db d7          	vpand  ymm2,ymm0,ymm7
+  40c43e:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c442:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c446:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c44b:	0f 85 95 00 00 00    	jne    40c4e6 <dual_montgomery_mul+0x726>
+  40c451:	bf 08 08 08 08       	mov    edi,0x8080808
+  40c456:	c5 f9 6e d7          	vmovd  xmm2,edi
+  40c45a:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
+  40c45f:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
+  40c463:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c467:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c46b:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c470:	75 74                	jne    40c4e6 <dual_montgomery_mul+0x726>
+  40c472:	bf 04 04 04 04       	mov    edi,0x4040404
+  40c477:	c5 f9 6e d7          	vmovd  xmm2,edi
+  40c47b:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
+  40c480:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
+  40c484:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c488:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c48c:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c491:	75 53                	jne    40c4e6 <dual_montgomery_mul+0x726>
+  40c493:	bf 02 02 02 02       	mov    edi,0x2020202
+  40c498:	c5 f9 6e d7          	vmovd  xmm2,edi
+  40c49c:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
+  40c4a1:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
+  40c4a5:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c4a9:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c4ad:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c4b2:	75 32                	jne    40c4e6 <dual_montgomery_mul+0x726>
+  40c4b4:	c5 fd 74 c1          	vpcmpeqb ymm0,ymm0,ymm1
+  40c4b8:	c5 fd 74 c1          	vpcmpeqb ymm0,ymm0,ymm1
+  40c4bc:	c4 e2 7d 17 c0       	vptest ymm0,ymm0
+  40c4c1:	75 23                	jne    40c4e6 <dual_montgomery_mul+0x726>
+  40c4c3:	c4 e2 7d 59 05 54 ef 	vpbroadcastq ymm0,QWORD PTR [rip+0xef54]        # 41b420 <BLAKE2B_IV+0x400>
+  40c4ca:	00 00 
+  40c4cc:	48 83 e9 20          	sub    rcx,0x20
+  40c4d0:	4c 39 d1             	cmp    rcx,r10
+  40c4d3:	c5 e5 d4 d8          	vpaddq ymm3,ymm3,ymm0
+  40c4d7:	0f 84 3c 04 00 00    	je     40c919 <dual_montgomery_mul+0xb59>
+  40c4dd:	c5 dd fe e5          	vpaddd ymm4,ymm4,ymm5
+  40c4e1:	e9 f9 fe ff ff       	jmp    40c3df <dual_montgomery_mul+0x61f>
+  40c4e6:	c4 e1 f9 7e da       	vmovq  rdx,xmm3
+  40c4eb:	c5 f9 7e e0          	vmovd  eax,xmm4
+  40c4ef:	48 01 f2             	add    rdx,rsi
+  40c4f2:	0f b6 0a             	movzx  ecx,BYTE PTR [rdx]
+  40c4f5:	84 c9                	test   cl,cl
+  40c4f7:	78 52                	js     40c54b <dual_montgomery_mul+0x78b>
+  40c4f9:	f6 c1 40             	test   cl,0x40
+  40c4fc:	0f 85 f7 03 00 00    	jne    40c8f9 <dual_montgomery_mul+0xb39>
+  40c502:	f6 c1 20             	test   cl,0x20
+  40c505:	0f 85 f6 03 00 00    	jne    40c901 <dual_montgomery_mul+0xb41>
+  40c50b:	f6 c1 10             	test   cl,0x10
+  40c50e:	0f 85 f5 03 00 00    	jne    40c909 <dual_montgomery_mul+0xb49>
+  40c514:	f6 c1 08             	test   cl,0x8
+  40c517:	0f 85 f4 03 00 00    	jne    40c911 <dual_montgomery_mul+0xb51>
+  40c51d:	f6 c1 04             	test   cl,0x4
+  40c520:	0f 85 71 04 00 00    	jne    40c997 <dual_montgomery_mul+0xbd7>
+  40c526:	f6 c1 02             	test   cl,0x2
+  40c529:	0f 85 50 04 00 00    	jne    40c97f <dual_montgomery_mul+0xbbf>
+  40c52f:	84 c9                	test   cl,cl
+  40c531:	0f 85 38 04 00 00    	jne    40c96f <dual_montgomery_mul+0xbaf>
+  40c537:	83 e8 08             	sub    eax,0x8
+  40c53a:	48 39 f2             	cmp    rdx,rsi
+  40c53d:	74 0c                	je     40c54b <dual_montgomery_mul+0x78b>
+  40c53f:	0f b6 4a ff          	movzx  ecx,BYTE PTR [rdx-0x1]
+  40c543:	48 83 ea 01          	sub    rdx,0x1
+  40c547:	84 c9                	test   cl,cl
+  40c549:	79 ae                	jns    40c4f9 <dual_montgomery_mul+0x739>
+  40c54b:	41 89 46 0c          	mov    DWORD PTR [r14+0xc],eax
+  40c54f:	41 8b 47 08          	mov    eax,DWORD PTR [r15+0x8]
+  40c553:	41 bb 2f 00 00 00    	mov    r11d,0x2f
+  40c559:	4d 8b 07             	mov    r8,QWORD PTR [r15]
+  40c55c:	89 c2                	mov    edx,eax
+  40c55e:	83 e0 f8             	and    eax,0xfffffff8
+  40c561:	c1 ea 03             	shr    edx,0x3
+  40c564:	83 ea 01             	sub    edx,0x1
+  40c567:	4c 8d 52 e1          	lea    r10,[rdx-0x1f]
+  40c56b:	49 89 d1             	mov    r9,rdx
+  40c56e:	4b 8d 3c 10          	lea    rdi,[r8+r10*1]
+  40c572:	83 e7 1f             	and    edi,0x1f
+  40c575:	48 8d 4f 20          	lea    rcx,[rdi+0x20]
+  40c579:	4c 39 d9             	cmp    rcx,r11
+  40c57c:	49 0f 42 cb          	cmovb  rcx,r11
+  40c580:	48 39 ca             	cmp    rdx,rcx
+  40c583:	0f 82 fb 01 00 00    	jb     40c784 <dual_montgomery_mul+0x9c4>
+  40c589:	48 85 ff             	test   rdi,rdi
+  40c58c:	74 5d                	je     40c5eb <dual_montgomery_mul+0x82b>
+  40c58e:	49 89 d3             	mov    r11,rdx
+  40c591:	49 29 fb             	sub    r11,rdi
+  40c594:	41 0f b6 0c 10       	movzx  ecx,BYTE PTR [r8+rdx*1]
+  40c599:	84 c9                	test   cl,cl
+  40c59b:	0f 88 3f 02 00 00    	js     40c7e0 <dual_montgomery_mul+0xa20>
+  40c5a1:	f6 c1 40             	test   cl,0x40
+  40c5a4:	0f 85 8a 03 00 00    	jne    40c934 <dual_montgomery_mul+0xb74>
+  40c5aa:	f6 c1 20             	test   cl,0x20
+  40c5ad:	0f 85 89 03 00 00    	jne    40c93c <dual_montgomery_mul+0xb7c>
+  40c5b3:	f6 c1 10             	test   cl,0x10
+  40c5b6:	0f 85 88 03 00 00    	jne    40c944 <dual_montgomery_mul+0xb84>
+  40c5bc:	f6 c1 08             	test   cl,0x8
+  40c5bf:	0f 85 87 03 00 00    	jne    40c94c <dual_montgomery_mul+0xb8c>
+  40c5c5:	f6 c1 04             	test   cl,0x4
+  40c5c8:	0f 85 b9 03 00 00    	jne    40c987 <dual_montgomery_mul+0xbc7>
+  40c5ce:	f6 c1 02             	test   cl,0x2
+  40c5d1:	0f 85 a0 03 00 00    	jne    40c977 <dual_montgomery_mul+0xbb7>
+  40c5d7:	84 c9                	test   cl,cl
+  40c5d9:	0f 85 b0 03 00 00    	jne    40c98f <dual_montgomery_mul+0xbcf>
+  40c5df:	48 83 ea 01          	sub    rdx,0x1
+  40c5e3:	83 e8 08             	sub    eax,0x8
+  40c5e6:	4c 39 da             	cmp    rdx,r11
+  40c5e9:	75 a9                	jne    40c594 <dual_montgomery_mul+0x7d4>
+  40c5eb:	4c 89 d1             	mov    rcx,r10
+  40c5ee:	c4 e1 f9 6e ea       	vmovq  xmm5,rdx
+  40c5f3:	c5 f9 6e e0          	vmovd  xmm4,eax
+  40c5f7:	49 83 c1 01          	add    r9,0x1
+  40c5fb:	49 29 f9             	sub    r9,rdi
+  40c5fe:	c4 e2 7d 59 dd       	vpbroadcastq ymm3,xmm5
+  40c603:	c4 e2 7d 58 e4       	vpbroadcastd ymm4,xmm4
+  40c608:	48 29 f9             	sub    rcx,rdi
+  40c60b:	bf 40 40 40 40       	mov    edi,0x40404040
+  40c610:	4c 01 c1             	add    rcx,r8
+  40c613:	c4 41 2d 76 d2       	vpcmpeqd ymm10,ymm10,ymm10
+  40c618:	4d 89 ca             	mov    r10,r9
+  40c61b:	c5 79 6e cf          	vmovd  xmm9,edi
+  40c61f:	bf 20 20 20 20       	mov    edi,0x20202020
+  40c624:	49 83 e2 e0          	and    r10,0xffffffffffffffe0
+  40c628:	49 89 cb             	mov    r11,rcx
+  40c62b:	c5 79 6e c7          	vmovd  xmm8,edi
+  40c62f:	bf 10 10 10 10       	mov    edi,0x10101010
+  40c634:	c5 d5 76 ed          	vpcmpeqd ymm5,ymm5,ymm5
+  40c638:	c5 fd 6f 35 60 eb 00 	vmovdqa ymm6,YMMWORD PTR [rip+0xeb60]        # 41b1a0 <BLAKE2B_IV+0x180>
+  40c63f:	00 
+  40c640:	c5 f9 6e ff          	vmovd  xmm7,edi
+  40c644:	c4 42 7d 1c d2       	vpabsb ymm10,ymm10
+  40c649:	c5 f1 ef c9          	vpxor  xmm1,xmm1,xmm1
+  40c64d:	4d 29 d3             	sub    r11,r10
+  40c650:	c4 42 7d 58 c9       	vpbroadcastd ymm9,xmm9
+  40c655:	c4 42 7d 58 c0       	vpbroadcastd ymm8,xmm8
+  40c65a:	c4 e2 7d 58 ff       	vpbroadcastd ymm7,xmm7
+  40c65f:	c5 dd fe 25 f9 ea 00 	vpaddd ymm4,ymm4,YMMWORD PTR [rip+0xeaf9]        # 41b160 <BLAKE2B_IV+0x140>
+  40c666:	00 
+  40c667:	c5 e5 d4 1d 11 eb 00 	vpaddq ymm3,ymm3,YMMWORD PTR [rip+0xeb11]        # 41b180 <BLAKE2B_IV+0x160>
+  40c66e:	00 
+  40c66f:	c5 d5 72 f5 08       	vpslld ymm5,ymm5,0x8
+  40c674:	c5 fd 6f 01          	vmovdqa ymm0,YMMWORD PTR [rcx]
+  40c678:	c4 e3 7d 46 c0 01    	vperm2i128 ymm0,ymm0,ymm0,0x1
+  40c67e:	c4 e2 7d 00 c6       	vpshufb ymm0,ymm0,ymm6
+  40c683:	c5 ed 71 d0 07       	vpsrlw ymm2,ymm0,0x7
+  40c688:	c5 ad db d2          	vpand  ymm2,ymm10,ymm2
+  40c68c:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c690:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c694:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c699:	0f 85 dc 00 00 00    	jne    40c77b <dual_montgomery_mul+0x9bb>
+  40c69f:	c4 c1 7d db d1       	vpand  ymm2,ymm0,ymm9
+  40c6a4:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c6a8:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c6ac:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c6b1:	0f 85 c4 00 00 00    	jne    40c77b <dual_montgomery_mul+0x9bb>
+  40c6b7:	c4 c1 7d db d0       	vpand  ymm2,ymm0,ymm8
+  40c6bc:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c6c0:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c6c4:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c6c9:	0f 85 ac 00 00 00    	jne    40c77b <dual_montgomery_mul+0x9bb>
+  40c6cf:	c5 fd db d7          	vpand  ymm2,ymm0,ymm7
+  40c6d3:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c6d7:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c6db:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c6e0:	0f 85 95 00 00 00    	jne    40c77b <dual_montgomery_mul+0x9bb>
+  40c6e6:	bf 08 08 08 08       	mov    edi,0x8080808
+  40c6eb:	c5 f9 6e d7          	vmovd  xmm2,edi
+  40c6ef:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
+  40c6f4:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
+  40c6f8:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c6fc:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c700:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c705:	75 74                	jne    40c77b <dual_montgomery_mul+0x9bb>
+  40c707:	bf 04 04 04 04       	mov    edi,0x4040404
+  40c70c:	c5 f9 6e d7          	vmovd  xmm2,edi
+  40c710:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
+  40c715:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
+  40c719:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c71d:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c721:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c726:	75 53                	jne    40c77b <dual_montgomery_mul+0x9bb>
+  40c728:	bf 02 02 02 02       	mov    edi,0x2020202
+  40c72d:	c5 f9 6e d7          	vmovd  xmm2,edi
+  40c731:	c4 e2 7d 58 d2       	vpbroadcastd ymm2,xmm2
+  40c736:	c5 fd db d2          	vpand  ymm2,ymm0,ymm2
+  40c73a:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c73e:	c5 ed 74 d1          	vpcmpeqb ymm2,ymm2,ymm1
+  40c742:	c4 e2 7d 17 d2       	vptest ymm2,ymm2
+  40c747:	75 32                	jne    40c77b <dual_montgomery_mul+0x9bb>
+  40c749:	c5 fd 74 c1          	vpcmpeqb ymm0,ymm0,ymm1
+  40c74d:	c5 fd 74 c1          	vpcmpeqb ymm0,ymm0,ymm1
+  40c751:	c4 e2 7d 17 c0       	vptest ymm0,ymm0
+  40c756:	75 23                	jne    40c77b <dual_montgomery_mul+0x9bb>
+  40c758:	c4 e2 7d 59 05 bf ec 	vpbroadcastq ymm0,QWORD PTR [rip+0xecbf]        # 41b420 <BLAKE2B_IV+0x400>
+  40c75f:	00 00 
+  40c761:	48 83 e9 20          	sub    rcx,0x20
+  40c765:	49 39 cb             	cmp    r11,rcx
+  40c768:	c5 e5 d4 d8          	vpaddq ymm3,ymm3,ymm0
+  40c76c:	0f 84 e2 01 00 00    	je     40c954 <dual_montgomery_mul+0xb94>
+  40c772:	c5 dd fe e5          	vpaddd ymm4,ymm4,ymm5
+  40c776:	e9 f9 fe ff ff       	jmp    40c674 <dual_montgomery_mul+0x8b4>
+  40c77b:	c4 e1 f9 7e da       	vmovq  rdx,xmm3
+  40c780:	c5 f9 7e e0          	vmovd  eax,xmm4
+  40c784:	4c 01 c2             	add    rdx,r8
+  40c787:	0f b6 0a             	movzx  ecx,BYTE PTR [rdx]
+  40c78a:	84 c9                	test   cl,cl
+  40c78c:	78 52                	js     40c7e0 <dual_montgomery_mul+0xa20>
+  40c78e:	f6 c1 40             	test   cl,0x40
+  40c791:	0f 85 9d 01 00 00    	jne    40c934 <dual_montgomery_mul+0xb74>
+  40c797:	f6 c1 20             	test   cl,0x20
+  40c79a:	0f 85 9c 01 00 00    	jne    40c93c <dual_montgomery_mul+0xb7c>
+  40c7a0:	f6 c1 10             	test   cl,0x10
+  40c7a3:	0f 85 9b 01 00 00    	jne    40c944 <dual_montgomery_mul+0xb84>
+  40c7a9:	f6 c1 08             	test   cl,0x8
+  40c7ac:	0f 85 9a 01 00 00    	jne    40c94c <dual_montgomery_mul+0xb8c>
+  40c7b2:	f6 c1 04             	test   cl,0x4
+  40c7b5:	0f 85 cc 01 00 00    	jne    40c987 <dual_montgomery_mul+0xbc7>
+  40c7bb:	f6 c1 02             	test   cl,0x2
+  40c7be:	0f 85 b3 01 00 00    	jne    40c977 <dual_montgomery_mul+0xbb7>
+  40c7c4:	84 c9                	test   cl,cl
+  40c7c6:	0f 85 c3 01 00 00    	jne    40c98f <dual_montgomery_mul+0xbcf>
+  40c7cc:	83 e8 08             	sub    eax,0x8
+  40c7cf:	49 39 d0             	cmp    r8,rdx
+  40c7d2:	74 0c                	je     40c7e0 <dual_montgomery_mul+0xa20>
+  40c7d4:	0f b6 4a ff          	movzx  ecx,BYTE PTR [rdx-0x1]
+  40c7d8:	48 83 ea 01          	sub    rdx,0x1
+  40c7dc:	84 c9                	test   cl,cl
+  40c7de:	79 ae                	jns    40c78e <dual_montgomery_mul+0x9ce>
+  40c7e0:	41 89 47 0c          	mov    DWORD PTR [r15+0xc],eax
+  40c7e4:	48 83 be 80 01 00 00 	cmp    QWORD PTR [rsi+0x180],0x0
+  40c7eb:	00 
+  40c7ec:	4d 8b a0 80 01 00 00 	mov    r12,QWORD PTR [r8+0x180]
+  40c7f3:	0f 85 92 00 00 00    	jne    40c88b <dual_montgomery_mul+0xacb>
+  40c7f9:	c5 f8 77             	vzeroupper
+  40c7fc:	4d 85 e4             	test   r12,r12
+  40c7ff:	75 1f                	jne    40c820 <dual_montgomery_mul+0xa60>
+  40c801:	48 89 df             	mov    rdi,rbx
+  40c804:	e8 67 3b ff ff       	call   400370 <free@plt>
+  40c809:	4c 89 ef             	mov    rdi,r13
+  40c80c:	e8 5f 3b ff ff       	call   400370 <free@plt>
+  40c811:	48 8d 65 d8          	lea    rsp,[rbp-0x28]
+  40c815:	5b                   	pop    rbx
+  40c816:	41 5c                	pop    r12
+  40c818:	41 5d                	pop    r13
+  40c81a:	41 5e                	pop    r14
+  40c81c:	41 5f                	pop    r15
+  40c81e:	5d                   	pop    rbp
+  40c81f:	c3                   	ret
+  40c820:	8b 94 24 f8 00 00 00 	mov    edx,DWORD PTR [rsp+0xf8]
+  40c827:	41 8b 47 0c          	mov    eax,DWORD PTR [r15+0xc]
+  40c82b:	39 c2                	cmp    edx,eax
+  40c82d:	0f 82 bc 01 00 00    	jb     40c9ef <dual_montgomery_mul+0xc2f>
+  40c833:	c1 ea 03             	shr    edx,0x3
+  40c836:	31 f6                	xor    esi,esi
+  40c838:	85 c0                	test   eax,eax
+  40c83a:	4c 89 ef             	mov    rdi,r13
+  40c83d:	0f 84 74 01 00 00    	je     40c9b7 <dual_montgomery_mul+0xbf7>
+  40c843:	e8 08 3c ff ff       	call   400450 <memset@plt>
+  40c848:	41 8b 57 0c          	mov    edx,DWORD PTR [r15+0xc]
+  40c84c:	f6 c2 07             	test   dl,0x7
+  40c84f:	89 d0                	mov    eax,edx
+  40c851:	74 07                	je     40c85a <dual_montgomery_mul+0xa9a>
+  40c853:	83 c0 01             	add    eax,0x1
+  40c856:	a8 07                	test   al,0x7
+  40c858:	75 f9                	jne    40c853 <dual_montgomery_mul+0xa93>
+  40c85a:	89 94 24 fc 00 00 00 	mov    DWORD PTR [rsp+0xfc],edx
+  40c861:	49 8b 37             	mov    rsi,QWORD PTR [r15]
+  40c864:	89 c2                	mov    edx,eax
+  40c866:	4c 89 ef             	mov    rdi,r13
+  40c869:	c1 ea 03             	shr    edx,0x3
+  40c86c:	e8 2f 3c ff ff       	call   4004a0 <memcpy@plt>
+  40c871:	48 8b 74 24 18       	mov    rsi,QWORD PTR [rsp+0x18]
+  40c876:	4c 89 fa             	mov    rdx,r15
+  40c879:	48 8d bc 24 f0 00 00 	lea    rdi,[rsp+0xf0]
+  40c880:	00 
+  40c881:	e8 4a aa ff ff       	call   4072d0 <bigint_sub_fast>
+  40c886:	e9 76 ff ff ff       	jmp    40c801 <dual_montgomery_mul+0xa41>
+  40c88b:	8b 94 24 e8 00 00 00 	mov    edx,DWORD PTR [rsp+0xe8]
+  40c892:	41 8b 46 0c          	mov    eax,DWORD PTR [r14+0xc]
+  40c896:	39 c2                	cmp    edx,eax
+  40c898:	0f 82 60 01 00 00    	jb     40c9fe <dual_montgomery_mul+0xc3e>
+  40c89e:	c1 ea 03             	shr    edx,0x3
+  40c8a1:	31 f6                	xor    esi,esi
+  40c8a3:	85 c0                	test   eax,eax
+  40c8a5:	48 89 df             	mov    rdi,rbx
+  40c8a8:	0f 84 f1 00 00 00    	je     40c99f <dual_montgomery_mul+0xbdf>
+  40c8ae:	c5 f8 77             	vzeroupper
+  40c8b1:	e8 9a 3b ff ff       	call   400450 <memset@plt>
+  40c8b6:	41 8b 56 0c          	mov    edx,DWORD PTR [r14+0xc]
+  40c8ba:	f6 c2 07             	test   dl,0x7
+  40c8bd:	89 d0                	mov    eax,edx
+  40c8bf:	74 07                	je     40c8c8 <dual_montgomery_mul+0xb08>
+  40c8c1:	83 c0 01             	add    eax,0x1
+  40c8c4:	a8 07                	test   al,0x7
+  40c8c6:	75 f9                	jne    40c8c1 <dual_montgomery_mul+0xb01>
+  40c8c8:	89 94 24 ec 00 00 00 	mov    DWORD PTR [rsp+0xec],edx
+  40c8cf:	49 8b 36             	mov    rsi,QWORD PTR [r14]
+  40c8d2:	89 c2                	mov    edx,eax
+  40c8d4:	48 89 df             	mov    rdi,rbx
+  40c8d7:	c1 ea 03             	shr    edx,0x3
+  40c8da:	e8 c1 3b ff ff       	call   4004a0 <memcpy@plt>
+  40c8df:	48 8b 74 24 18       	mov    rsi,QWORD PTR [rsp+0x18]
+  40c8e4:	4c 89 f2             	mov    rdx,r14
+  40c8e7:	48 8d bc 24 e0 00 00 	lea    rdi,[rsp+0xe0]
+  40c8ee:	00 
+  40c8ef:	e8 dc a9 ff ff       	call   4072d0 <bigint_sub_fast>
+  40c8f4:	e9 03 ff ff ff       	jmp    40c7fc <dual_montgomery_mul+0xa3c>
+  40c8f9:	83 e8 01             	sub    eax,0x1
+  40c8fc:	e9 4a fc ff ff       	jmp    40c54b <dual_montgomery_mul+0x78b>
+  40c901:	83 e8 02             	sub    eax,0x2
+  40c904:	e9 42 fc ff ff       	jmp    40c54b <dual_montgomery_mul+0x78b>
+  40c909:	83 e8 03             	sub    eax,0x3
+  40c90c:	e9 3a fc ff ff       	jmp    40c54b <dual_montgomery_mul+0x78b>
+  40c911:	83 e8 04             	sub    eax,0x4
+  40c914:	e9 32 fc ff ff       	jmp    40c54b <dual_montgomery_mul+0x78b>
+  40c919:	4d 39 c1             	cmp    r9,r8
+  40c91c:	0f 84 aa 00 00 00    	je     40c9cc <dual_montgomery_mul+0xc0c>
+  40c922:	42 8d 0c cd 00 00 00 	lea    ecx,[r9*8+0x0]
+  40c929:	00 
+  40c92a:	4c 29 ca             	sub    rdx,r9
+  40c92d:	29 c8                	sub    eax,ecx
+  40c92f:	e9 bb fb ff ff       	jmp    40c4ef <dual_montgomery_mul+0x72f>
+  40c934:	83 e8 01             	sub    eax,0x1
+  40c937:	e9 a4 fe ff ff       	jmp    40c7e0 <dual_montgomery_mul+0xa20>
+  40c93c:	83 e8 02             	sub    eax,0x2
+  40c93f:	e9 9c fe ff ff       	jmp    40c7e0 <dual_montgomery_mul+0xa20>
+  40c944:	83 e8 03             	sub    eax,0x3
+  40c947:	e9 94 fe ff ff       	jmp    40c7e0 <dual_montgomery_mul+0xa20>
+  40c94c:	83 e8 04             	sub    eax,0x4
+  40c94f:	e9 8c fe ff ff       	jmp    40c7e0 <dual_montgomery_mul+0xa20>
+  40c954:	4d 39 ca             	cmp    r10,r9
+  40c957:	0f 84 b3 00 00 00    	je     40ca10 <dual_montgomery_mul+0xc50>
+  40c95d:	42 8d 0c d5 00 00 00 	lea    ecx,[r10*8+0x0]
+  40c964:	00 
+  40c965:	4c 29 d2             	sub    rdx,r10
+  40c968:	29 c8                	sub    eax,ecx
+  40c96a:	e9 15 fe ff ff       	jmp    40c784 <dual_montgomery_mul+0x9c4>
+  40c96f:	83 e8 07             	sub    eax,0x7
+  40c972:	e9 d4 fb ff ff       	jmp    40c54b <dual_montgomery_mul+0x78b>
+  40c977:	83 e8 06             	sub    eax,0x6
+  40c97a:	e9 61 fe ff ff       	jmp    40c7e0 <dual_montgomery_mul+0xa20>
+  40c97f:	83 e8 06             	sub    eax,0x6
+  40c982:	e9 c4 fb ff ff       	jmp    40c54b <dual_montgomery_mul+0x78b>
+  40c987:	83 e8 05             	sub    eax,0x5
+  40c98a:	e9 51 fe ff ff       	jmp    40c7e0 <dual_montgomery_mul+0xa20>
+  40c98f:	83 e8 07             	sub    eax,0x7
+  40c992:	e9 49 fe ff ff       	jmp    40c7e0 <dual_montgomery_mul+0xa20>
+  40c997:	83 e8 05             	sub    eax,0x5
+  40c99a:	e9 ac fb ff ff       	jmp    40c54b <dual_montgomery_mul+0x78b>
+  40c99f:	c5 f8 77             	vzeroupper
+  40c9a2:	e8 a9 3a ff ff       	call   400450 <memset@plt>
+  40c9a7:	c7 84 24 ec 00 00 00 	mov    DWORD PTR [rsp+0xec],0x0
+  40c9ae:	00 00 00 00 
+  40c9b2:	e9 28 ff ff ff       	jmp    40c8df <dual_montgomery_mul+0xb1f>
+  40c9b7:	e8 94 3a ff ff       	call   400450 <memset@plt>
+  40c9bc:	c7 84 24 fc 00 00 00 	mov    DWORD PTR [rsp+0xfc],0x0
+  40c9c3:	00 00 00 00 
+  40c9c7:	e9 a5 fe ff ff       	jmp    40c871 <dual_montgomery_mul+0xab1>
+  40c9cc:	b8 38 ff ff ff       	mov    eax,0xffffff38
+  40c9d1:	c5 f9 6e c0          	vmovd  xmm0,eax
+  40c9d5:	c4 e2 7d 58 c0       	vpbroadcastd ymm0,xmm0
+  40c9da:	c5 dd fe c0          	vpaddd ymm0,ymm4,ymm0
+  40c9de:	c4 e3 7d 39 c0 01    	vextracti128 xmm0,ymm0,0x1
+  40c9e4:	c4 e3 79 16 c0 03    	vpextrd eax,xmm0,0x3
+  40c9ea:	e9 5c fb ff ff       	jmp    40c54b <dual_montgomery_mul+0x78b>
+  40c9ef:	bf c8 94 41 00       	mov    edi,0x4194c8
+  40c9f4:	e8 d7 39 ff ff       	call   4003d0 <puts@plt>
+  40c9f9:	e9 73 fe ff ff       	jmp    40c871 <dual_montgomery_mul+0xab1>
+  40c9fe:	bf c8 94 41 00       	mov    edi,0x4194c8
+  40ca03:	c5 f8 77             	vzeroupper
+  40ca06:	e8 c5 39 ff ff       	call   4003d0 <puts@plt>
+  40ca0b:	e9 cf fe ff ff       	jmp    40c8df <dual_montgomery_mul+0xb1f>
+  40ca10:	b8 38 ff ff ff       	mov    eax,0xffffff38
+  40ca15:	c5 f9 6e c0          	vmovd  xmm0,eax
+  40ca19:	c4 e2 7d 58 c0       	vpbroadcastd ymm0,xmm0
+  40ca1e:	c5 dd fe c0          	vpaddd ymm0,ymm4,ymm0
+  40ca22:	c4 e3 7d 39 c0 01    	vextracti128 xmm0,ymm0,0x1
+  40ca28:	c4 e3 79 16 c0 03    	vpextrd eax,xmm0,0x3
+  40ca2e:	e9 ad fd ff ff       	jmp    40c7e0 <dual_montgomery_mul+0xa20>
+  40ca33:	66 90                	xchg   ax,ax
+  40ca35:	66 66 2e 0f 1f 84 00 	data16 cs nop WORD PTR [rax+rax*1+0x0]
+  40ca3c:	00 00 00 00 
 
