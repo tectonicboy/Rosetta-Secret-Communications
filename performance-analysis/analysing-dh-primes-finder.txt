@@ -1,0 +1,105 @@
+TMA metrics:
+
+Level-1 buckets with:
+
+sudo perf stat -C 0-11 --topdown -- \
+taskset -c 0-11 bin/tools/find-new-dh-primes 320 3072 50 1
+
+~ 15 minutes of running, mostly finding M:
+
+Frontend-bound: 16.9
+Backend-bound : 23.4
+Bad Specul.   : 2.1
+Retiring      : 57.6
+
+Level-2 buckets with:
+
+sudo perf stat -M TopdownL2 -- \
+taskset -c 0-11 bin/tools/find-new-dh-primes 320 3072 50 1
+
+21.9 %  tma_core_bound       <--------
+ 0.4 %  tma_memory_bound
+ 6.0 %  tma_heavy_operations
+49.2 %  tma_light_operations
+11.2 %  tma_fetch_bandwidth  <--------
+ 9.0 %  tma_fetch_latency    <--------
+ 2.2 %  tma_branch_mispredicts
+ 0.0 %  tma_machine_clears
+
+   --------------------------------------------------------------------------
+
+Flamegraph for simple CPU cycle countdown snapshots of call graphs shows:
+
+Top functions accounting for the biggest time usage:
+
+58.30%  [.] bigint_sub_fast
+14.62%  [.] __memset_avx2_unaligned_erms
+10.77%  [.] bigint_mul_fast
+10.43%  [.] bigint_div2
+
+   --------------------------------------------------------------------------
+
+58.30%  [.] bigint_sub_fast
+
+CALLED IN THE FOLLOWING WAY:
+
+--58.14%--bigint_mod_pow
+          |
+          |--37.57%--bigint_div2
+          |          |
+          |           --37.50%--bigint_sub_fast
+          |
+           --20.56%--bigint_mod_mul
+                     |
+                      --20.56%--bigint_div2
+                                |
+                                 --20.52%--bigint_sub_fast
+
+   --------------------------------------------------------------------------
+
+ALSO: 14.62%  [.] __memset_avx2_unaligned_erms
+
+
+   --14.55%--bigint_mod_pow
+              |
+              |--8.60%--__memset_avx2_unaligned_erms
+              |
+              |--4.90%--bigint_mod_mul
+              |          |
+              |          |--4.31%--__memset_avx2_unaligned_erms
+              |          |
+              |           --0.53%--bigint_div2
+              |                     |
+              |                      --0.51%--__memset_avx2_unaligned_erms
+              |
+               --0.94%--bigint_div2
+                         |
+                          --0.91%--__memset_avx2_unaligned_erms
+
+   --------------------------------------------------------------------------
+
+ALSO: 10.77%  [.] bigint_mul_fast
+
+
+--10.73%--bigint_mod_pow
+          |
+          |--7.15%--bigint_mul_fast
+          |
+           --3.53%--bigint_mod_mul
+                     |
+                      --3.51%--bigint_mul_fast
+
+   --------------------------------------------------------------------------
+
+ALSO: 10.43%  [.] bigint_div2
+
+
+--10.40%--bigint_mod_pow
+          |
+          |--6.87%--bigint_div2
+          |
+           --3.44%--bigint_mod_mul
+                     |
+                      --3.39%--bigint_div2
+
+   --------------------------------------------------------------------------

@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
           "  - Required bitwidth of modulus M, where Q exactly divides (M-1);\n"
           "  - Rabin-Miller passes to run before considering a number prime;\n"
           "  - Number of CPU threads (checks that many moduli in parallel).\n\n"
-          "Typical example: bin/keygen/find-new-dh-primes 320 3072 50 16\n\n",
+          "Typical example: bin/tools/find-new-dh-primes 320 3072 50 16\n\n",
           REQ_NUM_CMD_LINE_ARGS);
 
         exit(1);
