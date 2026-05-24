@@ -3,6 +3,42 @@ May 16, 2026 |
 
 TITLE: Improving the use of CPU micro-op execution ports via code interleaving.
 
+BACKGROUND.
+
+Modern desktop x86_64 CPUs break down assembly instructions into smaller
+units of work called micro-operations (uOPs). The work represented by them
+is carried out by a number of execution ports. The hardware micro-architecture
+is such that these execution ports can be fed several micro-ops in the same
+CPU cycle and they all operate independently of each other, meaning they can
+all be utilized in parallel. In reality, however, it's often not the case.
+
+This is called instruction-level parallelism (ILP) and achieving a high degree
+of it leads to better, more optimized software that runs faster. ILP can be
+hindered by a number of things, such as inappropriate memory access patterns
+and dependency chains in the incoming assembly instructions, where instruction
+X+1 must wait for the one before it, instruction X, to produce its result so
+that X+1 can use it in its own operands. This obviously prohibits parallel
+execution of several micro-ops by several execution units at once. One remedy
+of this is interleaving independent work in the code where such dependency
+chains are present, so the CPU execution ports can find parallel work instead
+of waiting with mostly idle ports for the dependency to be resolved.
+
+The effects of this are amplified by the fact that the micro-architecture allows
+the CPU to look at a whole window of instructions and execute independent ones
+out of order, preserving correctness by "officially" finishing them in order,
+which is ensured by an internal hardware structure called the Reorder Buffer.
+This is called out-of-order execution. Thus, even if the independent interleaved
+instructions don't exactly come one after another, the CPU can still find said
+independent work and keep the execution ports busier, which is what we want.
+
+In this report, I present my efforts of applying such code interleaving to
+mitigate a state of under-utilized micro-op execution ports due to dependencies
+in the compiler-emitted assembly code of one of my Big Integer operations in C
+and achieving a 10% speed up. I talk about how this optimization is explained
+from a CPU micro-architectural point of view and show the tools that I used to
+carry out the performance analysis - Top-down microarchitecture analysis, the
+Perf tool, flame graphs and LLVM Machine Code Analyzer.
+
 PART I.
 Introduction.
 
@@ -13,23 +49,43 @@ reported to be nearly 10%.
 
 I obtained this using the Perf tool:
 
-perf stat --topdown -- bin/rosetta-server
-perf stat -M tma_core_bound,tma_memory_bound -- bin/rosetta-server
-perf stat -M tma_ports_utilization -- bin/rosetta-server
+sudo perf stat --topdown -- bin/rosetta-server
+sudo perf stat -M tma_core_bound,tma_memory_bound -- bin/rosetta-server
+sudo perf stat -M tma_ports_utilization -- bin/rosetta-server
 
 To find out which function was contributing the most to this, I used:
 
-perf record -e cpu_core/exe_activity.1_ports_util/ -g -- bin/rosetta-server
-perf report
+sudo perf record -e cpu_core/exe_activity.1_ports_util/ -g -- bin/rosetta-server
+sudo perf report
+
+This tells Perf to take a call graph snapshot every time the CPU spends X cycles
+being mostly idle (only 1 execution port is being utilized to work on a uOP).
 
 This reported that 61% of cycles in which the pipeline was stalled due to poor
-execution port utilization in the CPU backend (as calculated by the Top-down
-analysis methodology) was attributed to my Montgomery Modular Multiplication
-function, montgomery_mul(), under the "self" column.
+execution port utilization in the CPU backend (only 1 port is utilized) was
+attributed to my Montgomery Modular Multiplication function, montgomery_mul(),
+under the "self" column.
 
 This is also the function that takes up the most time of anything else in the
-running communication server, since it has to validate a cryptographic signature
-on each message it receives, which involves the following modular powering:
+running communication server, an insight obtained by looking at which functions
+appeared in the largest number of Perf snapshots when simply counting down
+regular CPU cycles between each taken snapshot:
+
+sudo perf record -e cpu_core/cycles/P -g -- bin/rosetta-server
+
+Emitting an SVG flamegraph from this, to render in a web browser:
+
+sudo perf script | stackcollapse-perf.pl | flamegraph.pl > my-flamegraph.svg
+
+Emitting a terminal-friendly render of the same information, but in descending
+order of functions that were at the top of the call graph in the largest number
+of Perf snapshots, so we can see the actual function body code that is taking
+the longest time in the continuously running communication server:
+
+sudo perf report --sort overhead,symbol --stdio
+
+Now, the communication server has to validate a cryptographic signature on each
+payload it receives, which involves the following modular powering calculation:
 
 R1 = (G^s) mod M
 R2 = (A^e) mod M
@@ -40,13 +96,17 @@ calculation. The server has to perform it all the time, as each connected
 client sends poll requests 10 times per second, each of which contain a
 signature that must be validated by the server. Even if using epoll() instead
 of the clients manually polling the server, a point at which the server has to
-deal with validating many signatures in a very short span of time will
-eventually be reached when enough clients connect to it at once.
+deal with validating many signatures in a very short window of time will
+eventually be reached when enough clients connect to the server at once.
 
 The montgomery powering code spends most of its time in montgomery_mul() calls,
 so I directed my focus to montgomery multiplication and the way I implement it.
 
-The vast majority of its work is, in turn, done in the following inner loop:
+Closing in on various parts of that function by surrounding the call site itself
+and then each part of the function's own code with clock_gettime() and seeing
+which part accounts for the largest percentage of the function's latency, I
+concluded that the vast majority of montgomery_mul()'s own work is, in turn,
+done in the following inner loop:
 
 static inline
 __attribute__((always_inline))
@@ -154,13 +214,17 @@ PART II.
 Measuring latency.
 
 I surround the code I'm measuring (the 2 montgomery powering calls, or the one
-interleaved powering call in the optimized case) with gettimeofday() and take
-the difference of the two recorded times to obtain each latency reading. Since
-each reading is upwards of 4000 microseconds, gettimeofday() is safe to use
+interleaved powering call in the optimized case) with:
+
+clock_gettime(CLOCK_MONOTONIC_RAW, ...)
+
+Each latency reading is obtained from the difference of the two times. Since
+each reading is upwards of 4000 microseconds, clock_gettime() is safe to use
 here without itself messing with the measured latency readings, as this call is
 implemented in modern GNU/Linux systems to simply read a piece of memory mapped
 by the kernel for each process, readily available without switching to kernel
-space at all, which means we obtain the current time in at most 1 microsecond.
+space at all, which means we obtain the current time in at most 1 microsecond
+and, from my research on the Web, less than 100 nanoseconds nowadays.
 
 Once I've collected 500 latency readings from the running communication server,
 they get dumped to a file with fwrite(). A small python program then computes a
@@ -188,7 +252,7 @@ Using this method, I consistently get final averages within 2 microseconds of
 the median final average. That is solid, given my 4000+ microsecond readings.
 
 I have made sure to have enough individual latency readings, and that the
-mechanism used to take each reading (gettimeofday function) is fast enough
+mechanism used to take each reading (clock_gettime() function) is fast enough
 that it won't interfere with the profiling process in any meaningful way.
 
 --------------------------------------------------------------------------------
@@ -208,7 +272,7 @@ micro-ops to available idle execution ports because the instructions in the RS
 had dependencies on (input operands produced by) ones that were already
 currently running in the ports. In other words, I improved instruction-level
 parallelism and made better use of the Out-of-Order capabilities of modern
-CPU microarchitecture by moving the 2nd Montgomery Multiplication chain
+CPU microarchitecture by moving the 2nd Montgomery Multiplication stream
 to be interleaved with the code for the first, instead of one after another.
 
 Interleaving two streams in one function does increase register pressure and
@@ -364,9 +428,9 @@ ______________________________________________________________________________
 
 This observation validates my hypothesis - where the CPU backend's execution
 ports were sitting idle, despite the Reservation Station having micro-ops
-ready for them, due to depending on results from currently-executed micro-ops
+ready for them, due to depending on results from currently-executing micro-ops
 in other ports, these idle ports are now being filled with out-of-order work
-from the other Multiply chain's micro-ops. This is a win for performance.
+from the other Multiply stream's micro-ops. This is a win for performance.
 
 
 III.5. Number of Assembly instructions occupying the CPU backend in parallel.
@@ -387,7 +451,7 @@ Interleaved version:
 
 ----------------------------------------------------------------------------
 D===================eeeeeeeeeeeeER  mov qword ptr [rdx + 400], rsi
-... skipped instructions ...
+...parallel instructions...
                                  D=eE-------------------------R  cmp rax, 48
 ----------------------------------------------------------------------------
 
@@ -405,7 +469,7 @@ Non-interleaved version:
 
 ----------------------------------------------------------------------------
 D==============eeeeeeeeeeeeER  mov qword ptr [rax + 400], rcx
-... skipped instructions ...
+...parallel instructions...
                             D======E------------------R  movzx  esi, sil
 ----------------------------------------------------------------------------
 

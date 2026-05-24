@@ -53,9 +53,8 @@ ARCHITECTURE_FLAGS += -march=native
 # Use only the stack pointer for managing function-local variables.
 # Do not waste an entire register for the unnecessary frame pointer.
 # On x86-64, this frees up the rbp register.
-# Temporarily disabled.
+# Disabled. Introduced a performance regression. May try in the future.
 
-GNU_OPTIMIZATION_FLAGS =
 #GNU_OPTIMIZATION_FLAGS += -fomit-frame-pointer
 
 #INFO: To check the segment sizes (like .data, .text) of an ELF binary:
@@ -70,10 +69,11 @@ GNU_OPTIMIZATION_FLAGS =
 #
 # LDFLAGS += -Wl,--gc-sections is required to instruct the linker to
 # perform the actual removal.
-# Temporarily disabled.
+# Disabled. Introduced a performance regression. May try in the future.
 
 #GNU_OPTIMIZATION_FLAGS += -ffunction-sections
 #GNU_OPTIMIZATION_FLAGS += -fdata-sections
+GNU_OPTIMIZATION_FLAGS +=
 
 #LDFLAGS += -Wl,--gc-sections
 LDFLAGS =

@@ -1,7 +1,18 @@
+--------------------------------------------------------------------------
+To ask objdump to give the assembly code in Intel syntax of a function:
+
+objdump -d -M intel bin/rosetta-server \
+| sed -n '/<dual_montgomery_mul>:/,/^$/p' \
+> performance-analysis/disassembled-dual-mont-mul.txt
+
+objdump uses a blank line to end a function's code and <FUNCTION_NAME>: labels
+to mark the beginning of the assembly code of a function.
+--------------------------------------------------------------------------
+
 Linux Perf tool commands used:
 -----------------------------
 
-Obtaining flamegraphs:
+# Obtaining flamegraphs:
 
 # Install FlameGraph on Fedora:
 
@@ -17,14 +28,29 @@ source ~/.bashrc
 stackcollapse-perf.pl --help
 
 # Emit a flamegraph in SVG format with Perf tool and open it in a web browser:
+# Perf takes call graph snapshots periodically when a set cycle count reaches 0.
 
-sudo perf record -g -- bin/rosetta-server
+sudo perf record -g -- bin/rosetta-server   (1)
+# OR:
+sudo perf record -e cpu_core/cycles/P -g -- bin/rosetta-server   (2)
+
+# (1) Fires snapshots at cycles countdowns in both P-cores and E-cores.
+# (2) Does so only in performance cores, which is what we want for hybrid CPUs.
+
+# Then emit the flamegraph in SVG format that can be rendered in a web browser:
+
 sudo perf script | stackcollapse-perf.pl | flamegraph.pl > my-flamegraph.svg
 
-# Optionally, if ssh'd to Fedora laptop from WSL, send it to Windows machine:
+# Optionally, if ssh'd to a Linux machine from WSL, send it to the Windows
+# machine by running this from the WSL VM terminal:
 
 scp hypervisor123@IP_ADDR:~/tmp/repos/Rosetta-Secure-Texting/my-flamegraph.svg \
 /mnt/c/Users/summoner99/Documents/my-flamegraph.svg
+
+# To obtain a terminal-friendly representation of the flamegraph, usefully
+# sorted by functions whose own code (SELF) was snapshot the most times:#
+
+sudo perf report --sort overhead,symbol --stdio
 
 --------------------------------------------------------------------------------
 

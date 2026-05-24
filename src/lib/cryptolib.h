@@ -1325,27 +1325,33 @@ uint8_t signature_validate( bigint* Gmont, bigint* Amont, bigint* M, bigint* Q
     blake2b_init(data, data_len, 0, prehash_len, prehash);
 
     /* DEBUG ONLY */
-    struct timeval tv1, tv2;
+    struct timespec tv1, tv2;
 
-    //gettimeofday(&tv1,NULL);
+    //clock_gettime(CLOCK_MONOTONIC_RAW, &tv1)
     //mont_pow_mod_m(Gmont, s, M, &R_aux1);
-    //gettimeofday(&tv2,NULL);
+    //clock_gettime(CLOCK_MONOTONIC_RAW, &tv2);
 
-    //gettimeofday(&tv1,NULL);
+    //clock_gettime(CLOCK_MONOTONIC_RAW, &tv1)
     //mont_pow_mod_m(Amont, e, M, &R_aux2);
-    //gettimeofday(&tv2,NULL);
-
+    //clock_gettime(CLOCK_MONOTONIC_RAW, &tv2);
 
     /* Attempt an interleaved Montgomery multiplication to reduce stalls in the
-         * Core-bound bucket of Top-down microarchitecture analysis.
-         */
-        gettimeofday(&tv1,NULL);
+     * Core-bound bucket of Top-down microarchitecture analysis.
+     */
+    clock_gettime(CLOCK_MONOTONIC_RAW, &tv1);
     dual_mont_pow_mod_m(Gmont, s, M, &R_aux1, Amont, e, M, &R_aux2);
-    gettimeofday(&tv2,NULL);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &tv2);
 
-    if( __builtin_expect (tv2.tv_usec > tv1.tv_usec, true))
+    //clock_gettime(CLOCK_MONOTONIC_RAW, &tv1);
+    bigint_mul_fast(&R_aux1, &R_aux2, &R_aux3);
+    //clock_gettime(CLOCK_MONOTONIC_RAW, &tv2);
+
+    bigint_div2(&R_aux3, M, &div_res, &R);
+
+    if( __builtin_expect (tv2.tv_nsec > tv1.tv_nsec, true))
         {
-            measurements[nr_timepoints++] = tv2.tv_usec - tv1.tv_usec;
+            measurements[nr_timepoints++] =
+                ((tv2.tv_nsec - tv1.tv_nsec) / (double)1000.0);
                 //printf("Total timepoints: %lu\n", nr_timepoints);
                 if(__builtin_expect (nr_timepoints == NR_TIMEPOINTS_TO_WRITE_AT, false))
                 {
@@ -1371,31 +1377,7 @@ uint8_t signature_validate( bigint* Gmont, bigint* Amont, bigint* M, bigint* Q
             memset(measurements, 0x00, MAX_TIMEPOINTS * sizeof(double));
                         nr_timepoints = 0;
                 }
-        //printf("\n=========================================================\n");
-        //printf( "CRYPT: verify_signature: DUAL_mont_pow TIME micros: %lu\n",
-        //        tv2.tv_usec - tv1.tv_usec);
-        //++nr_timepoints;
-                //printf("CRYPT: - - - - - - - - - - -  TOTAL MEASUREMENTS: %lf\n"
-                //           ,nr_timepoints);
-        //printf("CRYPT: - - - - - - - - - - - - - - - - - AVERAGE: %lf\n"
-        //       ,(total_times / nr_timepoints));
     }
-
-
-
-    bigint_mul_fast(&R_aux1, &R_aux2, &R_aux3);
-
-    //gettimeofday(&tv1,NULL);
-    bigint_div2(&R_aux3, M, &div_res, &R);
-    //gettimeofday(&tv2,NULL);
-
-
-    //printf("CRYPT: verify_sig THIRD PART: division by M: MICROS ");
-    //output_yel();
-    //printf("%lu\n", tv2.tv_usec - tv1.tv_usec);
-    //output_rst();
-    //printf("=============================================================\n\n");
-
 
     R_used_bytes = R.used_bits;
     while(R_used_bytes % 8 != 0){
