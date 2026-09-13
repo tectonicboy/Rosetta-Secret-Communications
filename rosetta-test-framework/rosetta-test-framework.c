@@ -9,7 +9,7 @@ uint8_t make_new_test_acc(void)
     unsigned char* full_save_dir;
     uint8_t        status = 0;
     uint8_t        pw_buf[16] = {0};
-    const char*    savedir = USER_SAVEFILES_DIR;
+    const char*    savedir = TEST_FRAMEWORK_USER_SAVEFILES_DIR;
 
     printf("Creating a new test user account.\n\n");
     printf("Pick a save file name: ");
@@ -50,7 +50,7 @@ uint8_t start_automatic_user_simulation_test(uint64_t test_num)
     char full_test_prog_path[1024];
         memset(full_test_prog_path, 0x00, 1024);
     const char* base_test_prog_path =
-            AUTOMATIC_USER_SIMULATION_TEST_PROG_BASE_PATH;
+                    TEST_FRAMEWORK_AUTOMATIC_USER_SIMULATION_BASE_PATH;
         size_t base_test_prog_path_len = strlen(base_test_prog_path);
     strncpy(full_test_prog_path, base_test_prog_path, base_test_prog_path_len);
     int n = sprintf

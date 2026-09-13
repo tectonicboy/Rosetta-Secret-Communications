@@ -1,6 +1,7 @@
 COMMON_CFLAGS += -D_GNU_SOURCE
 COMMON_CFLAGS += -Wall
 COMMON_CFLAGS += -Wextra
+COMMON_CFLAGS += -Werror
 COMMON_CFLAGS += -Wcast-align
 COMMON_CFLAGS += -Wfloat-equal
 COMMON_CFLAGS += -Wformat=2

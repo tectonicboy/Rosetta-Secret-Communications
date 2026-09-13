@@ -1,11 +1,13 @@
 #include "../../src/client/network-code/client-primary-functions.h"
 int main(){
+
     init_communication = ipc_init_communication;
     transmit_payload   = ipc_transmit_payload;
     receive_payload    = ipc_receive_payload;
     end_communication  = ipc_end_communication;
+
     uint8_t status;
-    char*   savedir  = USER_SAVEFILES_DIR;
+    char*   savedir  = TEST_FRAMEWORK_USER_SAVEFILES_DIR;
     char*   savefile = "devin";
     char    pwd[PASSWORD_BUF_SIZ];
     char    room_name[SMALL_FIELD_LEN]    = "ROOM1";

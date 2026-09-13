@@ -1234,7 +1234,7 @@ void signature_generate(bigint* M, bigint* Q, bigint* Gmont,
     memcpy(e.bits, third_btb_outbuf, 40);
     e.used_bits = get_used_bits(e.bits, 40);
 
-    /* Lastly, compute s = ( k + ((Q-a)×e) ) mod Q */
+    /* Lastly, compute s = ( k + ((Q - a) * e) ) mod Q */
     bigint_sub_fast(Q, private_key, &aux1);
     bigint_mul_fast(&aux1, &e, &aux2);
     bigint_add_fast(&aux2, &k, &aux3);
@@ -1280,15 +1280,16 @@ void signature_generate(bigint* M, bigint* Q, bigint* Gmont,
  *     In any other circumstance, the validation fails.
  *
  *   RETURNS: 0 if signature is valid for this message, 1 for invalid signature.
- *
  */
-/*DEBUG ONLY */
-size_t       nr_timepoints = 0;
+
+/* ------------------------ PERFORMANCE PROFILING --------------------------- */
 #define MAX_TIMEPOINTS 500
 #define NR_TIMEPOINTS_TO_WRITE_AT 500
-double       measurements[MAX_TIMEPOINTS];
-FILE*        measurements_fd;
-size_t       profiling_ret;
+size_t  nr_timepoints = 0;
+double  measurements[MAX_TIMEPOINTS];
+FILE*   measurements_fd;
+size_t  profiling_ret;
+
 uint8_t signature_validate( bigint* Gmont, bigint* Amont, bigint* M, bigint* Q
                            ,bigint* s, bigint* e, u8* data, u32 data_len)
 {
@@ -1422,51 +1423,65 @@ label_cleanup:
 uint8_t gen_priv_key(uint32_t len_bytes, uint8_t* buf)
 {
     size_t bytes_read;
-    FILE* ran = fopen(DEV_URANDOM_PATH, "r");
+    FILE* rand_fd = fopen(DEV_URANDOM_PATH, "r");
 
-    if(ran == NULL){
+    if(rand_fd == NULL){
         printf("[ERR] utilities: gen_priv_key - couldn't open urandom.\n\n");
         return 1;
     }
-    if ( (bytes_read = fread((void*)buf, 1, len_bytes, ran)) != len_bytes ){
+    if ( (bytes_read = fread((void*)buf, 1, len_bytes, rand_fd)) != len_bytes ){
         printf("[ERR] utilities: gen_priv_key - couldn't read %u bytes "
                "from urandom.\n\n"
                ,len_bytes
         );
         perror("Error type: ");
-        fclose(ran);
+        fclose(rand_fd);
         return 1;
     }
 
     /* Set the most significant bit to 0 - make sure it's always less than Q. */
     *(buf + (len_bytes - 1)) &= ~ (1 << 7);
 
-    printf("[OK]  Utils : Generated a %u-byte private key!\n\n", len_bytes);
-    fclose(ran);
+    printf("[OK] Cryptolib: Generated a %u-byte private key!\n\n", len_bytes);
+    fclose(rand_fd);
     return 0;
 }
 
 /* Given a private key, generate its corresponding public key. */
 struct bigint* gen_pub_key(bigint* privkey_bigint)
 {
-    bigint* M;
-    bigint* Gm;
+    u8 err = 0;
+    bigint* M = get_bigint_from_dat
+                    (DH_MODULUS_M_PATH, DH_M_BITWIDTH, MAX_USED_BITWIDTH);
+
+    bigint* Gm = get_bigint_from_dat
+                     (DH_G_MONT_PATH, DH_G_MONT_BITWIDTH, MAX_USED_BITWIDTH);
+
     bigint* R = (bigint*)calloc(1, sizeof(struct bigint));
 
-    M  = get_bigint_from_dat
-           (DH_MODULUS_M_PATH, DH_M_BITWIDTH, MAX_USED_BITWIDTH);
-    Gm = get_bigint_from_dat
-           (DH_G_MONT_PATH, DH_G_MONT_BITWIDTH, MAX_USED_BITWIDTH);
+    if(R == NULL)
+    {
+        perror("[ERR] Cryptolib: Heap alloc for a new public key failed: ");
+        err = 1;
+        goto label_cleanup;
+    }
 
     bigint_create_from_u32(R, M->size_bits, 0);
     mont_pow_mod_m(Gm, privkey_bigint, M, R);
 
 label_cleanup:
-
     bigint_cleanup(M);
     bigint_cleanup(Gm);
     free(M);
     free(Gm);
+
+    if(err)
+    {
+        printf("Generating a new public key encountered an error.\nCleaned "
+                "everything up. Terminating now.\n");
+        exit(1);
+    }
+
     return R;
 }
 

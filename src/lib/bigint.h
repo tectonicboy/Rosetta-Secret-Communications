@@ -11,12 +11,12 @@
 #define CMP_SECOND_BIGGER 3
 
 /* Current cap on how many bits a Big Int can have. */
-#define MAX_BITS          4290000000
+#define MAX_BITS 4290000000
 
 /* Get the i-th bit of BigInt n and store it in buffer identified by target.  */
 /* Indexed from bit 0 onward. Little-endian byte order.                       */
 #define BIGINT_GET_BIT(n, i, target) \
-target = (*((n).bits + (u32)(((i)-((i) % 8))/8)) & (1<<((i)%8))) ? 1 : 0
+target = (*((n).bits + (u32)(((i) - ((i) % 8)) / 8)) & (1 << ((i) % 8))) ? 1 : 0
 
 /* The structure that represents a Big Int. */
 typedef struct bigint{
@@ -245,7 +245,7 @@ void bigint_print_info(const bigint* const num)
 
 /* To view the bytes of the DAT files from linux terminal window: */
 /* xxd -b G_raw_bytes.dat                                         */
-bigint* get_bigint_from_dat(const char* const fn,
+bigint* get_bigint_from_dat(const char* const filepath,
                             const u32    used_bits,
                             const u32    reserve_bits)
 {
@@ -254,6 +254,15 @@ bigint* get_bigint_from_dat(const char* const fn,
     u32     file_bytes;
 
     big_n_ptr = (bigint*)calloc(1, sizeof(bigint));
+
+    if(big_n_ptr == NULL)
+    {
+        printf("[ERR] Heap allocation failed for a new BigInt that must be "
+                      "loaded from file: %s\n", filepath);
+        perror("Error: ");
+        exit(1);
+    }
+
     bigint_create_from_u32(big_n_ptr, reserve_bits, 0);
 
     if(reserve_bits % 8 || reserve_bits < 64 || reserve_bits > MAX_BITS){
@@ -261,11 +270,11 @@ bigint* get_bigint_from_dat(const char* const fn,
         return big_n_ptr;
     }
     if(reserve_bits < used_bits){
-        printf("[ERR] BigInt: Too few reserved bits for .dat file: %s\n",fn);
+        printf("[ERR] BigInt: Too few reserved bits for file: %s\n", filepath);
         return big_n_ptr;
     }
-    if ( (dat_file = fopen(fn, "r")) == NULL){
-        printf("[ERR] BigInt: Could not open DAT file. File name: %s\n\n", fn);
+    if ( (dat_file = fopen(filepath, "r")) == NULL){
+        printf("[ERR] BigInt: Could not open file: %s\n\n", filepath);
         return big_n_ptr;
     }
 
@@ -278,21 +287,21 @@ bigint* get_bigint_from_dat(const char* const fn,
     big_n_ptr->used_bits = used_bits;
 
     if(fread(big_n_ptr->bits, 1, file_bytes, dat_file) != file_bytes){
-        printf("[ERR] BigInt: Could not read bigint DAT file: %s\n\n", fn);
+        printf("[ERR] BigInt: Could not read bigint DAT file: %s\n", filepath);
     }
     if( fclose(dat_file) != 0){
-        printf("[ERR] BigInt: Could not close bigint DAT file: %s\n\n", fn);
+        printf("[ERR] BigInt: Could not close bigint DAT file: %s\n", filepath);
     }
     return big_n_ptr;
 }
 
-void save_bigint_to_dat(const char* const fn, const bigint* const num)
+void save_bigint_to_dat(const char* const filepath, const bigint* const num)
 {
     FILE* dat_file = NULL;
     u32 file_bytes;
 
-    if( (dat_file = fopen(fn, "w")) == NULL ){
-        printf("[ERR] BigInt: Could not open DAT file for writing:%s\n\n", fn);
+    if( (dat_file = fopen(filepath, "w")) == NULL ){
+        printf("[ERR] BigInt: Can't open file for writing: %s\n\n", filepath);
         return;
     }
 
@@ -303,7 +312,7 @@ void save_bigint_to_dat(const char* const fn, const bigint* const num)
     file_bytes /= 8;
 
     if( fwrite(num->bits, 1, file_bytes, dat_file) != file_bytes ){
-        printf("[ERR] BigInt: Could not write bigint to DAT file: %s\n\n", fn);
+        printf("[ERR] BigInt: Can't write BigInt to file: %s\n\n", filepath);
     }
     if(dat_file != NULL){
         fclose(dat_file);
@@ -1295,7 +1304,7 @@ void montgomery_mul(bigint* X, bigint* Y, bigint* N, bigint* R)
     bigint_nullify(R);
 
     /* Optimization: Keep T in the memory of R->bits in limbs [L+1] to [L+3]. */
-    /* Set the pointer to point to the right memory region of R's bit buffer  */
+    /* Set the pointer to point to the right memory region of R's bit buffer. */
     T = (unsigned long long*)(R->bits + ((MONT_L + 1) * MONT_LIMB_SIZ));
 
     memset(T, 0, (3 * MONT_LIMB_SIZ));

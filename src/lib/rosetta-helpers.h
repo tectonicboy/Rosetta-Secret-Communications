@@ -142,7 +142,7 @@ void print_buffer(uint8_t* buf, uint64_t len){
 #define DH_G_MONT_BITWIDTH       3071
 #define SERV_PUBKEY_BITWIDTH     3071
 #define SERV_PUBKEYMONT_BITWIDTH 3071
-#define SERV_PRIVKEY_BITWIDTH      318
+#define SERV_PRIVKEY_BITWIDTH    318
 #define MAX_USED_BITWIDTH        12800
 
 #define MESSAGE_LINE_LEN     (SMALL_FIELD_LEN + strlen(": \0") + MAX_TXT_LEN)
@@ -150,26 +150,26 @@ void print_buffer(uint8_t* buf, uint64_t len){
 #define BITMASK_BIT_ON_AT(X) (1ULL << (63ULL - ((X))))
 
 #define DEV_URANDOM_PATH        "/dev/urandom"
-#define SERV_PRIVKEY_PATH       "materials/cryptography/server_privkey.dat"
-#define SERV_PUBKEY_PATH        "materials/cryptography/server_pubkey.dat"
-#define SERV_PUBKEYMONT_PATH    "materials/cryptography/server_pubkeymont.dat"
-#define DH_MODULUS_M_PATH       "materials/cryptography/saved_M.dat"
-#define DH_PRIME_ORDER_Q_PATH   "materials/cryptography/saved_Q.dat"
-#define DH_GENERATOR_G_PATH     "materials/cryptography/saved_G.dat"
-#define DH_G_MONT_PATH          "materials/cryptography/saved_Gm.dat"
+#define SERV_PRIVKEY_PATH       "assets/cryptography/server_privkey.dat"
+#define SERV_PUBKEY_PATH        "assets/cryptography/server_pubkey.dat"
+#define SERV_PUBKEYMONT_PATH    "assets/cryptography/server_pubkeymont.dat"
+#define DH_MODULUS_M_PATH       "assets/cryptography/saved_M.dat"
+#define DH_PRIME_ORDER_Q_PATH   "assets/cryptography/saved_Q.dat"
+#define DH_GENERATOR_G_PATH     "assets/cryptography/saved_G.dat"
+#define DH_G_MONT_PATH          "assets/cryptography/saved_Gm.dat"
 #define RTF_LOGO_PATH           "rosetta-test-framework/rtf-logo.txt"
 #define REAL_USER_SAVEFILE_PATH "user-save.dat"
 
-#define USER_SPAWNER_PROG_PATH \
+#define TEST_FRAMEWORK_MANUAL_USER_SPAWNER_BIN_PATH \
     "bin/manual-user-testing/user-spawner"
 
-#define USER_SAVEFILES_DIR \
+#define TEST_FRAMEWORK_USER_SAVEFILES_DIR \
     "rosetta-test-framework/test-accounts/"
 
-#define AUTOMATIC_USER_SIMULATION_TEST_PROG_BASE_PATH \
+#define TEST_FRAMEWORK_AUTOMATIC_USER_SIMULATION_BASE_PATH \
     "bin/automatic-user-testing/auto-simulated-user-test-"
 
-#define AUTOMATIC_USER_SIMULATION_AUTO_SPAWNER_BASE_PATH \
+#define TEST_FRAMEWORK_AUTOMATIC_USER_SIMULATION_SPAWNER_BASE_PATH \
     "bin/automatic-user-testing/auto-spawner"
 
 #define ROSETTA_SERVER_PROG_PATH "bin/rosetta-server"

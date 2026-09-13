@@ -1,0 +1,10 @@
+1. Indentation needs fixing.
+2. Calls to error-returning functions don't check for errors. Like malloc.
+   Check everywhere and make sure errors are checked for!
+3. Variable names need improving. src/lib is done. Do the rest.
+4. Project coding style guidelines need defining and following everywhere.
+5. Project directory structure needs improving. Smaller top-level dir.
+6. Comments need improving.
+7. WRITE DOCUMENTATION FOR THE PROJECT LIKE IN THE COMPILER PROJECT.
+8. Check with Valgrind that there are zero memory leaks possible.
+

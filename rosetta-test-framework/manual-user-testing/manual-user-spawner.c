@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
     unsigned char* full_save_dir = NULL;
     uint8_t        status = 0;
     char           pw_buf[2 * SMALL_FIELD_LEN] = {0};
-    const char*    savedir = USER_SAVEFILES_DIR;
+    const char*    savedir = TEST_FRAMEWORK_USER_SAVEFILES_DIR;
 
     main_thread_id = pthread_self();
 

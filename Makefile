@@ -1,6 +1,6 @@
 # -*- MakeFile -*-
 
-# MAKEFILE ENTRIES COMMON TO ALL 3 PROJECT MAKEFILES ARE IN config.mk
+# MAKEFILE ENTRIES COMMON TO ALL 3 PROJECT MAKEFILES: common-build-config.mk
 
 include common-build-config.mk
 

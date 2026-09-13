@@ -46,7 +46,6 @@ int main(int argc, char* argv[])
     size_t     counter = 0;
     uint8_t    keep_searching = 1;
     uint8_t    is_prime = 0;
-    uint8_t    unused_bits_m = 0;
     uint8_t    unused_bits_q = 0;
     uint8_t    unused_bits_aux = 0;
     unsigned long q_bits;
@@ -96,8 +95,8 @@ int main(int argc, char* argv[])
     {
         unsigned long temp_m_bits = m_bits;
         unsigned long temp_q_bits = q_bits;
-        while(temp_m_bits++ % 8 != 0){
-            ++unused_bits_m;
+        while(temp_m_bits % 8 != 0){
+            ++temp_m_bits;
         }
         m_bytes = temp_m_bits / 8;
         while(temp_q_bits++ % 8 != 0){

@@ -31,7 +31,7 @@ void run_auto_spawner_program(uint64_t spawner_num){
     char full_auto_spawner_prog_path[1024];
         memset(full_auto_spawner_prog_path, 0x00, 1024);
         const char* base_auto_spawner_prog_path =
-            AUTOMATIC_USER_SIMULATION_AUTO_SPAWNER_BASE_PATH;
+                TEST_FRAMEWORK_AUTOMATIC_USER_SIMULATION_SPAWNER_BASE_PATH;
         u64 base_auto_spawner_prog_path_len = strlen(base_auto_spawner_prog_path);
         strncpy(full_auto_spawner_prog_path, base_auto_spawner_prog_path,
                         base_auto_spawner_prog_path_len);
