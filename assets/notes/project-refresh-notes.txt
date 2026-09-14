@@ -1,10 +1,33 @@
-1. Indentation needs fixing.
-2. Calls to error-returning functions don't check for errors. Like malloc.
-   Check everywhere and make sure errors are checked for!
-3. Variable names need improving. src/lib is done. Do the rest.
-4. Project coding style guidelines need defining and following everywhere.
-5. Project directory structure needs improving. Smaller top-level dir.
-6. Comments need improving.
-7. WRITE DOCUMENTATION FOR THE PROJECT LIKE IN THE COMPILER PROJECT.
-8. Check with Valgrind that there are zero memory leaks possible.
-
+ 1. Variable names need improving, src/lib files are done. Do the rest.
+    CANT DO ALL VARIABLES RN BUT WRITE SOMEWHERE VISIBILE THAT ITS AN ISSUE
+    IVE RECOGNIZED AND ADDED TO THE TODO LIST!!!!!!
+    Comments need improving on some spots too!
+ 2. Indentation needs fixing.
+ 3. ENCRYPTED section visuals ascii art needs improving and make sure it is
+    present in every payload diagram for ALL of its encrypted parts. Separate
+    visualisations for parts that are encrypted with separate keys!
+ 4. Calls to error-returning functions don't check for errors - malloc/calloc.
+    Check everywhere and make sure errors are checked for!
+ 5. Project coding style guidelines need defining and following everywhere.
+ 6. Project directory structure needs improving. Smaller top-level dir.
+ 7. Remove label_finish in functions that don't need one.
+ 8. WRITE DOCUMENTATION FOR THE PROJECT LIKE IN THE COMPILER PROJECT.
+    For the purposes of this, find a good logical split for the project's main
+    components: bigint, crypt, client, server, rtf, communication interface.
+ 9. Communication interface (4 function ptrs) should be a well documented struct
+    instead of 4 pointers on their own.
+10. For TCP, plans to let the server do kernel bypass networking with DPDK.
+    While normally server data path isn't where the largest part of latency is,
+    DPDK gives ways of implementing advanced DDoS protection for example.
+11. The pubkey format check that was commented out. The nonce reuse after client
+    is restarted. Mark these 2 as cryptography details that need attention.
+12. Check with Valgrind that there are zero memory leaks possible.
+13. Also run asan and UBsan. Make sure they are clean.
+14. The montgomery multiplication interleaving performance analysis writeup
+    should be moved to a special github repository for Advanced Software
+    Performance Analysis, with a summary of the report kept in this repo.
+    The writeup itself also needs a final polish.
+15. PRESENTATION: Use new name Rosetta Secret Communications everywhere.
+16. PRESENTATION: Make sure github landing page is clean, polished and relays
+                  quickly to employers looking at it why they should be liking
+                  what they see.

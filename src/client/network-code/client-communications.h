@@ -7,16 +7,13 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 
-/* recv() shall timeout after 3 seconds thanks to SO_RCVTIMEO socket option. */
+/* recv() shall timeout after 3 seconds using the SO_RCVTIMEO socket option. */
 #define RECV_TIMEOUT_AFTER_SEC  3
 #define SERVER_PORT             54746
 #define SERVER_IP_ADDR          "13.63.197.0"
 #define MAX_RECV_RETRIES        400
 #define RECV_RETRY_AFTER_MICROS 5000
 #define POLL_INTERVAL_MICROS    100000 /* Poll the server every 0.1 seconds */
-
-/* recv() shall timeout after 3 seconds thanks to SO_RCVTIMEO socket option. */
-#define RECV_TIMEOUT_AFTER_SEC  3
 
 const int port = SERVER_PORT;
 const int optval1 = 1;
@@ -31,7 +28,8 @@ const socklen_t    server_addr_len = sizeof(struct sockaddr_in);
 struct sockaddr_in servaddr;
 struct sockaddr_un unix_server_addr;
 
-uint8_t tcp_init_communication()
+/* Establish a maintained TCP connection with the Rosetta Server. */
+uint8_t tcp_init_communication(void)
 {
     uint8_t ret = 0;
 
@@ -83,6 +81,11 @@ label_finished:
     return ret;
 }
 
+/* Use an underlying mechanism, send() system call on GNU/Linux in this case,
+ * to take the communication payload that the Rosetta client has constructed
+ * according to the custom userspace payload layout protocol, construct a full
+ * TCP network packet with it and transmit the packet to the Rosetta server.
+ */
 u8 tcp_transmit_payload(u8* msg_buf, u64 msg_len)
 {
     uint8_t ret = 0;
@@ -95,6 +98,10 @@ u8 tcp_transmit_payload(u8* msg_buf, u64 msg_len)
     return ret;
 }
 
+/* Use an underlying mechanism, recv() system call on GNU/Linux in this case,
+ * to accept the communication payload of a newly arrived TCP network packet
+ * that must have been sent by the Rosetta Server.
+ */
 u8 tcp_receive_payload(u8* reply_buf, u64* reply_len)
 {
     uint8_t  ret = 0;
@@ -129,6 +136,9 @@ u8 tcp_receive_payload(u8* reply_buf, u64* reply_len)
     return ret;
 }
 
+/* Inform the Rosetta Server that the client is closing the maintained TCP
+ * network connection with it.
+ */
 void tcp_end_communication(void)
 {
     if(close(own_socket_fd) == -1){
@@ -140,7 +150,12 @@ void tcp_end_communication(void)
     return;
 }
 
-uint8_t ipc_init_communication()
+/* This mode of communication is used by the Rosetta Test Framework.
+ *
+ * Connect to a listening local process, acting as the Rosetta Server, for local
+ * interprocess communications to simulate real people using the system to chat.
+ */
+uint8_t ipc_init_communication(void)
 {
     int     len    = 0;
     uint8_t ret    = 0;
@@ -186,6 +201,12 @@ label_init_successful:
     return ret;
 }
 
+/* This mode of communication is used by the Rosetta Test Framework.
+ *
+ * Send a communication payload, constructed according to the custom userspace
+ * payload layout protocol, to a listening local OS process that's acting as the
+ * Rosetta Server to simulate real people using the system to chat.
+ */
 uint8_t ipc_transmit_payload(uint8_t* buf, size_t buf_len)
 {
     uint8_t ret = 0;
@@ -198,6 +219,12 @@ uint8_t ipc_transmit_payload(uint8_t* buf, size_t buf_len)
     return ret;
 }
 
+/* This mode of communication is used by the Rosetta Test Framework.
+ *
+ * The local OS process acting as the Rosetta Server has sent the client a
+ * payload, constructed according to the custom userspace payload layout
+ * protocol, over local interprocess communications. Receive the payload.
+ */
 uint8_t ipc_receive_payload(uint8_t* buf, uint64_t* recv_len)
 {
     uint8_t  ret    = 0;
@@ -231,6 +258,11 @@ uint8_t ipc_receive_payload(uint8_t* buf, uint64_t* recv_len)
     return ret;
 }
 
+/* This mode of communication is used by the Rosetta Test Framework.
+ *
+ * Tell the local OS process acting as a Rosetta Server the client is closing
+ * the maintained connection with it over local interprocess communications.
+ */
 void ipc_end_communication(void)
 {
     if(close(own_socket_fd) == -1){

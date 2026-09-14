@@ -5,8 +5,10 @@
 class cMain : public wxFrame
 {
 public:
-     cMain();
-    ~cMain();
+
+    /* Constructor and destructor. */
+    cMain();
+    ~cMain(){};
 
     wxButton* btn_login         = NULL;
     wxButton* btn_login_GO      = NULL;
@@ -33,7 +35,7 @@ public:
       wxTextCtrl* usermsg_input  = NULL;
     wxTextCtrl* info_msg_box   = NULL;
 
-    /* Events have types. wxCommandEvent is the type for a button click. */
+    /* Events have types. wxCommandEvent is the type for a button click  */
     /* which in simple terms is the "do something" event.                */
 
       /* Login and Registration button events. */
@@ -47,7 +49,7 @@ public:
       /* Quit button event. */
     void BtnClickQuit(wxCommandEvent &evt);
 
-      /* Make / Join Room button events. */
+      /* Events for joining and creating a chat room. */
     void BtnClickMakeRoom(wxCommandEvent &evt);
     void BtnClickJoinRoom(wxCommandEvent &evt);
     void BtnClickJoinRoomGo(wxCommandEvent &evt);
@@ -57,7 +59,7 @@ public:
     void BtnClickCloseYourRoom(wxCommandEvent &evt);
     void BtnClickLeaveTheRoom(wxCommandEvent &evt);
 
-    /* Button event to send a text message to everyone in the chat room. */
+    /* Event: Send the user's typed message to everyone in their chat room. */
     void BtnClickSendMsg(wxCommandEvent &evt);
 
     wxDECLARE_EVENT_TABLE();

@@ -250,14 +250,6 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
                                      (server_nonce_bigint.bits, LONG_NONCE_LEN);
     server_nonce_bigint.size_bits = MAX_USED_BITWIDTH;
 
-    /* Initialize the mutex that will be used to prevent the main thread and
-     * the poller thread from writing/reading the same data in parallel.
-     */
-    if (pthread_mutex_init(&mutex, NULL) != 0) {
-        printf("[ERR] Server: Mutex could not be initialized. Aborting.\n");
-        status = 1;
-        goto label_cleanup;
-    }
     status = init_communication();
     pthread_mutex_init(&poll_mutex, NULL);
 

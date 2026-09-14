@@ -1,8 +1,7 @@
-/* This #define is used in the high-level C client communications engine
+/* This macro is used in the high-level C client communications engine
  * to distinguish between the client having been started with this GUI app
  * and it having been started with the Rosetta Test Framework, which would not
- * have a GUI to display messages on (or any other client driver program in
- * the future.)
+ * have a GUI to display messages on.
  */
 #define USE_WX_GUI
 
@@ -10,12 +9,16 @@
 #include "cMain.h"
 #include "../network-code/client-primary-functions.h"
 
+/* Background and foreground colors of the Rosetta user-facing client GUI. */
 #define BG_COLOR wxColour(30, 30, 30)
 #define FG_COLOR wxColour(120, 255, 120)
 
 /* Implement what the Event Table is.
  * Parm 1 - the class it is producing the events for.
  * Parm 2 - it also requires the base class that parm 1 inherited from.
+ *
+ * Each event's args are the unique event ID & object that triggers the event.
+ * Then, a function programmatically defines what happens when the event fires.
  */
 BEGIN_EVENT_TABLE(cMain, wxFrame)
     EVT_BUTTON    (10001, cMain::BtnClickLogin        )
@@ -47,13 +50,18 @@ int    userid_len;
  * only have 1 object of the cMain class, this means that we simply get a
  * pointer to "the cMain object", allowing us to access its public member
  * variables, aka msg_entries. A completely normal C function pointer is
- * then assigned to a statically declared function here which accesses
- * that global cMain object's msg_entries public member variable. This is how
- * we obtain a workaround that lets the C client communications engine deliver
- * received messages and display them on the wxWidgets C++ GUI. I hate OOP.
+ * then assigned to a statically declared function here which accesses that
+ * global cMain object's msg_entries. This is how we obtain the transition that
+ * lets the C client communications engine deliver received messages and display
+ * them on the wxWidgets C++ GUI.
  */
 static cMain *g_instance = nullptr;
 
+/* Update GUI using the g_instance global pointer.
+ *
+ * Client polled the server and received a new message for its user from
+ * somebody in their chatroom. Display it on the user's chatroom GUI.
+ */
 void display_gui_message(char* message_line){
     wxString msgToDisplay = wxString::FromUTF8(message_line);
     g_instance->GetEventHandler()->CallAfter([msgToDisplay]()
@@ -64,8 +72,13 @@ void display_gui_message(char* message_line){
     return;
 }
 
+/* Update GUI using the g_instance global pointer.
+ *
+ * Client polled the server and received information that the chatroom has
+ * been closed by the room owner. Inform the user on their GUI that they have
+ * been booted from the room as it's been closed for everybody.
+ */
 void display_gui_user_booted(){
-    /* Update the GUI using the g_instance pointer similar to above. */
     g_instance->GetEventHandler()->CallAfter([]()
     {
         g_instance->info_msg_box->SetValue("");
@@ -94,7 +107,12 @@ cMain::cMain() : wxFrame(
                   ,wxSize(1920, 1080)  /* Size of the window in pixels       */
                  )
 {
+    /* Important. Saving a pointer to the constructed object here allows
+     *            functions to access its members later, which allows event
+     *            handlers here to display messages on the user's GUI.
+     */
     g_instance = this;
+
       display_received_msg = display_gui_message;
     force_user_out_of_room = display_gui_user_booted;
 
@@ -260,9 +278,6 @@ cMain::cMain() : wxFrame(
 
     this->SetBackgroundColour(*wxBLACK);
 }
-
-/* Destructor - no parameters, no code in function body */
-cMain::~cMain(){}
 
 void cMain::BtnClickLogin(wxCommandEvent &evt)
 {
