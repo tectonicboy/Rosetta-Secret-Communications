@@ -2,7 +2,12 @@
 #include "../lib/bigint.h"
 #include "../lib/cryptolib.h"
 
-/* These function pointers tell the server whether to communicate through
+/* TODO: Transform this communication interface into a struct. Write this long
+ *       explanation for the 4 function pointers in official documentation,
+ *       keep only a smaller comment in code. Move the interface to
+ *       server communications header file.
+ *
+ * These function pointers tell the server whether to communicate through
  * Unix Domain sockets, or through Internet sockets. If the server was started
  * for the Rosetta Testing Framework, communication with test clients, which are
  * local OS processes talking to each other, simulating real people texting,
@@ -35,12 +40,10 @@ uint8_t(*onboard_new_client)(void);
 
 /* Memory region for short-term cryptographic artifacts for a login handshake */
 u8* temp_handshake_buf = NULL;
+u8  temp_handshake_memory_region_isLocked = 0;
 
-/* Whether the login handshake memory region is currently locked or not. */
-u8 temp_handshake_memory_region_isLocked = 0;
-
-/* Login is a multi-transmission process, so keep track whether we're in the
- * middle of it currently or not.
+/* Login handshake is a two-transmission process, so keep track of whether we're
+ * in the middle of it currently or not.
  */
 u8 login_not_finished = 0;
 
@@ -66,8 +69,8 @@ struct chatroom{
 
 /* Bitmasks telling the server which client and room slots are currently free.
  *
- * Begin populating room slots and user slots at index [1]. Reserve [0] for
- * meaning that the user is not in any room at all.
+ * Begin populating room slots and user slots at index [1]. Reserve index [0]
+ * for meaning that a user is not in any room at all.
  */
 u64 users_status_bitmask    = 0;
 u64 rooms_status_bitmask    = 0;
@@ -79,16 +82,19 @@ u64 next_free_room_ix = 1;
 
 u8 server_privkey[PRIVKEY_LEN];
 pthread_mutex_t mutex;
+
+/* Array of descriptors for clients and chat rooms. */
 struct connected_client clients[MAX_CLIENTS];
 struct chatroom rooms[MAX_CHATROOMS];
 
-/* Create thread_id's for every client machine's recv() loop thread. */
+/* Create thread_id's for every connected client's request processing thread. */
 pthread_t client_thread_ids[MAX_CLIENTS];
 
-bigint* M;  /* Diffie-Hellman prime modulus M.              */
-bigint* Q;  /* Diffie-Hellman prime exactly dividing (M-1). */
-bigint* G;  /* Diffie-Hellman generator.                    */
-bigint* Gm; /* Montgomery Form of G.                        */
+bigint* M;  /* Diffie-Hellman prime modulus M.                     */
+bigint* Q;  /* Diffie-Hellman prime order, exactly dividing (M-1). */
+bigint* G;  /* Diffie-Hellman generator G.                         */
+bigint* Gm; /* Montgomery Form of G.                               */
+
 bigint* server_pubkey_bigint;
 bigint  server_privkey_bigint;
 
@@ -103,8 +109,6 @@ int main(int argc, char* argv[])
     uint8_t thread_func_arg_buf[sizeof(curr_free_user_ix)];
     int arg1;
 
-    /* Function pointer set to respective socket initialization routine. */
-
     if(argc != 2){
         printf("[ERR] Server: Needs 1 cmd line arg: 0 = regular, 1 = RTF.\n");
         exit(1);
@@ -112,16 +116,16 @@ int main(int argc, char* argv[])
 
     arg1 = atoi(argv[1]);
 
-    /* Set 4 function pointers for the communication mechanism (socket type)  */
+    /* Select the communication interface. */
 
-    /* If server started for Rosetta Test Framework, use AF_UNIX sockets. */
+    /* If server is started for Rosetta Test Framework, use AF_UNIX sockets. */
     if(arg1 == 1){
         init_communication = ipc_init_communication;
         transmit_payload   = ipc_transmit_payload;
         receive_payload    = ipc_receive_payload;
         onboard_new_client = ipc_onboard_new_client;
     }
-    /* If server started for normal Rosetta texting, use Internet sockets. */
+    /* If the server is started for real user-facing operation, use AF_INET. */
     else if(arg1 == 0){
         init_communication = tcp_init_communication;
         transmit_payload   = tcp_transmit_payload;
@@ -129,13 +133,11 @@ int main(int argc, char* argv[])
         onboard_new_client = tcp_onboard_new_client;
     }
     else{
-        printf("[ERR] Server: must pass 0 for Rosetta, 1 for Test Framework.\n");
+        printf("[ERR] Server: Pass 0 for user-facing, 1 for Test Framework.\n");
         exit(1);
     }
 
-    /**************************************************************************/
-
-    /* Initialize Linux Sockets API stuff, load cryptographic artifacts. */
+    /* Server initialization. */
     status = self_init();
 
     if(status){
@@ -147,12 +149,10 @@ int main(int argc, char* argv[])
     while(1){
         printf("\n[OK] Server: SET curr_free_user_ix %lu\n", curr_free_user_ix);
 
-
-                /**********************************************************************/
-
         /* Block here until a newly seen client wants to log in to Rosetta. */
-
         ret = onboard_new_client();
+
+        /* Unblocked and continues here. A login handshake has begun. */
         login_not_finished = 1;
 
         if(ret){
@@ -163,6 +163,7 @@ int main(int argc, char* argv[])
 
         /**********************************************************************/
 
+        /* Fill in arguments for the thread function for this user's thread. */
         memcpy( thread_func_arg_buf
                ,&curr_free_user_ix
                ,sizeof(curr_free_user_ix)
@@ -170,11 +171,6 @@ int main(int argc, char* argv[])
 
         pthread_mutex_lock(&mutex);
 
-        /* Give this new client a thread on which their socket will be stuck
-         * on a recv() call loop and send() whatever the msg processor needs to.
-         */
-
-        /* Start the recv() looping thread for this new client. */
         pthread_create(
             &(client_thread_ids[curr_free_user_ix])
            ,NULL
@@ -183,14 +179,17 @@ int main(int argc, char* argv[])
         );
 
         pthread_detach(client_thread_ids[curr_free_user_ix]);
+
         ++curr_free_user_ix;
 
+        /* Find the next available connected client descriptor index. */
         while(curr_free_user_ix < MAX_CLIENTS){
             if(!(users_status_bitmask & (1ULL<<(63ULL - curr_free_user_ix)))){
                 break;
             }
             ++curr_free_user_ix;
         }
+
         pthread_mutex_unlock(&mutex);
     }
 

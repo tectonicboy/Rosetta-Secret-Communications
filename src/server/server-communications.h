@@ -14,7 +14,7 @@
 #define RETRY_RECV_DELAY_MICROS   5000
 #define RETRY_RECV_MAX_ATTEMPTS   400
 
-/* Linux Sockets API related. */
+/* Linux Sockets API related variables and data structures. */
 int port = SERVER_PORT;
 int listening_socket;
 int optval1 = 1;
@@ -25,7 +25,7 @@ socklen_t clientLens[MAX_CLIENTS];
 struct sockaddr_in tcp_servaddr;
 struct sockaddr_un ipc_servaddr;
 
-/* For local interprocess communications for the Rosetta Test Framework. */
+/* Only for local interprocess communications for Rosetta Test Framework. */
 #define AF_UNIX_SOCK_PATH     "/usr/bin/rosetta.sock\0"
 #define AF_UNIX_SOCK_PATH_LEN strlen("/usr/bin/rosetta.sock\0")
 
@@ -36,6 +36,7 @@ uint8_t tcp_init_communication(void)
     for(socklen_t i = 0; i < MAX_CLIENTS; ++i){
         clientLens[i] = sizeof(struct sockaddr_in);
     }
+
     /* Initialize the server address structure. */
     tcp_servaddr.sin_family      = AF_INET;
     tcp_servaddr.sin_port        = htons(port);
@@ -58,13 +59,13 @@ uint8_t tcp_init_communication(void)
         printf("[OK]  Server: TCP socket option for REUSEPORT has been set.\n");
     #endif
 
-        if(setsockopt(listening_socket, SOL_SOCKET, SO_REUSEADDR, &optval2,
+    if(setsockopt(listening_socket, SOL_SOCKET, SO_REUSEADDR, &optval2,
                   sizeof(optval2))
              == -1)
     {
         perror("[ERR] TCP socket option for REUSEADDR failed: ");
                 goto label_error;
-      }
+    }
     printf("[OK]  Server: TCP socket option for REUSEADDR has been set.\n");
     if( bind(listening_socket, (struct sockaddr*)&tcp_servaddr,
              sizeof(tcp_servaddr))
@@ -96,22 +97,28 @@ label_finished:
 
 uint8_t tcp_onboard_new_client()
 {
-    /* Having accept() fill out local variables before filling out the proper
-         * global user descriptor allows the current free user index global to be
-         * updated by another thread if a client exits the system before a new one
-         * arrives. Both threads are under the same mutex, so this is safe.
-         * Letting accept itself fill out the user descriptor at next_free_user_ix
-         * was buggy because the index would NOT be updated even if a user leaving
-         * the system updates next_free_user_ix.
-         */
+    /* Having accept() fill out local variables first, before filling out the
+     * global user descriptor allows the current free_user_index global variable
+     * to be updated by another thread if a client exits the system before a
+     * new client arrives.
+     *
+     * Both threads are under the same mutex, so this is safe.
+     *
+     * Letting accept itself fill out the global user descriptor at
+     * next_free_user_ix was buggy because the index would NOT be updated even
+     * if a user leaving the system updates next_free_user_ix.
+     */
     struct sockaddr_in new_client_address;
     socklen_t new_clientLen = sizeof(struct sockaddr_in);
+
     int new_socket =
       accept( listening_socket,
               (struct sockaddr*)(&new_client_address),
               &new_clientLen);
+
     uint64_t socket_ix = curr_free_user_ix;
     client_socket_fd[socket_ix] = new_socket;
+
         memcpy(&(client_addresses[socket_ix]), &new_client_address,
                      sizeof(struct sockaddr_in));
         memcpy(&(clientLens[socket_ix]), &new_clientLen, sizeof(socklen_t));
@@ -150,9 +157,10 @@ uint8_t tcp_transmit_payload(uint64_t socket_ix, uint8_t* buf, size_t send_len)
     if( __builtin_expect (send(client_socket_fd[socket_ix], buf,
                                                              send_len, MSG_NOSIGNAL) == -1, false))
     {
-              /* This is fine. A client suddenly poofed, while a poll request sent by
-                 * it was still on its way to the server. Handle it gracefully.
-                 */
+              /* This is fine. A client suddenly disappeared, while a poll
+               * request sent by that client was still on its way to the server.
+               * Handle this gracefully here.
+               */
               if(errno == EPIPE){
                         printf("[OK]  Server: send() gave EPIPE, socket[%lu]\n", socket_ix);
             return 0;
@@ -170,7 +178,8 @@ ssize_t tcp_receive_payload(uint64_t socket_ix, uint8_t* buf, size_t max_len)
 {
     ssize_t bytes_read = recv(client_socket_fd[socket_ix], buf, max_len, 0);
 
-    /* Handle terminated communication - both graceful and unexpected. */
+    /* Gracefully handle terminated communication - expected and unexpected. */
+
     if( __builtin_expect (bytes_read < 0, false) ){
         if(errno != EAGAIN
            #if defined(EWOULDBLOCK) && EWOULDBLOCK != EAGAIN
@@ -237,13 +246,16 @@ label_init_succeeded:
 
 uint8_t ipc_onboard_new_client()
 {
-      /* Having accept() fill out local variables before filling out the proper
-     * global user descriptor allows the current free user index global to be
-     * updated by another thread if a client exits the system before a new one
-     * arrives. Both threads are under the same mutex, so this is safe.
-     * Letting accept itself fill out the user descriptor at next_free_user_ix
-     * was buggy because the index would NOT be updated even if a user leaving
-     * the system updates next_free_user_ix.
+    /* Having accept() fill out local variables first, before filling out the
+     * global user descriptor allows the current free_user_index global variable
+     * to be updated by another thread if a client exits the system before a
+     * new client arrives.
+     *
+     * Both threads are under the same mutex, so this is safe.
+     *
+     * Letting accept itself fill out the global user descriptor at
+     * next_free_user_ix was buggy because the index would NOT be updated even
+     * if a user leaving the system updates next_free_user_ix.
      */
     int new_socket = accept(listening_socket, NULL, NULL);
 
@@ -284,8 +296,9 @@ uint8_t ipc_transmit_payload(uint64_t socket_ix, uint8_t* buf, size_t send_len)
     if( __builtin_expect (send(client_socket_fd[socket_ix],
                                                              buf, send_len, MSG_NOSIGNAL) == -1, false))
     {
-        /* This is fine. A client suddenly poofed, while a poll request sent by
-         * it was still on its way to the server. Handle it gracefully.
+        /* This is fine. A client suddenly disappeared, while a poll request
+         * sent by that client was still on its way to the server.
+         * Handle this gracefully.
          */
         if(errno == EPIPE){
             printf("[OK]  Server: send() gave EPIPE, socket[%lu]\n", socket_ix);
@@ -301,7 +314,8 @@ ssize_t ipc_receive_payload(uint64_t socket_ix, uint8_t* buf, size_t max_len)
 {
     ssize_t num_read = recv(client_socket_fd[socket_ix], buf, max_len, 0);
 
-    /* Handle terminated communication - both graceful and unexpected cases. */
+    /* Gracefully handle terminated communication - expected and unexpected. */
+
     if( __builtin_expect (num_read < 0, false) ){
         if(errno != EAGAIN
            #if defined(EWOULDBLOCK) && EWOULDBLOCK != EAGAIN

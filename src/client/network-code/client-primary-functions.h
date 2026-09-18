@@ -431,7 +431,7 @@ void* begin_polling(__attribute__((unused)) void* input)
                 read_ix += block_len + SMALL_FIELD_LEN;
             }
 
-            /* Verify the server's signature now. */
+            /* Validate the server's signature now. */
             status = authenticate_server(reply_buf, read_ix, read_ix);
             if(status == 1){
                 printf("[ERR] Client: Bad signature in polling reply.\n\n");

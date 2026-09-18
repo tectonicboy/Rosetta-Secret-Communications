@@ -1574,7 +1574,7 @@ u8 process_msg_40(u8* payload)
 {
     u8 status;
 
-    /* Verify the server's signature first. */
+    /* Validate the server's signature first. */
     status = authenticate_server(payload, SMALL_FIELD_LEN, SMALL_FIELD_LEN);
     if(status){
         printf("[ERR] Client: Invalid signature in process_msg_40. Drop.\n\n");
@@ -1601,7 +1601,7 @@ void process_msg_50(u8* payload)
     u64 sender_ix = MAX_CLIENTS + 1;
     u8 status;
 
-    /* Verify the server's signature first. */
+    /* Validate the server's signature first. */
     status =
       authenticate_server(payload, 2 * SMALL_FIELD_LEN, 2 * SMALL_FIELD_LEN);
     if(status){
@@ -1769,7 +1769,7 @@ void process_msg_51(u8* payload)
 {
     u8 status = 0;
 
-    /* Verify the server's signature first. */
+    /* Validate the server's signature first. */
     status = authenticate_server(payload, SMALL_FIELD_LEN, SMALL_FIELD_LEN);
     if(status){
         printf("[ERR] Client: Invalid signature in process_msg_51. Drop.\n\n");
