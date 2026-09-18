@@ -19,7 +19,8 @@
 target = (*((n).bits + (u32)(((i) - ((i) % 8)) / 8)) & (1 << ((i) % 8))) ? 1 : 0
 
 /* The structure that represents a Big Int. */
-typedef struct bigint{
+typedef struct bigint
+{
     u8* bits;
     u32 size_bits;
     u32 used_bits;
@@ -33,11 +34,10 @@ u32 get_used_bits(const u8* const buf, const u32 siz_bytes)
     u32 used_bits = siz_bytes * 8;
 
     /* Start from the rightmost byte, as this is biggest in little-endian. */
-    for(int64_t i = siz_bytes - 1; i >= 0; --i){
+    for(int64_t i = siz_bytes - 1; i >= 0; --i)
+    {
         for(u8 j = 0; j < 8; ++j){  /* Examine each bit individually. */
-            if(buf[i] & ( 1 << ( 7 - j))){
-                return used_bits;
-            }
+            if(buf[i] & ( 1 << ( 7 - j))) { return used_bits; }
             --used_bits;
         }
     }
@@ -45,9 +45,8 @@ u32 get_used_bits(const u8* const buf, const u32 siz_bytes)
 }
 
 /* First constructor - from a u32. */
-void bigint_create_from_u32(bigint* const __restrict__ num,
-                            const u32 bitsize,
-                            const u32 initial)
+void bigint_create_from_u32
+         (bigint* const __restrict__ num, const u32 bitsize, const u32 initial)
 {
     if( __builtin_expect
          ((bitsize % 8 != 0) || (bitsize <= 64) || (bitsize > MAX_BITS), false))
@@ -57,9 +56,11 @@ void bigint_create_from_u32(bigint* const __restrict__ num,
         exit(1);
     }
     num->size_bits = bitsize;
-    num->bits = (u8*)calloc(1, bitsize / 8);
+    num->bits      = (u8*)calloc(1, bitsize / 8);
     num->used_bits = 0;
-    if( __builtin_expect(num->bits == NULL, false) ){
+
+    if( __builtin_expect(num->bits == NULL, false) )
+    {
         perror("Memory allocation failed for a new bigint's bit buffer: ");
         exit(1);
     }
@@ -91,12 +92,14 @@ void bigint_nullify(bigint* const __restrict__ num)
 
 void bigint_remake(bigint* const num, const u32 bitsize, const u32 initial)
 {
-    if( __builtin_expect(num->size_bits == bitsize, true) ){
+    if( __builtin_expect(num->size_bits == bitsize, true) )
+    {
         bigint_nullify(num);
         memcpy(num->bits, &initial, sizeof(u32));
         num->used_bits = get_used_bits(num->bits, sizeof(u32));
     }
-    else{
+    else
+    {
         bigint_cleanup(num);
         bigint_create_from_u32(num, bitsize, initial);
     }
@@ -104,25 +107,25 @@ void bigint_remake(bigint* const num, const u32 bitsize, const u32 initial)
 }
 
 /* Place a BigInt's bits as ASCII characters into a given memory buffer. */
-void bigint_get_ascii_bits( const bigint* const num
-                           ,char* const target_buffer)
+void bigint_get_ascii_bits(const bigint* const num, char* const target_buffer)
 {
     u32 bits_to_8 = num->used_bits;
     u32 bytes_used;
 
-    while(bits_to_8 % 8){
+    while(bits_to_8 % 8)
         ++bits_to_8;
-    }
+
     bytes_used = bits_to_8 / 8;
     memset(target_buffer, 0, bytes_used * 8);
-    for(u32 i = 0; i < bytes_used; ++i){
-        for(u8 j = 0; j < 8; ++j){
-            if ((*((num->bits) + i ) >> (7 - j)) & 1){
+
+    for(u32 i = 0; i < bytes_used; ++i)
+    {
+        for(u8 j = 0; j < 8; ++j)
+        {
+            if ((*((num->bits) + i ) >> (7 - j)) & 1)
                 target_buffer[( (i * 8) + j )] = 49;
-            }
-            else{
+            else
                 target_buffer[( (i * 8) + j )] = 48;
-            }
         }
     }
     return;
@@ -135,27 +138,25 @@ void bigint_print_bits(const bigint* const n)
     u32   bytes_used;
     char* bitstring;
 
-    if( !(n->used_bits) ){
+    if( !(n->used_bits) )
+    {
         printf("<ZERO>\n");
         return;
     }
-    while(bits_to_8 % 8){
+    while(bits_to_8 % 8)
         ++bits_to_8;
-    }
+
     bytes_used = (u32)((double)bits_to_8 / (double)8.0);
     bitstring  = (char*)calloc(1, (bytes_used * 8));
     bigint_get_ascii_bits(n, bitstring);
     printf("\n\n");
-    for(u32 i = 0; i < bytes_used * 8; ++i){
-        if( !(i % 8) ){
-            printf(" | ");
-        }
-        if( (!(i % 32)) && (i) ){
-            printf("\n | ");
-        }
+
+    for(u32 i = 0; i < bytes_used * 8; ++i)
+    {
+        if( !(i % 8) )           { printf(" | ");   }
+        if( (!(i % 32)) && (i) ) { printf("\n | "); }
         printf("%c", bitstring[i]);
     }
-
     printf("\n\n");
     free(bitstring);
     return;
@@ -169,33 +170,30 @@ void bigint_print_bits_bigend(const bigint* const n)
     char* bitstring;
     char* bitstring_bigend;
 
-    if( ! n->used_bits ){
+    if( ! n->used_bits )
+    {
         printf("<ZERO>\n");
         return;
     }
-    while(bits_to_8 % 8){
+    while(bits_to_8 % 8)
         ++bits_to_8;
-    }
 
     bytes_used       = (u32)((double)bits_to_8 / (double)8.0);
     bitstring        = (char*)calloc(1, bytes_used * 8);
     bitstring_bigend = (char*)calloc(1, bytes_used * 8);
     bigint_get_ascii_bits(n, bitstring);
 
-    for(u32 i = 0; i < bytes_used; ++i){
-        for(u32 j = 0; j < 8; ++j){
-            bitstring_bigend[(8*i) + j] = bitstring[(8*(bytes_used - (i+1)))+j];
-        }
-    }
+    for(u32 i = 0; i < bytes_used; ++i)
+        for(u32 j = 0; j < 8; ++j)
+            bitstring_bigend[(8 * i) + j] =
+                bitstring[(8 * (bytes_used - (i + 1))) + j];
+
     printf("\n\n");
 
-    for(u32 i = 0; i < bytes_used * 8; ++i){
-        if( !(i % 8) ){
-            printf(" | ");
-        }
-        if( !(i % 32) && (i) ){
-            printf("\n | ");
-        }
+    for(u32 i = 0; i < bytes_used * 8; ++i)
+    {
+        if( !(i % 8) )        { printf(" | ");   }
+        if( !(i % 32) && (i) ){ printf("\n | "); }
         printf("%c", bitstring_bigend[i]);
     }
     printf("\n\n");
@@ -205,15 +203,13 @@ void bigint_print_bits_bigend(const bigint* const n)
 }
 
 /* Switch the endianness of a binary bit string. */
-void bitstring_switch_endian( const char* const old_str
-                             ,const u32         bytes_used
-                             ,char* const       new_str)
+void bitstring_switch_endian
+         (const char* const old_str, const u32 bytes_used, char* const new_str)
 {
-    for(u32 i = 0; i < bytes_used; ++i){
-        for(u32 j = 0; j < 8; ++j){
-            new_str[(8 * (bytes_used - (i+1))) + j] = old_str[(8*i) + j];
-        }
-    }
+    for(u32 i = 0; i < bytes_used; ++i)
+        for(u32 j = 0; j < 8; ++j)
+            new_str[(8 * (bytes_used - (i + 1))) + j] = old_str[(8 * i) + j];
+
     return;
 }
 
@@ -245,9 +241,8 @@ void bigint_print_info(const bigint* const num)
 
 /* To view the bytes of the DAT files from linux terminal window: */
 /* xxd -b G_raw_bytes.dat                                         */
-bigint* get_bigint_from_dat(const char* const filepath,
-                            const u32    used_bits,
-                            const u32    reserve_bits)
+bigint* get_bigint_from_dat
+       (const char* const filepath, const u32 used_bits, const u32 reserve_bits)
 {
     bigint* big_n_ptr;
     FILE*   dat_file;
@@ -265,33 +260,35 @@ bigint* get_bigint_from_dat(const char* const filepath,
 
     bigint_create_from_u32(big_n_ptr, reserve_bits, 0);
 
-    if(reserve_bits % 8 || reserve_bits < 64 || reserve_bits > MAX_BITS){
+    if(reserve_bits % 8 || reserve_bits < 64 || reserve_bits > MAX_BITS)
+    {
         printf("[ERR] BigInt: get_bigint_from_dat - Invalid reserve_bits\n");
         return big_n_ptr;
     }
-    if(reserve_bits < used_bits){
+    if(reserve_bits < used_bits)
+    {
         printf("[ERR] BigInt: Too few reserved bits for file: %s\n", filepath);
         return big_n_ptr;
     }
-    if ( (dat_file = fopen(filepath, "r")) == NULL){
+    if ( (dat_file = fopen(filepath, "r")) == NULL)
+    {
         printf("[ERR] BigInt: Could not open file: %s\n\n", filepath);
         return big_n_ptr;
     }
-
     file_bytes = used_bits;
-    while(file_bytes % 8 != 0){
-        ++file_bytes;
-    }
-    file_bytes /= 8;
 
+    while(file_bytes % 8 != 0)
+        ++file_bytes;
+
+    file_bytes /= 8;
     big_n_ptr->used_bits = used_bits;
 
-    if(fread(big_n_ptr->bits, 1, file_bytes, dat_file) != file_bytes){
+    if(fread(big_n_ptr->bits, 1, file_bytes, dat_file) != file_bytes)
         printf("[ERR] BigInt: Could not read bigint DAT file: %s\n", filepath);
-    }
-    if( fclose(dat_file) != 0){
+
+    if( fclose(dat_file) != 0)
         printf("[ERR] BigInt: Could not close bigint DAT file: %s\n", filepath);
-    }
+
     return big_n_ptr;
 }
 
@@ -300,23 +297,24 @@ void save_bigint_to_dat(const char* const filepath, const bigint* const num)
     FILE* dat_file = NULL;
     u32 file_bytes;
 
-    if( (dat_file = fopen(filepath, "w")) == NULL ){
+    if( (dat_file = fopen(filepath, "w")) == NULL )
+    {
         printf("[ERR] BigInt: Can't open file for writing: %s\n\n", filepath);
         return;
     }
-
     file_bytes = num->used_bits;
-    while(file_bytes % 8 != 0){
+
+    while(file_bytes % 8 != 0)
         ++file_bytes;
-    }
+
     file_bytes /= 8;
 
-    if( fwrite(num->bits, 1, file_bytes, dat_file) != file_bytes ){
+    if( fwrite(num->bits, 1, file_bytes, dat_file) != file_bytes )
         printf("[ERR] BigInt: Can't write BigInt to file: %s\n\n", filepath);
-    }
-    if(dat_file != NULL){
+
+    if(dat_file != NULL)
         fclose(dat_file);
-    }
+
     return;
 }
 
@@ -326,38 +324,35 @@ void save_bigint_to_dat(const char* const filepath, const bigint* const num)
  *   CMP_EQUALS        (2)  if n1 = n2
  *   CMP_SECOND_BGIGER (3)  if n1 < n2
  */
-u8 bigint_compare2( const bigint* const n1, const bigint* const n2)
+u8 bigint_compare2(const bigint* const n1, const bigint* const n2)
 {
     u32  used_bytes;
     bool cond1;
     bool cond2;
 
-    if(n1->used_bits > n2->used_bits){
+    if(n1->used_bits > n2->used_bits)
         return 1;
-    }
-    if(n1->used_bits < n2->used_bits){
+
+    if(n1->used_bits < n2->used_bits)
         return 3;
-    }
 
     used_bytes = n1->used_bits;
-    while(used_bytes % 8 != 0){
+
+    while(used_bytes % 8 != 0)
         ++used_bytes;
-    }
+
     used_bytes /= 8;
 
-    for(int32_t i = (used_bytes - 1); i >= 0; --i){
-        for(int32_t j = 0; j < 8; ++j){
+    for(int32_t i = (used_bytes - 1); i >= 0; --i)
+    {
+        for(int32_t j = 0; j < 8; ++j)
+        {
             cond1 = ((*(n1->bits + i) << j) & (1 << 7));
             cond2 = ((*(n2->bits + i) << j) & (1 << 7));
-            if( (cond1) && !(cond2) ){
-                return 1;
-            }
-            else if( !(cond1) && (cond2) ){
-                return 3;
-            }
-            else{
-                continue;
-            }
+
+            if     ( (cond1) && !(cond2) ) { return 1; }
+            else if( !(cond1) && (cond2) ) { return 3; }
+            else{ continue; }
         }
     }
     return 2;
@@ -368,23 +363,24 @@ void bigint_equate2(bigint* const n1, const bigint* const n2)
 {
     u32 aux;
 
-    if( __builtin_expect (n1->size_bits < n2->used_bits,false) ){
+    if( __builtin_expect (n1->size_bits < n2->used_bits,false) )
+    {
         printf("[ERR] Bigint: Equation target has too few reserved bits.\n");
         return;
     }
-    if(!n2->used_bits){
+    if(!n2->used_bits)
+    {
         bigint_nullify(n1);
         return;
     }
 
     bigint_nullify(n1);
-
     aux = n2->used_bits;
-    while(aux % 8 != 0) {
-        ++aux;
-    }
-    aux /= 8;
 
+    while(aux % 8 != 0)
+        ++aux;
+
+    aux /= 8;
     n1->used_bits = n2->used_bits;
     memcpy(n1->bits, n2->bits, aux);
     return;
@@ -397,9 +393,8 @@ void bigint_equate2(bigint* const n1, const bigint* const n2)
  *
  *  R must have at least 32 more reserved bits than the bigger ADD operand's.
  */
-void bigint_add_fast( const bigint* const n1
-                     ,const bigint* const n2
-                     ,bigint* const R)
+void bigint_add_fast
+        (const bigint* const n1, const bigint* const n2, bigint* const R)
 {
     u64  A;
     u64  B;
@@ -409,86 +404,85 @@ void bigint_add_fast( const bigint* const n1
     u64  temp_res = 0;
     u64  last_bits_bigger;
     u32* more_bits = NULL;
-
-    uint32_t* aux_ptr_n1bits = (uint32_t*)(n1->bits);
-    uint32_t* aux_ptr_n2bits = (uint32_t*)(n2->bits);
-    uint32_t* aux_ptr_Rbits  = (uint32_t*)(R->bits);
+    u32* aux_ptr_n1bits = (u32*)(n1->bits);
+    u32* aux_ptr_n2bits = (u32*)(n2->bits);
+    u32* aux_ptr_Rbits  = (u32*)(R->bits);
 
     bigint_nullify(R);
 
-    if( n1->used_bits < n2->used_bits ){
+    if( n1->used_bits < n2->used_bits )
+    {
         A = n2->used_bits;
         more_bits = (uint32_t*)(n2->bits);
     }
-    else{
+    else
+    {
         A = n1->used_bits;
         more_bits = (uint32_t*)(n1->bits);
     }
-    if(!n1->used_bits){
+    if(!n1->used_bits)
+    {
         bigint_equate2(R, n2);
         return;
     }
-    if(!n2->used_bits){
+    if(!n2->used_bits)
+    {
         bigint_equate2(R, n1);
         return;
     }
 
     C = A;
     B = A % 32;
-    if(B){
-        A += (32 - B);
-    }
+
+    if(B) { A += (32 - B); }
+
     A /= 32;
 
-    while(i < (A-1)){
-        temp_res =   ( (u64)(aux_ptr_n1bits[i]) )
-                   + ( (u64)(aux_ptr_n2bits[i]) )
-                   + carry;
+    while(i < (A-1))
+    {
+        temp_res = (u64)(aux_ptr_n1bits[i]) + (u64)(aux_ptr_n2bits[i]) + carry;
         carry = 0;
-        if ( temp_res & (1ULL << 32LL) ){
+
+        if(temp_res & (1ULL << 32LL))
             carry = 1;
-        }
+
         aux_ptr_Rbits[i] = (u32)temp_res;
         ++i;
     }
 
     /* ---------------------------------------------------------------------- */
 
-    temp_res =   ( (u64)(aux_ptr_n1bits[i]) )
-               + ( (u64)(aux_ptr_n2bits[i]) )
-               + carry;
-
+    temp_res = (u64)(aux_ptr_n1bits[i]) + (u64)(aux_ptr_n2bits[i]) + carry;
     aux_ptr_Rbits[i] = (u32)temp_res;
     last_bits_bigger = 31;
 
-    while( ! ( more_bits[i] & ( ((u32)1) << last_bits_bigger) ) ){
+    while( ! ( more_bits[i] & ( ((u32)1) << last_bits_bigger) ) )
         --last_bits_bigger;
-    }
-    if ( temp_res & ((u64)1 << (last_bits_bigger + 1)) ){
+
+    if ( temp_res & ((u64)1 << (last_bits_bigger + 1)) )
+    {
         carry = 1;
 
-        /*  Carry wasn't accounted for by built-in
-         *  addition because it was in the 33rd bit.
+        /*  Carry wasn't accounted for by built-in addition because it was in
+         *  the 33rd bit.
          */
         if(last_bits_bigger == 31)
             R->bits[((i+1) * 4)] |= 1;
     }
-    else{
+    else
         carry = 0;
-    }
-    if(carry){
+
+    if(carry)
         R->used_bits = C + 1;
-    }
-    else{
+    else
         R->used_bits = C;
-    }
+
     return;
 }
 
 /* Standard multiplication of two BigInts. */
-void bigint_mul_fast( const bigint* const n1
-                     ,const bigint* const n2
-                     ,bigint* const R)
+void bigint_mul_fast
+         (const bigint* const n1, const bigint* const n2, bigint* const R)
 {
     u64 A;
     u64 B;
@@ -502,46 +496,50 @@ void bigint_mul_fast( const bigint* const n1
 
     bigint_nullify(R);
 
-    if(R->size_bits < (n1->used_bits + n2->used_bits) ){
+    if(R->size_bits < (n1->used_bits + n2->used_bits) )
+    {
         printf("[ERR] Bigint: Not enough bits to store result of MUL.\n");
         return;
     }
 
-    if(!n1->used_bits || !n2->used_bits){
+    if(!n1->used_bits || !n2->used_bits)
         return;
-    }
-    if(n1->used_bits == 1){
+
+    if(n1->used_bits == 1)
+    {
         bigint_equate2(R, n2);
         return;
     }
-    if(n2->used_bits == 1){
+    if(n2->used_bits == 1)
+    {
         bigint_equate2(R, n1);
         return;
     }
 
     A  = n2->used_bits;
     AA = n1->used_bits;
-
     B  = A % 32;
     BB = AA % 32;
 
-    if(B){
+    if(B)
         A += (32 - B);
-    }
-    if(BB){
+
+    if(BB)
         AA+= (32 - BB);
-    }
+
     A  /= 32;
     AA /= 32;
 
-    for(i = 0; i < A; ++i){
+    for(i = 0; i < A; ++i)
+    {
         uint32_t* __restrict__ aux_ptr_tempres = (uint32_t*)(&temp_res);
         uint32_t* __restrict__ aux_ptr_n1bits  = (uint32_t*)(n1->bits);
         uint32_t* __restrict__ aux_ptr_n2bits  = (uint32_t*)(n2->bits);
         uint32_t* __restrict__ aux_ptr_Rbits   = (uint32_t*)(R->bits);
 
         C = 0;
-        for(j = 0; j < AA; ++j){
+        for(j = 0; j < AA; ++j)
+        {
             temp_res =   ( (u64)(aux_ptr_Rbits[i+j]) )
                        + C
                        + (
@@ -550,24 +548,25 @@ void bigint_mul_fast( const bigint* const n1
                           ( (u64)(aux_ptr_n2bits[i]) )
                          );
 
-            /*Go (i+j) 32-bit places into R->bits. Place temp_res there. */
+            /*Go (i + j) 32-bit places into R->bits. Place temp_res there. */
             aux_ptr_Rbits[i+j] = *aux_ptr_tempres;
             C = (u64)(aux_ptr_tempres[1]);
         }
         aux_ptr_Rbits[i + 1 + (AA - 1)] = aux_ptr_tempres[1];
     }
+
     R->used_bits = n1->used_bits + n2->used_bits;
     bit_to_check = n1->used_bits + n2->used_bits + 63 - ( (A + AA) * 32 );
-    if (!(temp_res & ((u64)1 << bit_to_check) )){
+
+    if (!(temp_res & ((u64)1 << bit_to_check) ))
         --R->used_bits;
-    }
+
     return;
 }
 
 /* BigInt n1 to the power of BigInt n2. */
-void bigint_pow( const bigint* const n1
-                ,const bigint* const n2
-                ,bigint* const R)
+void bigint_pow
+         (const bigint* const n1, const bigint* const n2, bigint* const R)
 {
     bigint n1_used_bits;
     bigint R_req_bits;
@@ -589,40 +588,47 @@ void bigint_pow( const bigint* const n1
 
     bigint_nullify(R);
 
-    if(n1->size_bits != n2->size_bits){
+    if(n1->size_bits != n2->size_bits)
+    {
         printf("[ERR] Bigint: POW operands' reserved bits count must match.\n");
         goto ret_label;
     }
-    if( bigint_compare2(n2, &zero) == CMP_EQUALS){
+    if( bigint_compare2(n2, &zero) == CMP_EQUALS)
+    {
         bigint_equate2(R, &one);
         goto ret_label;
     }
-    if( bigint_compare2(n1, &zero) == CMP_EQUALS){
+    if( bigint_compare2(n1, &zero) == CMP_EQUALS)
         goto ret_label;
-    }
-    if( bigint_compare2(n2, &one) == CMP_EQUALS){
+
+    if( bigint_compare2(n2, &one) == CMP_EQUALS)
+    {
         bigint_equate2(R, n1);
         goto ret_label;
     }
-    if( bigint_compare2(n1, &one) == CMP_EQUALS){
+    if( bigint_compare2(n1, &one) == CMP_EQUALS)
+    {
         bigint_equate2(R, &one);
         goto ret_label;
     }
 
     bigint_mul_fast(&n1_used_bits, n2, &R_req_bits);
 
-    if( bigint_compare2(&R_req_bits, &zero) == CMP_EQUALS){
+    if( bigint_compare2(&R_req_bits, &zero) == CMP_EQUALS)
+    {
         printf("[ERR] BigInt: Bitlegnth of POW result exceeds max allowed.\n");
         goto ret_label;
     }
-    if( bigint_compare2(&R_res_bits, &R_req_bits) == CMP_SECOND_BIGGER){
+    if( bigint_compare2(&R_res_bits, &R_req_bits) == CMP_SECOND_BIGGER)
+    {
         printf("[ERR] BigInt: Not enough bits to store the result of POW.\n");
         goto ret_label;
     }
 
     bigint_equate2(R, n1);
 
-    while( bigint_compare2(&starter, n2) == CMP_SECOND_BIGGER){
+    while( bigint_compare2(&starter, n2) == CMP_SECOND_BIGGER)
+    {
         bigint_equate2(&R_temp, R);
         bigint_equate2(&starter_temp, &starter);
         bigint_add_fast(&starter_temp, &one, &starter);
@@ -630,6 +636,7 @@ void bigint_pow( const bigint* const n1
     }
 
 ret_label:
+
     bigint_cleanup(&n1_used_bits);
     bigint_cleanup(&R_req_bits);
     bigint_cleanup(&zero);
@@ -642,40 +649,43 @@ ret_label:
 }
 
 /* Algorithm Multiple-precision subtraction, Handbook of applied cryptography */
-void bigint_sub_fast( const bigint* const n1
-                     ,const bigint* const n2
-                     ,bigint* const R)
+void bigint_sub_fast
+         (const bigint* const n1, const bigint* const n2, bigint* const R)
 {
     const uint64_t limb_bits = 32;
+
     /* Add (denominator - 1) to round UP number of limbs instead of down. */
     const uint64_t limbs = (n1->used_bits + limb_bits - 1) / limb_bits;
+
     uint32_t c = 0;
     uint32_t* aux_ptr_n1bits  = (uint32_t*)(n1->bits);
     uint32_t* aux_ptr_n2bits  = (uint32_t*)(n2->bits);
     uint32_t* aux_ptr_resbits = (uint32_t*)(R->bits);
+    const uint8_t operand_comparison = bigint_compare2(n1, n2);
 
     bigint_nullify(R);
 
-    const uint8_t operand_comparison = bigint_compare2(n1, n2);
-
-    if( operand_comparison == CMP_SECOND_BIGGER){
+    if( operand_comparison == CMP_SECOND_BIGGER)
+    {
         printf("[ERR] Bigint: n1 was smaller than n2 in a SUB operation.\n");
         return;
     }
-    if( operand_comparison == CMP_EQUALS){
+    if( operand_comparison == CMP_EQUALS)
         return;
-    }
-    if( n2->used_bits == 0){
+
+    if( n2->used_bits == 0)
+    {
         bigint_equate2(R, n1);
         return;
     }
-    for(uint64_t i = 0; i < limbs; ++i){
-        /* If xi - yi - c happens to equal -1 (because xi and yi were max(u32))
+    for(uint64_t i = 0; i < limbs; ++i)
+    {
+        /* If xi - yi - c happens to equal -1 (because xi and yi were max(u32)),
          * simply let it overflow, that limb should be and is set to all 1s.
          */
         aux_ptr_resbits[i] = aux_ptr_n1bits[i] - aux_ptr_n2bits[i] - c;
 
-        /* if bit index 32 or higher was set in the result, it's negative
+        /* If bit index 32 or higher was set in the result, it's negative
          * because the 64-bit range wrapped around and is now FFs in the
          * most significant 32 bits and (what would have been) the small
          * negative number is in the least significant bits below 32.
@@ -696,9 +706,8 @@ void bigint_sub_fast( const bigint* const n1
         {
             c = 1;
         }
-        else{
+        else
             c = 0;
-        }
     }
 
     R->used_bits = get_used_bits(R->bits, R->size_bits / 8);
@@ -708,10 +717,8 @@ void bigint_sub_fast( const bigint* const n1
 /* Implementation of Algorithm 14.20 Multiple Precision Division in Handbook of
  * Applied Cryptography. Using 16-bit limbs so that u64 storage is sufficient.
  */
-void bigint_div2( const bigint* const A
-                 ,const bigint* const B
-                 ,bigint* const Res
-                 ,bigint* const Rem)
+void bigint_div2(const bigint* const A, const bigint* const B,
+                 bigint* const Res,     bigint* const Rem)
 {
     const u64 num_temps = 19; /* How many temporary BigInts we need. */
     u64 b = (u64)pow(2,16);
@@ -724,23 +731,26 @@ void bigint_div2( const bigint* const A
     uint16_t* aux_ptr16_temp0bits = NULL;
     uint16_t* aux_ptr16_temp2bits = NULL;
 
-    for(i = 0; i < num_temps; ++i){
+    for(i = 0; i < num_temps; ++i)
         bigint_create_from_u32(&(big_temps[i]), A->size_bits, 0);
-    }
+
     /* Quickly check if A or B are zero. */
-    if(bigint_compare2(B, &(big_temps[0])) == CMP_EQUALS){
+    if(bigint_compare2(B, &(big_temps[0])) == CMP_EQUALS)
+    {
         printf("\n\n[ERR] BIGINT - Division by ZERO.\n\nOPERAND 1:\n");
         bigint_print_info(A);
         bigint_print_bits(A);
         goto label_cleanup;
     }
-    if(bigint_compare2(A, &(big_temps[0])) == CMP_EQUALS){
+    if(bigint_compare2(A, &(big_temps[0])) == CMP_EQUALS)
+    {
         bigint_nullify(Res);
         bigint_nullify(Rem);
         goto label_cleanup;
     }
     /* if B > A, return RES=0, REM=A  */
-    if(bigint_compare2(A, B) == CMP_SECOND_BIGGER){
+    if(bigint_compare2(A, B) == CMP_SECOND_BIGGER)
+    {
         bigint_nullify(Res);
         bigint_equate2(Rem, A);
         goto label_cleanup;
@@ -748,18 +758,18 @@ void bigint_div2( const bigint* const A
 
     bigint_equate2(&(big_temps[0]), A);
     bigint_equate2(&(big_temps[2]), B);
-
     n = big_temps[0].used_bits;
-    while(n % 16){
+
+    while(n % 16)
         ++n;
-    }
+
     n /= 16;
     --n;
-
     t = big_temps[2].used_bits;
-    while(t % 16){
+
+    while(t % 16)
         ++t;
-    }
+
     t /= 16;
     --t;
 
@@ -798,13 +808,16 @@ void bigint_div2( const bigint* const A
     }
 
     /* Part 3 */
-    for(i = n; i >= (t+1); --i){
-        if(aux_ptr16_temp0bits[i] == aux_ptr16_temp2bits[t]){
+    for(i = n; i >= (t+1); --i)
+    {
+        if(aux_ptr16_temp0bits[i] == aux_ptr16_temp2bits[t])
+        {
             /* q_(i-t-1) a limb, also stored as a bigint in big_temps[17]. */
             aux_ptr16_temp3bits[i-t-1] = (uint16_t)(b - 1);
             bigint_remake(&(big_temps[17]), A->size_bits, (u32)(b - 1));
         }
-        else{
+        else
+        {
              aux_ptr16_temp3bits[i-t-1] =
               (u16)floor(
                   ( (((u64)(aux_ptr16_temp0bits[i])) * b )
@@ -817,12 +830,13 @@ void bigint_div2( const bigint* const A
               (  ( (((u64)(aux_ptr16_temp2bits[t])) * b )
                    + (u64)(aux_ptr16_temp2bits[t-1])
                  )
-                 * ( (u64)(aux_ptr16_temp3bits[i-t-1]) )
+                 *
+                 ( (u64)(aux_ptr16_temp3bits[i-t-1]) )
               )
               >
               ( ( ((u64)(aux_ptr16_temp0bits[i])) * b_squared )
-                  + ( ((u64)(aux_ptr16_temp0bits[i-1]))  * b)
-                  + (  (u64)(aux_ptr16_temp0bits[i-2]))
+                + ( ((u64)(aux_ptr16_temp0bits[i-1]))  * b)
+                + (  (u64)(aux_ptr16_temp0bits[i-2]))
               )
         )
         {
@@ -830,8 +844,8 @@ void bigint_div2( const bigint* const A
         }
 
         /* IMPORTANT: Update X's bits before this, as its limbs were altered. */
-        big_temps[0].used_bits = get_used_bits
-                                   (big_temps[0].bits, (u32)((A->size_bits)/8));
+        big_temps[0].used_bits =
+            get_used_bits(big_temps[0].bits, (u32)((A->size_bits)/8));
 
         bigint_remake(&(big_temps[9]), A->size_bits, (u32)i);
         bigint_sub_fast(&(big_temps[ 9]), &(big_temps[8]), &(big_temps[13]));
@@ -840,7 +854,7 @@ void bigint_div2( const bigint* const A
         bigint_mul_fast(&(big_temps[2]), &(big_temps[15]), &(big_temps[16]));
 
         bigint_remake
-          (&(big_temps[17]), A->size_bits, (u32)(aux_ptr16_temp3bits[i-t-1]));
+            (&(big_temps[17]), A->size_bits, (u32)(aux_ptr16_temp3bits[i-t-1]));
 
         bigint_mul_fast(&(big_temps[16]), &(big_temps[17]), &(big_temps[18]));
 
@@ -848,35 +862,37 @@ void bigint_div2( const bigint* const A
            == CMP_SECOND_BIGGER)
         {
             aux_ptr16_temp3bits[i-t-1] -= 1;
+
             bigint_remake
               (&(big_temps[17]),A->size_bits,(u32)(aux_ptr16_temp3bits[i-t-1]));
+
             bigint_mul_fast
                (&(big_temps[16]), &(big_temps[17]), &(big_temps[18]));
         }
         bigint_equate2(&(big_temps[1]), &(big_temps[0]));
         bigint_sub_fast(&(big_temps[1]), &(big_temps[18]), &(big_temps[0]));
     }
-    big_temps[0].used_bits = get_used_bits
-      ( big_temps[0].bits, (u32)((A->size_bits) / 8) );
 
-    big_temps[3].used_bits = get_used_bits
-      ( big_temps[3].bits, (u32)((A->size_bits) / 8) );
+    big_temps[0].used_bits =
+        get_used_bits(big_temps[0].bits, (u32)((A->size_bits) / 8));
+
+    big_temps[3].used_bits =
+        get_used_bits(big_temps[3].bits, (u32)((A->size_bits) / 8));
 
     bigint_equate2(Rem, &(big_temps[0]));
     bigint_equate2(Res, &(big_temps[3]));
 
 label_cleanup:
-    for(i = 0; i < num_temps; ++i){
+
+    for(i = 0; i < num_temps; ++i)
         bigint_cleanup(&(big_temps[i]));
-    }
+
     return;
 }
 
 /* Modular Multiplication. Multiply many BigInts, modulo another BigInt. */
-void bigint_mod_mul( bigint** nums
-                    ,const bigint*  const mod
-                    ,const u32 how_many
-                    ,bigint* const R)
+void bigint_mod_mul
+   (bigint** nums, const bigint* const mod, const u32 how_many, bigint* const R)
 {
     bigint div_res;
     bigint rem;
@@ -887,31 +903,31 @@ void bigint_mod_mul( bigint** nums
     bigint_create_from_u32(&mul_res, nums[0]->size_bits, 1);
     bigint_create_from_u32(&rem,     nums[0]->size_bits, 1);
     bigint_equate2(R, &rem);
-    if(how_many < 2) {
+
+    if(how_many < 2)
+    {
         printf("[ERR] BigInt: ModMUL - fewer than 2 BigInts were supplied.\n");
         goto label_ret;
     }
+
     compare_res = 0;
 
     /* The long loop */
-    for(u32 i = 0; i < how_many; ++i){
-        /*
-        printf("[BigInt] - Long loop in MOD_MUL moved  i = %u to %u"
-              " (how many big numbers we multiply).\n"
-              , i, how_many
-              );
-        */
+    for(u32 i = 0; i < how_many; ++i)
+    {
         bigint_mul_fast(R, nums[i], &mul_res);
-        if((compare_res = bigint_compare2(&mul_res, mod)) != CMP_SECOND_BIGGER){
+
+        if((compare_res = bigint_compare2(&mul_res, mod)) != CMP_SECOND_BIGGER)
+        {
             bigint_div2(&mul_res, mod, &div_res, &rem);
             bigint_equate2(R, &rem);
         }
-        else{
+        else
             bigint_equate2(R, &mul_res);
-        }
     }
 
 label_ret:
+
     bigint_cleanup(&mul_res);
     bigint_cleanup(&div_res);
     bigint_cleanup(&rem);
@@ -919,10 +935,8 @@ label_ret:
 }
 
 /* Modular powering. BigInt_N to the power of BigInt_P, modulo BigInt_M. */
-void bigint_mod_pow( const bigint* const N
-                    ,const bigint* const P
-                    ,const bigint* const M
-                    ,bigint* const R)
+void bigint_mod_pow(const bigint* const N, const bigint* const P,
+                    const bigint* const M, bigint* const R)
 {
     bigint   aux1;
     bigint   aux2;
@@ -939,14 +953,17 @@ void bigint_mod_pow( const bigint* const N
 
     arr1 = (u32*)calloc(1, P->used_bits * (sizeof(u32)));
 
-    while(P_used_bytes % 8) {
+    while(P_used_bytes % 8)
         ++P_used_bytes;
-    }
+
     P_used_bytes /= 8;
 
-    for(u32 i = 0; i < P_used_bytes; ++i){
-        for(u32 j = 0; j < 8; ++j){
-            if( ( (*(P->bits + i)) >> j) & 1){
+    for(u32 i = 0; i < P_used_bytes; ++i)
+    {
+        for(u32 j = 0; j < 8; ++j)
+        {
+            if( ( (*(P->bits + i)) >> j) & 1)
+            {
                 arr1[arr1_curr_ind] = (i * 8) + j;
                 ++arr1_curr_ind;
                 ++c1;
@@ -955,7 +972,6 @@ void bigint_mod_pow( const bigint* const N
     }
 
     bigint_nullify(R);
-
     bigint_create_from_u32(&aux1,    M->size_bits, 1);
     bigint_create_from_u32(&aux2,    M->size_bits, 1);
     bigint_create_from_u32(&two,     M->size_bits, 2);
@@ -966,37 +982,44 @@ void bigint_mod_pow( const bigint* const N
     arr2     = (bigint*) calloc(1, c1 * sizeof(bigint));
     arr_ptrs = (bigint**)calloc(1, c1 * sizeof(bigint*));
 
-    for(u32 i = 0; i < c1; ++i){
+    for(u32 i = 0; i < c1; ++i)
+    {
         bigint_create_from_u32(&(arr2[i]), M->size_bits, 1);
         arr_ptrs[i] = &arr2[i];
     }
-    if(R->size_bits < M->used_bits){
+    if(R->size_bits < M->used_bits)
+    {
         printf("[ERR] BigInt: Mod_Pow - too few reserved bits in Result.\n");
         goto label_ret;
     }
-    if( !(M->size_bits > (2 * M->used_bits)) ){
+    if( !(M->size_bits > (2 * M->used_bits)) )
+    {
         printf("[ERR] BigInt: Mod_Pow: wrong M's reserved bits.\n");
         goto label_ret;
     }
-    if(bigint_compare2(M, &zero) == CMP_EQUALS){
+    if(bigint_compare2(M, &zero) == CMP_EQUALS)
+    {
         printf("[ERR] BigInt: Mod_Pow: Division by zero.\n");
         goto label_ret;
     }
-    if(bigint_compare2(M, &one) == CMP_EQUALS){
+    if(bigint_compare2(M, &one) == CMP_EQUALS)
         goto label_ret;
-    }
-    if(bigint_compare2(P, &zero) == CMP_EQUALS){
+
+    if(bigint_compare2(P, &zero) == CMP_EQUALS)
+    {
         bigint_equate2(R, &one);
         goto label_ret;
     }
-    if(bigint_compare2(P, &one) == CMP_EQUALS){
+    if(bigint_compare2(P, &one) == CMP_EQUALS)
+    {
         bigint_div2(N, M, &div_res, R);
         goto label_ret;
     }
-    if(bigint_compare2(N, &zero) == CMP_EQUALS){
+    if(bigint_compare2(N, &zero) == CMP_EQUALS)
         goto label_ret;
-    }
-    if(bigint_compare2(N, &one) == CMP_EQUALS){
+
+    if(bigint_compare2(N, &one) == CMP_EQUALS)
+    {
         bigint_equate2(R, &one);
         goto label_ret;
     }
@@ -1005,14 +1028,10 @@ void bigint_mod_pow( const bigint* const N
     bigint_div2(N, M, &div_res, &aux1);
 
     /* The long loop */
-    for(u32 i = 0; i < P->used_bits; ++i){
-        /*
-        printf("[BigInt] - Long loop in MOD_POW moved  i = %u to %u"
-               " (power's used bits).\n"
-               , i, P->used_bits
-               );
-        */
-        if( i == arr1[arr1_curr_ind] ){
+    for(u32 i = 0; i < P->used_bits; ++i)
+    {
+        if( i == arr1[arr1_curr_ind] )
+        {
             bigint_equate2( arr_ptrs[arr1_curr_ind], &aux1);
             ++arr1_curr_ind;
         }
@@ -1020,16 +1039,18 @@ void bigint_mod_pow( const bigint* const N
         bigint_div2(&aux2, M, &div_res, &aux1);
     }
 
-    if(c1 == 1){
+    if(c1 == 1)
+    {
         bigint_equate2(R, arr_ptrs[0]);
         goto label_ret;
     }
     bigint_mod_mul(arr_ptrs, M, c1, R);
 
 label_ret:
-    for(u32 i = 0; i < c1; ++i){
+
+    for(u32 i = 0; i < c1; ++i)
         bigint_cleanup(&(arr2[i]));
-    }
+
     free(arr2);
     free(arr_ptrs);
     free(arr1);
@@ -1083,29 +1104,35 @@ u8 rabin_miller(const bigint* const N, const u32 passes)
     bigint_create_from_u32(&aux1,        N->size_bits, 0);
 
     bigint_sub_fast(N, &one, &N_minus_one);
+
     /* Get K and M */
     bigint_equate2(&aux1, &N_minus_one);
 
-    while(K_flag){
+    while(K_flag)
+    {
         bigint_div2(&aux1, &two, &div_res, &rem);
-        if(bigint_compare2(&rem, &zero) == CMP_EQUALS){
+
+        if(bigint_compare2(&rem, &zero) == CMP_EQUALS)
+        {
             ++K;
             bigint_equate2(&aux1, &div_res);
             bigint_equate2(&M, &div_res);
         }
-        else{
+        else
             K_flag = 0;
-        }
     }
 
     /* Create the different A's we will use */
     As = (bigint*)calloc(1, ( (passes * 2) + 1) * sizeof(bigint));
-    for(u32 i = 0; i < (passes * 2) + 1; ++i){
+
+    for(u32 i = 0; i < (passes * 2) + 1; ++i)
+    {
         bigint_create_from_u32(&(As[i]), N->size_bits, A_val);
         ++A_val;
     }
 
 label_B0:
+
     lab_b0_flag = 0;
 
     /* Compute this A's b0 */
@@ -1115,49 +1142,57 @@ label_B0:
         || (bigint_compare2(&B0, &N_minus_one) == CMP_EQUALS))
     {
         ++prime_votes;
-        if(prime_votes == passes){
+        if(prime_votes == passes)
+        {
             ret = 1;
             goto label_ret;
         }
-        else{
+        else
+        {
             ++curr_A_ind;
             goto label_B0;
         }
     }
     /* Start computing this A's Bi terms till the B(K-1)-th term. */
-    else{
+    else
+    {
         bigint_equate2(&Bi, &B0);
 
-        for(u32 i = 1; i < K; ++i){
+        for(u32 i = 1; i < K; ++i)
+        {
             bigint_equate2(&Bi_prev, &Bi);
             bigint_mod_pow(&Bi_prev, &two, N, &Bi);
-            if(bigint_compare2(&Bi, &N_minus_one) == CMP_EQUALS){
+            if(bigint_compare2(&Bi, &N_minus_one) == CMP_EQUALS)
+            {
                 ++prime_votes;
-                if(prime_votes == passes){
+                if(prime_votes == passes)
+                {
                     ret = 1;
                     lab_ret_flag = 1;
                     break;
                 }
-                else{
+                else
+                {
                     ++curr_A_ind;
                     lab_b0_flag = 1;
                     break;
                 }
             }
-            if( (i == (K - 1)) ){
+            if( (i == (K - 1)) )
+            {
                 lab_ret_flag = 1;
                 break;
             }
         }
-        if(lab_ret_flag) {
+        if(lab_ret_flag)
             goto label_ret;
-        }
-        if(lab_b0_flag)  {
+
+        if(lab_b0_flag)
             goto label_B0;
-        }
     }
 
 label_ret:
+
     bigint_cleanup(&N_minus_one);
     bigint_cleanup(&one);
     bigint_cleanup(&two);
@@ -1169,21 +1204,20 @@ label_ret:
     bigint_cleanup(&rem);
     bigint_cleanup(&zero);
     bigint_cleanup(&aux1);
-    for(u32 i = 0; i < (passes * 2) + 1; ++i){
+
+    for(u32 i = 0; i < (passes * 2) + 1; ++i)
         bigint_cleanup(&(As[i]));
-    }
+
     free(As);
     return ret;
  }
 
-static inline
-__attribute__((always_inline))
+static inline __attribute__((always_inline))
 void mont_mul_inner_loop(      uint64_t* const __restrict__ R_limbs,
-                                                 const uint64_t* const __restrict__ N_limbs,
-                                                 const uint64_t* const __restrict__ X_limbs,
-                                                 const uint64_t* const __restrict__ Y_limbs,
-                                                 const uint64_t i,
-                                                 const unsigned long long q)
+                         const uint64_t* const __restrict__ N_limbs,
+                         const uint64_t* const __restrict__ X_limbs,
+                         const uint64_t* const __restrict__ Y_limbs,
+                         const uint64_t i, const unsigned long long q)
 {
     uint8_t C;
     uint8_t D;
@@ -1193,52 +1227,11 @@ void mont_mul_inner_loop(      uint64_t* const __restrict__ R_limbs,
     unsigned long long  Vh;
     unsigned long long  W;
 
-    /* T, a 3-limb variable, resides in R->bits buffer for optimization:
-         * T = (unsigned long long*)(R->bits + ((MONT_L + 1) * MONT_LIMB_SIZ));
-         */
+    /* T, a 3-limb variable, resides in R->bits buffer for optimization. */
     #define T  ( (unsigned long long*)(R_limbs + (MONT_L + 1)) )
-        for(u64 j = 1; j < MONT_L; ++j){
-        Ul   = _mulx_u64(q, N_limbs[j], &Uh);
-                Vl   = _mulx_u64(Y_limbs[i], X_limbs[j], &Vh);
-                C    = _addcarryx_u64((u8)0, Ul, R_limbs[j], &Ul);
-                Uh  += (u64)C;
-        D    = _addcarryx_u64((u8)0, Vl, T[1], &Vl);
-        C    = _addcarryx_u64((u8)0, Ul, Vl, T);
-        D    = _addcarryx_u64(D, Uh, Vh, &W);
-        C    = _addcarryx_u64(C, W, T[2], T + 1);
-                T[2] = (u64)C + (u64)D;
-        R_limbs[j-1] = *T;
-        }
-    #undef T
-}
 
-static inline
-__attribute__((always_inline))
-void dual_mont_mul_inner_loop(      uint64_t* const __restrict__ R_limbs,
-                                                                  uint64_t* const __restrict__ R2_limbs,
-                              const uint64_t* const __restrict__ N_limbs,
-                              const uint64_t* const __restrict__ X_limbs,
-                                                            const uint64_t* const __restrict__ X2_limbs,
-                              const uint64_t* const __restrict__ Y_limbs,
-                                                            const uint64_t* const __restrict__ Y2_limbs,
-                              const uint64_t i,
-                              const unsigned long long q,
-                                                            const unsigned long long q2)
-{
-    uint8_t C;
-    uint8_t D;
-    unsigned long long  Ul;
-    unsigned long long  Uh;
-    unsigned long long  Vl;
-    unsigned long long  Vh;
-    unsigned long long  W;
-
-    /* T, a 3-limb variable, resides in R->bits buffer for optimization:
-     * T = (unsigned long long*)(R->bits + ((MONT_L + 1) * MONT_LIMB_SIZ));
-     */
-    #define T  ( (unsigned long long*)(R_limbs  + (MONT_L + 1)) )
-    #define T2 ( (unsigned long long*)(R2_limbs + (MONT_L + 1)) )
-    for(u64 j = 1; j < MONT_L; ++j){
+    for(u64 j = 1; j < MONT_L; ++j)
+    {
         Ul   = _mulx_u64(q, N_limbs[j], &Uh);
         Vl   = _mulx_u64(Y_limbs[i], X_limbs[j], &Vh);
         C    = _addcarryx_u64((u8)0, Ul, R_limbs[j], &Ul);
@@ -1249,17 +1242,62 @@ void dual_mont_mul_inner_loop(      uint64_t* const __restrict__ R_limbs,
         C    = _addcarryx_u64(C, W, T[2], T + 1);
         T[2] = (u64)C + (u64)D;
         R_limbs[j-1] = *T;
+    }
+    #undef T
+}
 
-                Ul    = _mulx_u64(q2, N_limbs[j], &Uh);
-                Vl    = _mulx_u64(Y2_limbs[i], X2_limbs[j], &Vh);
-                C     = _addcarryx_u64((u8)0, Ul, R2_limbs[j], &Ul);
-                Uh   += (u64)C;
-                D     = _addcarryx_u64((u8)0, Vl, T2[1], &Vl);
-                C     = _addcarryx_u64((u8)0, Ul, Vl, T2);
-                D     = _addcarryx_u64(D, Uh, Vh, &W);
-                C     = _addcarryx_u64(C, W, T2[2], T2 + 1);
-                T2[2] = (u64)C + (u64)D;
-                R2_limbs[j-1] = *T2;
+/* Originally there were 2 calls back to back for Montgomery Modular Powering
+ * in the signature validation function. Interleaving these 2 function calls
+ * exposed more instruction-level parallelism and resulted in a 10% speedup.
+ */
+static inline __attribute__((always_inline))
+void dual_mont_mul_inner_loop(      uint64_t* const __restrict__ R_limbs,
+                                    uint64_t* const __restrict__ R2_limbs,
+                              const uint64_t* const __restrict__ N_limbs,
+                              const uint64_t* const __restrict__ X_limbs,
+                              const uint64_t* const __restrict__ X2_limbs,
+                              const uint64_t* const __restrict__ Y_limbs,
+                              const uint64_t* const __restrict__ Y2_limbs,
+                              const uint64_t i, const unsigned long long q,
+                              const unsigned long long q2)
+{
+    uint8_t C;
+    uint8_t D;
+    unsigned long long  Ul;
+    unsigned long long  Uh;
+    unsigned long long  Vl;
+    unsigned long long  Vh;
+    unsigned long long  W;
+
+    /* T, a 3-limb variable, resides in R->bits buffer for optimization */
+    #define T  ( (unsigned long long*)(R_limbs  + (MONT_L + 1)) )
+    #define T2 ( (unsigned long long*)(R2_limbs + (MONT_L + 1)) )
+
+    for(u64 j = 1; j < MONT_L; ++j)
+    {
+        /* Interleaved. One iteration for call 1's arguments. */
+        Ul    = _mulx_u64(q, N_limbs[j], &Uh);
+        Vl    = _mulx_u64(Y_limbs[i], X_limbs[j], &Vh);
+        C     = _addcarryx_u64((u8)0, Ul, R_limbs[j], &Ul);
+        Uh   += (u64)C;
+        D     = _addcarryx_u64((u8)0, Vl, T[1], &Vl);
+        C     = _addcarryx_u64((u8)0, Ul, Vl, T);
+        D     = _addcarryx_u64(D, Uh, Vh, &W);
+        C     = _addcarryx_u64(C, W, T[2], T + 1);
+        T[2]  = (u64)C + (u64)D;
+        R_limbs[j-1] = *T;
+
+        /* Interleaved. One iteration for call 2's arguments. */
+        Ul    = _mulx_u64(q2, N_limbs[j], &Uh);
+        Vl    = _mulx_u64(Y2_limbs[i], X2_limbs[j], &Vh);
+        C     = _addcarryx_u64((u8)0, Ul, R2_limbs[j], &Ul);
+        Uh   += (u64)C;
+        D     = _addcarryx_u64((u8)0, Vl, T2[1], &Vl);
+        C     = _addcarryx_u64((u8)0, Ul, Vl, T2);
+        D     = _addcarryx_u64(D, Uh, Vh, &W);
+        C     = _addcarryx_u64(C, W, T2[2], T2 + 1);
+        T2[2] = (u64)C + (u64)D;
+        R2_limbs[j-1] = *T2;
     }
     #undef T
     #undef T2
@@ -1285,7 +1323,6 @@ void dual_mont_mul_inner_loop(      uint64_t* const __restrict__ R_limbs,
  *       pass it here. This is because we operate in base 2^64 and our storage
  *       type is already uint64_t.
  */
-//__attribute__((noinline))
 void montgomery_mul(bigint* X, bigint* Y, bigint* N, bigint* R)
 {
     u8 C;
@@ -1309,7 +1346,8 @@ void montgomery_mul(bigint* X, bigint* Y, bigint* N, bigint* R)
 
     memset(T, 0, (3 * MONT_LIMB_SIZ));
 
-    for(uint64_t i = 0; i < MONT_L; ++i){
+    for(uint64_t i = 0; i < MONT_L; ++i)
+    {
         uint64_t* X_N_bit_buffer_ptr;
         uint64_t* Y_bit_buffer_ptr;
         uint64_t* R_bit_buffer_ptr;
@@ -1320,6 +1358,7 @@ void montgomery_mul(bigint* X, bigint* Y, bigint* N, bigint* R)
          */
         Y_bit_buffer_ptr   = ((u64*)(Y->bits)) + i;
         X_N_bit_buffer_ptr = (u64*)(X->bits);
+
         /* 2. */
         Ul = _mulx_u64(*Y_bit_buffer_ptr, *X_N_bit_buffer_ptr, &Uh);
         R_bit_buffer_ptr = (u64*)(R->bits);
@@ -1328,9 +1367,11 @@ void montgomery_mul(bigint* X, bigint* Y, bigint* N, bigint* R)
         *(T + 0) = Ul;
         *(T + 1) = Uh;
         *(T + 2) = 0;
+
         /* 3. */
         q = _mulx_u64((u64)MONT_MU, *(T + 0), &Uh);
         X_N_bit_buffer_ptr = (u64*)(N->bits);
+
         /* 3.5:  T += q*n0. */
         Vl = _mulx_u64(q, *X_N_bit_buffer_ptr, &Vh);
         C = _addcarryx_u64( (u8)0, *(T + 0), Vl, (T + 0) );
@@ -1339,7 +1380,7 @@ void montgomery_mul(bigint* X, bigint* Y, bigint* N, bigint* R)
 
         /* 4. */
         mont_mul_inner_loop((u64*)(R->bits), (u64*)(N->bits),
-                                                        (u64*)(X->bits), (u64*)(Y->bits), i, q);
+                            (u64*)(X->bits), (u64*)(Y->bits), i, q);
 
         R_bit_buffer_ptr = ((u64*)(R->bits)) + MONT_L;
 
@@ -1361,7 +1402,8 @@ void montgomery_mul(bigint* X, bigint* Y, bigint* N, bigint* R)
     uint64_t temp_limb;
     memcpy(&temp_limb, (R->bits + (MONT_L * MONT_LIMB_SIZ)), MONT_LIMB_SIZ);
 
-    if ( temp_limb != 0){
+    if(temp_limb != 0)
+    {
         bigint_equate2(&R_aux, R);
         bigint_sub_fast(&R_aux, N, R);
     }
@@ -1371,8 +1413,9 @@ void montgomery_mul(bigint* X, bigint* Y, bigint* N, bigint* R)
     return;
 }
 
+/* Used in the interleaved Montgomery Modular Powering. */
 void dual_montgomery_mul(bigint* X,  bigint* Y,  bigint* N,  bigint* R,
-                                                 bigint* X2, bigint* Y2, bigint* R2)
+                         bigint* X2, bigint* Y2, bigint* R2)
 {
     u8 C, C2;
     u8 D, D2;
@@ -1397,9 +1440,10 @@ void dual_montgomery_mul(bigint* X,  bigint* Y,  bigint* N,  bigint* R,
     T2 = (unsigned long long*)(R2->bits + ((MONT_L + 1) * MONT_LIMB_SIZ));
 
     memset(T,  0, (3 * MONT_LIMB_SIZ));
-        memset(T2, 0, (3 * MONT_LIMB_SIZ));
+    memset(T2, 0, (3 * MONT_LIMB_SIZ));
 
-    for(uint64_t i = 0; i < MONT_L; ++i){
+    for(uint64_t i = 0; i < MONT_L; ++i)
+    {
         uint64_t *X_N_bit_buffer_ptr, *X2_N2_bit_buffer_ptr;
         uint64_t *Y_bit_buffer_ptr,   *Y2_bit_buffer_ptr;
         uint64_t *R_bit_buffer_ptr,   *R2_bit_buffer_ptr;
@@ -1410,6 +1454,7 @@ void dual_montgomery_mul(bigint* X,  bigint* Y,  bigint* N,  bigint* R,
          */
         Y_bit_buffer_ptr     = ((u64*)(Y->bits))  + i;
         X_N_bit_buffer_ptr   = (u64*)(X->bits);
+
         /* 2. */
         Ul  = _mulx_u64(*Y_bit_buffer_ptr,  *X_N_bit_buffer_ptr,   &Uh);
         R_bit_buffer_ptr  = (u64*)(R->bits);
@@ -1418,18 +1463,20 @@ void dual_montgomery_mul(bigint* X,  bigint* Y,  bigint* N,  bigint* R,
         *(T  + 0) = Ul;
         *(T  + 1) = Uh;
         *(T  + 2) = 0;
+
         /* 3. */
         q  = _mulx_u64((u64)MONT_MU, *(T  + 0), &Uh);
         X_N_bit_buffer_ptr   = (u64*)(N->bits);
+
         /* 3.5:  T += q*n0. */
         Vl  = _mulx_u64(q,  *X_N_bit_buffer_ptr,   &Vh);
         C   = _addcarryx_u64( (u8)0, *(T  + 0), Vl,  (T  + 0) );
         D   = _addcarryx_u64( C,  *(T  + 1), Vh,  (T  + 1) );
         *(T  + 2) += (u64)D;
 
-        /******* Second set of parameter usage BEGIN. */
+        /******* Second set of parameter usage BEGINS. */
 
-                Y2_bit_buffer_ptr    = ((u64*)(Y2->bits)) + i;
+        Y2_bit_buffer_ptr    = ((u64*)(Y2->bits)) + i;
         X2_N2_bit_buffer_ptr = (u64*)(X2->bits);
         Ul2 = _mulx_u64(*Y2_bit_buffer_ptr, *X2_N2_bit_buffer_ptr, &Uh2);
         R2_bit_buffer_ptr = (u64*)(R2->bits);
@@ -1438,23 +1485,22 @@ void dual_montgomery_mul(bigint* X,  bigint* Y,  bigint* N,  bigint* R,
         *(T2 + 0) = Ul2;
         *(T2 + 1) = Uh2;
         *(T2 + 2) = 0;
-                q2 = _mulx_u64((u64)MONT_MU, *(T2 + 0), &Uh2);
-                X2_N2_bit_buffer_ptr = (u64*)(N->bits);
-                Vl2 = _mulx_u64(q2, *X2_N2_bit_buffer_ptr, &Vh2);
-                C2  = _addcarryx_u64( (u8)0, *(T2 + 0), Vl2, (T2 + 0) );
-                D2  = _addcarryx_u64( C2, *(T2 + 1), Vh2, (T2 + 1) );
-                *(T2 + 2) += (u64)D2;
+        q2 = _mulx_u64((u64)MONT_MU, *(T2 + 0), &Uh2);
+        X2_N2_bit_buffer_ptr = (u64*)(N->bits);
+        Vl2 = _mulx_u64(q2, *X2_N2_bit_buffer_ptr, &Vh2);
+        C2  = _addcarryx_u64( (u8)0, *(T2 + 0), Vl2, (T2 + 0) );
+        D2  = _addcarryx_u64( C2, *(T2 + 1), Vh2, (T2 + 1) );
+        *(T2 + 2) += (u64)D2;
 
-                /******* Second set of parameter usage END.   */
+        /******* Second set of parameter usage ENDS.   */
 
-                dual_mont_mul_inner_loop((u64*)(R->bits), (u64*)(R2->bits),
-                                                                 (u64*)(N->bits),
-                                                                 (u64*)(X->bits), (u64*)(X2->bits),
-                                                                 (u64*)(Y->bits), (u64*)(Y2->bits),
-                                                                 i, q, q2
-                                                                 );
+        /* The interleaved inner loop. */
+        dual_mont_mul_inner_loop
+            ((u64*)(R->bits), (u64*)(R2->bits), (u64*)(N->bits),
+             (u64*)(X->bits), (u64*)(X2->bits), (u64*)(Y->bits),
+             (u64*)(Y2->bits), i, q, q2);
 
-        R_bit_buffer_ptr  = ((u64*)(R->bits))  + MONT_L;
+        R_bit_buffer_ptr = ((u64*)(R->bits)) + MONT_L;
 
         /* 5. */
         C  = _addcarryx_u64((u8)0, *(T  + 1), *R_bit_buffer_ptr,  (T  + 0));
@@ -1464,16 +1510,16 @@ void dual_montgomery_mul(bigint* X,  bigint* Y,  bigint* N,  bigint* R,
         /* 6. */
         memcpy( ((u64*)(R->bits))  + (MONT_L - 1), T,  2 * MONT_LIMB_SIZ );
 
-                /***** Second set of parameter usage BEGIN. */
+        /***** Second set of parameter usage BEGINS. */
 
-                R2_bit_buffer_ptr = ((u64*)(R2->bits)) + MONT_L;
-                C2 = _addcarryx_u64((u8)0, *(T2 + 1), *R2_bit_buffer_ptr, (T2 + 0));
-                *(T2 + 1) = (u64)C2 + *(T2 + 2);
-                *(T2 + 2) = 0;
-                memcpy( ((u64*)(R2->bits)) + (MONT_L - 1), T2, 2 * MONT_LIMB_SIZ );
+        R2_bit_buffer_ptr = ((u64*)(R2->bits)) + MONT_L;
+        C2 = _addcarryx_u64((u8)0, *(T2 + 1), *R2_bit_buffer_ptr, (T2 + 0));
+        *(T2 + 1) = (u64)C2 + *(T2 + 2);
+        *(T2 + 2) = 0;
+        memcpy( ((u64*)(R2->bits)) + (MONT_L - 1), T2, 2 * MONT_LIMB_SIZ );
 
-                /***** Second set of parameter usage END.   */
-    }
+        /***** Second set of parameter usage ENDS.   */
+}
 
     memset(T,  0, 3 * MONT_LIMB_SIZ);
     memset(T2, 0, 3 * MONT_LIMB_SIZ);
@@ -1486,33 +1532,34 @@ void dual_montgomery_mul(bigint* X,  bigint* Y,  bigint* N,  bigint* R,
     memcpy(&temp_limb,  (R->bits  + (MONT_L * MONT_LIMB_SIZ)), MONT_LIMB_SIZ);
     memcpy(&temp_limb2, (R2->bits + (MONT_L * MONT_LIMB_SIZ)), MONT_LIMB_SIZ);
 
-    if(temp_limb != 0){
+    if(temp_limb != 0)
+    {
         bigint_equate2(&R_aux, R);
         bigint_sub_fast(&R_aux, N, R);
     }
-    if(temp_limb2 != 0){
+    if(temp_limb2 != 0)
+    {
         bigint_equate2(&R_aux2, R2);
-                bigint_sub_fast(&R_aux2, N, R2);
-        }
+        bigint_sub_fast(&R_aux2, N, R2);
+    }
 
     /* Cleanup. */
     bigint_cleanup(&R_aux);
-        bigint_cleanup(&R_aux2);
+    bigint_cleanup(&R_aux2);
     return;
 }
-
 
 /* Practical method to convert a number to Montgomery Form.
  *
  * To find the Montgomery form (mod M) of A, do the following:
  *
- *  Call Montgomery MUL mod M with input 1 set to (beta^(2*L) mod M), the other
- *  input set to A itself (in normal positional notation). The output of this
- *  will in fact be a valid Montgomery representative of A.
+ * Call Montgomery MUL mod M with input 1 set to (beta^(2*L) mod M), the other
+ * input set to A itself (in normal positional notation). The output of this
+ * will in fact be a valid Montgomery representative of A.
  *
- *  Note: Sometimes a Montgomery form of a number can be larger than the number
- *        itself in regular positional notation. This is fine and is still a
- *        valid Montgomery form of that number.
+ * Note: Sometimes a Montgomery form of a number can be larger than the number
+ *       itself in regular positional notation. This is fine and is still a
+ *       valid Montgomery form of that number.
  */
 void get_mont_form(bigint* src, bigint* target, bigint* M)
 {
@@ -1532,8 +1579,10 @@ void get_mont_form(bigint* src, bigint* target, bigint* M)
 
     /* beta = 2^64 for 64-bit Montgomery limbs. */
     bigint_pow(&two, &sixtyfour, &beta);
+
     /* aux = beta^(2*L) mod M */
     bigint_mod_pow(&beta, &two_L, M, &aux);
+
     /* Now generate the source's Montgomery form. */
     montgomery_mul(&aux, src, M, target);
 
@@ -1550,18 +1599,19 @@ void get_mont_form(bigint* src, bigint* target, bigint* M)
 
 /* Computes B^P mod M using Montgomery Modular Multiplication. Result goes in R.
  * The base B must be in Montgomery Form.
- * The result R is NOT the Montgomery Form of the result of powering, it
- * is the actual result in regular positional notation.
+ * The result R is NOT the Montgomery Form of the result of powering, it is the
+ * actual result in regular positional notation.
  *
  * Note: This function is somewhat general, but not fully general - it computes
  *       any modular powering mod M using Montgomery Multiplication, and the
  *       parameters that depend on the modulus M (MU and L) are defined at
  *       the top of this file. However, it won't work for modular powering mod
- *       some other number, other than M, which for the purposes of the secure
- *       chat system this library was originally written for is global static.
- *       If a function for modular POW mod M using Montgomery Multiplication
- *       for a different modulus is needed, you have to change the Montgomery
- *       parameters MU and L - they are different for each Montgomery modulus.
+ *       some other number, other than M, which for the purposes of the Rosetta
+ *       Secret Communications, is global static.
+ *       If a function for modular powering mod M using Montgomery
+ *       Multiplication for a different modulus is needed, we'd have to change
+ *       the Montgomery parameters MU and L - they are different for each
+ *       Montgomery modulus M.
  */
 void mont_pow_mod_m(bigint* B, bigint* P, bigint* M, bigint* R)
 {
@@ -1582,15 +1632,16 @@ void mont_pow_mod_m(bigint* B, bigint* P, bigint* M, bigint* R)
     bigint_equate2(&X, B);
     bigint_equate2(&Y, B);
 
-    for(int64_t i = (int64_t)(P->used_bits - 2); i >= 0; --i){
+    for(int64_t i = (int64_t)(P->used_bits - 2); i >= 0; --i)
+    {
         montgomery_mul(&Y, &Y, M, R);
         bigint_equate2(&Y, R);
-        if( (BIGINT_GET_BIT(*P, i, bit)) == 1 ){
+        if( (BIGINT_GET_BIT(*P, i, bit)) == 1 )
+        {
             montgomery_mul(&Y, &X, M, R);
             bigint_equate2(&Y, R);
         }
     }
-
     montgomery_mul(&one, R, M, &R_1);
     bigint_div2(&R_1, M, &div_res, R);
 
@@ -1607,11 +1658,10 @@ void mont_pow_mod_m(bigint* B, bigint* P, bigint* M, bigint* R)
  * for the first such call for sure and also for the second call for about
  * a quarter of the time, since both powers in validating Schnorr signatures
  * (the only place where we have two Montgomery powerings back to back for now)
- * have random-looking bits and two set bits for the same bit index is a quarter
- * of the other possibilities.
+ * have random bits and the chance of two set bits at the same index is 25%.
  */
 void dual_mont_pow_mod_m(bigint* B1, bigint* P1, bigint* M1, bigint* R1,
-                                                 bigint* B2, bigint* P2, bigint* M2, bigint* R2)
+                         bigint* B2, bigint* P2, bigint* M2, bigint* R2)
 {
     u32 bit;
     bigint X, X2;
@@ -1626,7 +1676,7 @@ void dual_mont_pow_mod_m(bigint* B1, bigint* P1, bigint* M1, bigint* R1,
     bigint_create_from_u32(&one,      M1->size_bits, 1);
     bigint_create_from_u32(&div_res,  M1->size_bits, 0);
 
-        bigint_create_from_u32(&X2,       M2->size_bits, 0);
+    bigint_create_from_u32(&X2,       M2->size_bits, 0);
     bigint_create_from_u32(&Y2,       M2->size_bits, 0);
     bigint_create_from_u32(&R_2,      M2->size_bits, 0);
     bigint_create_from_u32(&one2,     M2->size_bits, 1);
@@ -1637,74 +1687,84 @@ void dual_mont_pow_mod_m(bigint* B1, bigint* P1, bigint* M1, bigint* R1,
     bigint_equate2(&Y, B1);
 
     bigint_equate2(&X2, B2);
-        bigint_equate2(&Y2, B2);
+    bigint_equate2(&Y2, B2);
 
     uint32_t z;
 
-        if(P1->used_bits > P2->used_bits){
+    if(P1->used_bits > P2->used_bits)
         z = P1->used_bits;
-        }
-    else{
+
+    else
         z = P2->used_bits;
-        }
 
-        /* The crunch loop. */
-    for(int64_t i = (int64_t)(z - 2); i >= 0; --i){
-                bool c1 = (i <= P1->used_bits - 2);
-                bool c2 = (i <= P2->used_bits - 2);
-                if(__builtin_expect ((c1 && c2), true) ){
-                    dual_montgomery_mul(&Y, &Y, M1, R1, &Y2, &Y2, R2);
+    /* The crunch loop. */
+    for(int64_t i = (int64_t)(z - 2); i >= 0; --i)
+    {
+        bool c1 = (i <= P1->used_bits - 2);
+        bool c2 = (i <= P2->used_bits - 2);
+
+        if(__builtin_expect ((c1 && c2), true) )
+        {
+            dual_montgomery_mul(&Y, &Y, M1, R1, &Y2, &Y2, R2);
             bigint_equate2(&Y,  R1);
-                    bigint_equate2(&Y2, R2);
+            bigint_equate2(&Y2, R2);
 
-                    bool c3 = (BIGINT_GET_BIT(*P1, i, bit));
-                    bool c4 = (BIGINT_GET_BIT(*P2, i, bit));
+            bool c3 = (BIGINT_GET_BIT(*P1, i, bit));
+            bool c4 = (BIGINT_GET_BIT(*P2, i, bit));
 
-                    if(c3 && c4){
+            if(c3 && c4)
+            {
                 dual_montgomery_mul(&Y, &X, M1, R1, &Y2, &X2, R2);
-                            bigint_equate2(&Y,  R1);
-                            bigint_equate2(&Y2, R2);
-                    }
-                    else if(c3 && !c4){
-                montgomery_mul(&Y, &X, M1, R1);
-                            bigint_equate2(&Y, R1);
-                    }
-                    else if(!c3 && c4){
-                montgomery_mul(&Y2, &X2, M2, R2);
-                            bigint_equate2(&Y2, R2);
-                    }
-        }
-                else if(c1 && !c2){
-            montgomery_mul(&Y, &Y, M1, R1);
-                        bigint_equate2(&Y, R1);
-                        if( (BIGINT_GET_BIT(*P1, i, bit)) == 1 ){
+                bigint_equate2(&Y,  R1);
+                bigint_equate2(&Y2, R2);
+            }
+            else if(c3 && !c4)
+            {
                 montgomery_mul(&Y, &X, M1, R1);
                 bigint_equate2(&Y, R1);
-                        }
-                }
-        else if(!c1 && c2){
-            montgomery_mul(&Y2, &Y2, M2, R2);
-                        bigint_equate2(&Y2, R2);
-                        if( (BIGINT_GET_BIT(*P2, i, bit)) == 1 ){
+            }
+            else if(!c3 && c4)
+            {
                 montgomery_mul(&Y2, &X2, M2, R2);
-                                bigint_equate2(&Y2, R2);
-                        }
-                }
+                bigint_equate2(&Y2, R2);
+            }
         }
+        else if(c1 && !c2)
+        {
+            montgomery_mul(&Y, &Y, M1, R1);
+            bigint_equate2(&Y, R1);
+            if( (BIGINT_GET_BIT(*P1, i, bit)) == 1 )
+            {
+                montgomery_mul(&Y, &X, M1, R1);
+                bigint_equate2(&Y, R1);
+            }
+        }
+        else if(!c1 && c2)
+        {
+            montgomery_mul(&Y2, &Y2, M2, R2);
+            bigint_equate2(&Y2, R2);
+            if( (BIGINT_GET_BIT(*P2, i, bit)) == 1 )
+            {
+                montgomery_mul(&Y2, &X2, M2, R2);
+                bigint_equate2(&Y2, R2);
+            }
+        }
+    }
+
     dual_montgomery_mul(&one, R1, M1, &R_1, &one2, R2, &R_2);
-        bigint_div2(&R_1, M1, &div_res,  R1);
-        bigint_div2(&R_2, M2, &div_res2, R2);
+    bigint_div2(&R_1, M1, &div_res,  R1);
+    bigint_div2(&R_2, M2, &div_res2, R2);
 
     /* Cleanup. */
     bigint_cleanup(&X);
-        bigint_cleanup(&X2);
+    bigint_cleanup(&X2);
     bigint_cleanup(&Y);
-        bigint_cleanup(&Y2);
+    bigint_cleanup(&Y2);
     bigint_cleanup(&R_1);
-        bigint_cleanup(&R_2);
+    bigint_cleanup(&R_2);
     bigint_cleanup(&one);
-        bigint_cleanup(&one2);
+    bigint_cleanup(&one2);
     bigint_cleanup(&div_res);
-        bigint_cleanup(&div_res2);
+    bigint_cleanup(&div_res2);
     return;
 }
