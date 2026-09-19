@@ -39,14 +39,15 @@ void erase_mem_secure(volatile uint8_t* buf, uint64_t num_bytes_to_erase)
     size_t i = 0;
 
     /* SIMD - zero out memory in chunks of 256 bits at a time. */
-    while(i + sizeof(__m256i) <= num_bytes_to_erase){
+    while(i + sizeof(__m256i) <= num_bytes_to_erase)
+    {
         _mm256_storeu_si256((__m256i *)(uintptr_t)(buf + i), zero_reg256);
         i += sizeof(__m256i);
     }
     /* Any remaining bytes fewer than 32, clear byte by byte. */
-    while(i < num_bytes_to_erase){
+    while(i < num_bytes_to_erase)
         buf[i++] = 0;
-    }
+
     /* Compiler memory barrier to prevent aggressive compile-time and link-time
      * optimizers from reordering memory around this memory clearing operation.
      */
@@ -91,10 +92,14 @@ void output_rst(){ printf("\033[0m"); }
 #define s64 int64_t
 
 /* Helper function to print the raw byte values of a memory buffer. */
-void print_buffer(uint8_t* buf, uint64_t len){
+void print_buffer(uint8_t* buf, uint64_t len)
+{
     printf("\n\n");
-    for(u64 x = 0; x < len; ++x){
-        if(x % 16 == 0 && x > 0){printf("\n");}
+    for(u64 x = 0; x < len; ++x)
+    {
+        if(x % 16 == 0 && x > 0)
+            printf("\n");
+
         printf("%02X ", buf[x]);
     }
     printf("\n\n");

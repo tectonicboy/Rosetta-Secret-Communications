@@ -1185,13 +1185,15 @@ label_start_pass:
     return;
 }
 
-/* Generate a Schnorr cryptographic signature from a message, ccording to the
+/* Generate a Schnorr cryptographic signature from a message, according to the
  * method pioneered by Claus-Peter Schnorr. A signature validated by the
  * receiver ensures that the payload really was sent by the intended sender and
  * that the payload was not modified en route - authenticity.
  *
+ * Algorithm for generating a new Schnorr signature:
+ *
  * PH = BLAKE2B{64}(data);
- *  k = (BLAKE2B{64}(a || PH) mod (Q-1)) + 1;
+ *  k = (BLAKE2B{64}(a || PH) mod (Q - 1)) + 1;
  *  R = G^k mod M;
  *  e = trunc{bitwidth(Q)}(BLAKE2B{64}(R || PH));
  *  s = ((k - (a * e)) mod Q;
@@ -1242,6 +1244,7 @@ void signature_generate
     bigint_create_from_u32(&aux2,              M->size_bits, 0);
     bigint_create_from_u32(&aux3,              M->size_bits, 0);
 
+    /* Compute prehash PH = BLAKE2B{64}(data) */
     memset(prehash, 0, prehash_len);
     blake2b_init(data, data_len, 0, prehash_len, prehash);
     second_btb_inbuf = (u8*)calloc(1, key_len_bytes + prehash_len);
@@ -1249,48 +1252,47 @@ void signature_generate
     memcpy(second_btb_inbuf + key_len_bytes, prehash, prehash_len);
     blake2b_init(second_btb_inbuf, len_key_PH, 0, 64, second_btb_outbuf);
 
-    /* Now compute k. */
+    /* Compute k = (BLAKE2B{64}(a || PH) mod (Q - 1)) + 1 */
     memcpy(second_btb_outnum.bits, second_btb_outbuf, 64);
     second_btb_outnum.used_bits = get_used_bits(second_btb_outnum.bits, 64);
     bigint_sub_fast(Q, &one, &Q_minus_one);
     bigint_div2(&second_btb_outnum, &Q_minus_one, &div_res, &reduced_btb_res);
-    bigint_add_fast(&reduced_btb_res, &one, &k);  /* <----- k */
+    bigint_add_fast(&reduced_btb_res, &one, &k);
 
-    /* Now compute R. */
+    /* Compute R = G^k mod M */
     mont_pow_mod_m(Gmont, &k, M, &R);
 
     R_used_bytes = R.used_bits;
-    while(R_used_bytes % 8 != 0){
+    while(R_used_bytes % 8 != 0)
         ++R_used_bytes;
-    }
+
     R_used_bytes /= 8;
 
-    /* Now compute e. */
+    /* Compute e = trunc{bitwidth(Q)}(BLAKE2B{64}(R || PH)) */
     R_with_prehash = (u8*)calloc(1, R_used_bytes + prehash_len);
     memcpy(R_with_prehash, R.bits, R_used_bytes);
     memcpy(R_with_prehash + R_used_bytes, prehash, prehash_len);
     len_Rused_PH = R_used_bytes + prehash_len;
     blake2b_init(R_with_prehash, len_Rused_PH, 0, 64, third_btb_outbuf);
-    memcpy(e.bits, third_btb_outbuf, 40);
-    e.used_bits = get_used_bits(e.bits, 40);
+    memcpy(e.bits, third_btb_outbuf, DH_Q_BITWIDTH / 8);
+    e.used_bits = get_used_bits(e.bits, DH_Q_BITWIDTH / 8);
 
-    /* Lastly, compute s = ( k + ((Q - a) * e) ) mod Q */
+    /* Compute s = ((k - (a * e)) mod Q */
     bigint_sub_fast(Q, private_key, &aux1);
     bigint_mul_fast(&aux1, &e, &aux2);
     bigint_add_fast(&aux2, &k, &aux3);
     bigint_div2(&aux3, Q, &div_res, &s);
 
-    /* signature buffer must have been allocated with exactly
-     * ( (2 * sizeof(bigint)) + (2 * bytewidth(Q)) )
-     * bytes of memory. No checks done for performance.
+    /* Output buffer of size ( (2 * sizeof(bigint)) + (2 * bytewidth(Q)) )
+     * bytes must have been preallocated.
      */
     memcpy(signature + offset, &s, sizeof(bigint));
     offset += sizeof(bigint);
-    memcpy(signature + offset, s.bits, 40);
-    offset += 40;
+    memcpy(signature + offset, s.bits, DH_Q_BITWIDTH / 8);
+    offset += DH_Q_BITWIDTH / 8;
     memcpy(signature + offset, &e, sizeof(bigint));
     offset += sizeof(bigint);
-    memcpy(signature + offset, e.bits, 40);
+    memcpy(signature + offset, e.bits, DH_Q_BITWIDTH / 8);
 
     /* Cleanup. */
     bigint_cleanup(&second_btb_outnum);
@@ -1310,16 +1312,17 @@ void signature_generate
     return;
 }
 
-/* To verify against public key A and whatever was signed, the receiver:
+/* To validate a signature using public key A and whatever was signed using its
+ * corresponding private key a, the receiver:
  *
  *  0. checks that 0 <= s < Q, and that e has the expected bitwidth (that of Q).
- *  1. Computes the prehash PH as in step 0. above.
+ *  1. Computes the prehash PH as in the first step of signature generation.
  *  2. Computes R = (G^s * A^e) mod M.
  *  3. Computes BLAKE2B{64}(R||PH), truncated to bitwidth of Q.
  *     Check that this is equal to e. If it is, validation passed.
- *     In any other circumstance, the validation fails.
+ *     Under any other circumstance, validation fails.
  *
- *   RETURNS: 0 if signature is valid for this message, 1 for invalid signature.
+ *   RETURNS: 0 if signature is valid, 1 if it's invalid.
  */
 
 /* ------------------------ PERFORMANCE PROFILING --------------------------- */
@@ -1329,9 +1332,9 @@ size_t  nr_timepoints = 0;
 double  measurements[MAX_TIMEPOINTS];
 FILE*   measurements_fd;
 size_t  profiling_ret;
-
-uint8_t signature_validate( bigint* Gmont, bigint* Amont, bigint* M, bigint* Q
-                           ,bigint* s, bigint* e, u8* data, u32 data_len)
+/* -------------------------------------------------------------------------- */
+uint8_t signature_validate(bigint* Gmont, bigint* Amont, bigint* M, bigint* Q,
+                           bigint* s, bigint* e, u8* data, u32 data_len)
 {
     const u64 prehash_len = 64;
     u64       R_used_bytes;
@@ -1356,17 +1359,20 @@ uint8_t signature_validate( bigint* Gmont, bigint* Amont, bigint* M, bigint* Q
     bigint_create_from_u32(&div_res, M->size_bits, 0);
     bigint_create_from_u32(&val_e,   M->size_bits, 0);
 
-    if(bigint_compare2(s, Q) != CMP_SECOND_BIGGER){
+    if(bigint_compare2(s, Q) != CMP_SECOND_BIGGER)
+    {
         printf("[WARN] Cryptolib: sig_validate: input s != input Q.\n");
-          retval = 1;
+        retval = 1;
         goto label_cleanup;
     }
 
     /* Compute the signature validation prehash. Same as during generation. */
     blake2b_init(data, data_len, 0, prehash_len, prehash);
 
-    /* DEBUG ONLY */
+    /* Performance profiling. */
     struct timespec tv1, tv2;
+
+    /* The old way with 2 calls to montgomery modular powering back to back. */
 
     //clock_gettime(CLOCK_MONOTONIC_RAW, &tv1)
     //mont_pow_mod_m(Gmont, s, M, &R_aux1);
@@ -1376,68 +1382,81 @@ uint8_t signature_validate( bigint* Gmont, bigint* Amont, bigint* M, bigint* Q
     //mont_pow_mod_m(Amont, e, M, &R_aux2);
     //clock_gettime(CLOCK_MONOTONIC_RAW, &tv2);
 
-    /* Attempt an interleaved Montgomery multiplication to reduce stalls in the
-     * Core-bound bucket of Top-down microarchitecture analysis.
+    /* Use the new interleaved montgomery modular powering. It proved to boost
+     * instruction-level parallelism, lowering signature validation latency
+     * by 10%
      */
     clock_gettime(CLOCK_MONOTONIC_RAW, &tv1);
     dual_mont_pow_mod_m(Gmont, s, M, &R_aux1, Amont, e, M, &R_aux2);
     clock_gettime(CLOCK_MONOTONIC_RAW, &tv2);
 
     //clock_gettime(CLOCK_MONOTONIC_RAW, &tv1);
+
     bigint_mul_fast(&R_aux1, &R_aux2, &R_aux3);
+
     //clock_gettime(CLOCK_MONOTONIC_RAW, &tv2);
 
     bigint_div2(&R_aux3, M, &div_res, &R);
 
     if( __builtin_expect (tv2.tv_nsec > tv1.tv_nsec, true))
+    {
+        measurements[nr_timepoints++] =
+            ((tv2.tv_nsec - tv1.tv_nsec) / (double)1000.0);
+
+        if( __builtin_expect
+                (nr_timepoints == NR_TIMEPOINTS_TO_WRITE_AT, false))
         {
-            measurements[nr_timepoints++] =
-                ((tv2.tv_nsec - tv1.tv_nsec) / (double)1000.0);
-                //printf("Total timepoints: %lu\n", nr_timepoints);
-                if(__builtin_expect (nr_timepoints == NR_TIMEPOINTS_TO_WRITE_AT, false))
-                {
             measurements_fd = fopen
-                            ("./performance-analysis/last-measurements.dat", "w");
-                        if(measurements_fd == NULL){
+                          ("./performance-analysis/last-measurements.dat", "w");
+
+            if(measurements_fd == NULL)
+            {
                 printf("[ERR] Crypt: Could not open measurements file.\n");
-                                exit(1);
-                        }
-                        profiling_ret = fwrite(measurements, 1,
-                                                                    nr_timepoints * sizeof(double),
-                                                                        measurements_fd);
-                        if(profiling_ret != nr_timepoints * sizeof(double)){
-                printf("[ERR] Crypt: Could not write to measurements file.\n");
-                                fclose(measurements_fd);
-                                exit(1);
-                        }
-                        else{
-                printf("\n[OK]  Crypt: Wrote measurements file: %lu bytes.\n\n"
-                                             ,nr_timepoints * sizeof(double));
-                                fclose(measurements_fd);
-                        }
+                exit(1);
+            }
+            profiling_ret = fwrite(measurements, 1,
+                                   nr_timepoints * sizeof(double),
+                                   measurements_fd);
+
+            if(profiling_ret != nr_timepoints * sizeof(double))
+            {
+                printf("[ERR] Crypt: Write to measurements file failed.\n");
+                fclose(measurements_fd);
+                exit(1);
+            }
+            else
+            {
+                printf("\n[OK]  Crypt: Wrote measurements %lu bytes.\n\n",
+                       nr_timepoints * sizeof(double));
+
+                fclose(measurements_fd);
+            }
             memset(measurements, 0x00, MAX_TIMEPOINTS * sizeof(double));
-                        nr_timepoints = 0;
-                }
+            nr_timepoints = 0;
+        }
     }
 
     R_used_bytes = R.used_bits;
-    while(R_used_bytes % 8 != 0){
+
+    while(R_used_bytes % 8 != 0)
         ++R_used_bytes;
-    }
+
     R_used_bytes /= 8;
 
-    /* Last step:                                                       */
-    /* Computes val_e = BLAKE2B{64}(R||PH), truncated to bitwidth of Q. */
-    /* Check that this is equal to e. If it is, validation has passed.  */
+    /* Last step of signature validation:
+     * Computes val_e = BLAKE2B{64}(R||PH), truncated to bitwidth of Q.
+     * Check that this is equal to e. If it is, validation has passed.
+     */
     R_with_prehash = (u8*)calloc(1, R_used_bytes + prehash_len);
     memcpy(R_with_prehash, R.bits, R_used_bytes);
     memcpy(R_with_prehash + R_used_bytes, prehash, prehash_len);
     len_Rused_PH = R_used_bytes + prehash_len;
     blake2b_init(R_with_prehash, len_Rused_PH, 0, 64, blake2b_outbuf);
-    memcpy(val_e.bits, blake2b_outbuf, 40);
-    val_e.used_bits = get_used_bits(val_e.bits, 40);
+    memcpy(val_e.bits, blake2b_outbuf, DH_Q_BITWIDTH / 8);
+    val_e.used_bits = get_used_bits(val_e.bits, DH_Q_BITWIDTH / 8);
 
-    if( bigint_compare2(e, &val_e) != CMP_EQUALS ){
+    if( __builtin_expect(bigint_compare2(e, &val_e) != CMP_EQUALS), false )
+    {
         printf("[WARN] Cryptolib: SIG_VAL: val_e != passed e. Ret 0.\n");
         printf("Passed e:\n");
         bigint_print_info(e);
@@ -1449,6 +1468,7 @@ uint8_t signature_validate( bigint* Gmont, bigint* Amont, bigint* M, bigint* Q
     }
 
 label_cleanup:
+
     bigint_cleanup(&R);
     bigint_cleanup(&R_aux1);
     bigint_cleanup(&R_aux2);
@@ -1465,21 +1485,23 @@ uint8_t gen_priv_key(uint32_t len_bytes, uint8_t* buf)
     size_t bytes_read;
     FILE* rand_fd = fopen(DEV_URANDOM_PATH, "r");
 
-    if(rand_fd == NULL){
-        printf("[ERR] utilities: gen_priv_key - couldn't open urandom.\n\n");
+    if(rand_fd == NULL)
+    {
+        printf("[ERR] Cryptolib: gen_priv_key - couldn't open urandom.\n\n");
         return 1;
     }
-    if ( (bytes_read = fread((void*)buf, 1, len_bytes, rand_fd)) != len_bytes ){
-        printf("[ERR] utilities: gen_priv_key - couldn't read %u bytes "
-               "from urandom.\n\n"
-               ,len_bytes
-        );
+    if ( (bytes_read = fread((void*)buf, 1, len_bytes, rand_fd)) != len_bytes )
+    {
+        printf("[ERR] Cryptolib: gen_priv_key - couldn't read %u bytes "
+               "from urandom.\n\n", len_bytes);
         perror("Error type: ");
         fclose(rand_fd);
         return 1;
     }
 
-    /* Set the most significant bit to 0 - make sure it's always less than Q. */
+    /* Set the most significant bit to 0 to make sure the private key is always
+     * less than Diffie-Hellman prime order Q.
+     */
     *(buf + (len_bytes - 1)) &= ~ (1 << 7);
 
     printf("[OK] Cryptolib: Generated a %u-byte private key!\n\n", len_bytes);
@@ -1491,6 +1513,7 @@ uint8_t gen_priv_key(uint32_t len_bytes, uint8_t* buf)
 struct bigint* gen_pub_key(bigint* privkey_bigint)
 {
     u8 err = 0;
+
     bigint* M = get_bigint_from_dat
                     (DH_MODULUS_M_PATH, DH_M_BITWIDTH, MAX_USED_BITWIDTH);
 
@@ -1510,6 +1533,7 @@ struct bigint* gen_pub_key(bigint* privkey_bigint)
     mont_pow_mod_m(Gm, privkey_bigint, M, R);
 
 label_cleanup:
+
     bigint_cleanup(M);
     bigint_cleanup(Gm);
     free(M);
@@ -1521,16 +1545,14 @@ label_cleanup:
                 "everything up. Terminating now.\n");
         exit(1);
     }
-
     return R;
 }
 
-/* Check that a public key is of the correct form given our DH parameters.
+/* Check that a public key is of the correct form. The exact check is:
  *
- * The check is:
- *      pub_key^(M/Q) mod M == 1
+ *  pub_key^(M/Q) mod M == 1
  *
- *  Return 1 for valid and 0 for invalid public key.
+ *  Return 1 for valid and 0 for invalid public key form.
  */
 bool check_pubkey_form(bigint* Km, bigint* M, bigint* Q)
 {
@@ -1548,7 +1570,8 @@ bool check_pubkey_form(bigint* Km, bigint* M, bigint* Q)
     bigint_div2(M, Q, &M_over_Q, &div_rem);
     mont_pow_mod_m(Km, &M_over_Q, M, &mod_pow_res);
 
-    if(bigint_compare2(&mod_pow_res, &one) != CMP_EQUALS){
+    if(bigint_compare2(&mod_pow_res, &one) != CMP_EQUALS)
+    {
         printf("[ERR] Public key didn't pass (pub_key^(M/Q) mod M == 1)\n\n");
         ret = 1;
     }
