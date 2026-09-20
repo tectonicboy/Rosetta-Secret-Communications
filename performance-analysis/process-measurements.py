@@ -40,18 +40,21 @@ def analyze_measurements(filename):
     outliers_removed = len(data) - len(valid_measurements)
 
     # --- MODIFICATION START ---
+
     # 7. Append the stabilized average to the output file.
     output_filename = "/home/hypervisor123/tmp/repos/Rosetta-Secure-Texting/performance-analysis/latest-stabilized-averages.dat"
+
     try:
         with open(output_filename, 'a') as out_f:
             # Format to 2 decimal places, add a trailing space.
             out_f.write(f"{stable_avg:.2f} ")
     except Exception as e:
         print(f"Error writing to {output_filename}: {e}")
+
     # --- MODIFICATION END ---
 
     # Output Results to Console
-    print(f"--- Analysis for {filename} ---")
+    print(f"--- Analysis for    {filename} ---")
     print(f"Total Samples:      {len(data)}")
     print(f"Outliers Removed:   {outliers_removed}")
     print(f"Q1 (25th %):        {q1:.2f} us")
