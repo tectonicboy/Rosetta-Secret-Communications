@@ -48,7 +48,8 @@ u8  temp_handshake_memory_region_isLocked = 0;
 u8 login_not_finished = 0;
 
 /* The structure that represents a Rosetta client connected to the server. */
-struct connected_client{
+struct connected_client
+{
     char   user_id[SMALL_FIELD_LEN];
     u64    room_ix;
     u64    num_pending_msgs;
@@ -61,7 +62,8 @@ struct connected_client{
 };
 
 /* The structure that represents a Rosetta chat room. */
-struct chatroom{
+struct chatroom
+{
     u64 num_people;
     u64 owner_ix;
     u64 room_id;
@@ -109,7 +111,8 @@ int main(int argc, char* argv[])
     uint8_t thread_func_arg_buf[sizeof(curr_free_user_ix)];
     int arg1;
 
-    if(argc != 2){
+    if(argc != 2)
+    {
         printf("[ERR] Server: Needs 1 cmd line arg: 0 = regular, 1 = RTF.\n");
         exit(1);
     }
@@ -119,20 +122,23 @@ int main(int argc, char* argv[])
     /* Select the communication interface. */
 
     /* If server is started for Rosetta Test Framework, use AF_UNIX sockets. */
-    if(arg1 == 1){
+    if(arg1 == 1)
+    {
         init_communication = ipc_init_communication;
         transmit_payload   = ipc_transmit_payload;
         receive_payload    = ipc_receive_payload;
         onboard_new_client = ipc_onboard_new_client;
     }
     /* If the server is started for real user-facing operation, use AF_INET. */
-    else if(arg1 == 0){
+    else if(arg1 == 0)
+    {
         init_communication = tcp_init_communication;
         transmit_payload   = tcp_transmit_payload;
         receive_payload    = tcp_receive_payload;
         onboard_new_client = tcp_onboard_new_client;
     }
-    else{
+    else
+    {
         printf("[ERR] Server: Pass 0 for user-facing, 1 for Test Framework.\n");
         exit(1);
     }
@@ -140,13 +146,15 @@ int main(int argc, char* argv[])
     /* Server initialization. */
     status = self_init();
 
-    if(status){
+    if(status)
+    {
         printf("\n[ERR] Server: Could not complete self initialization!\n\n");
         exit(1);
     }
     printf("\n\n[OK]  Server: SUCCESS - Finished self initializing!\n\n");
 
-    while(1){
+    while(1)
+    {
         printf("\n[OK] Server: SET curr_free_user_ix %lu\n", curr_free_user_ix);
 
         /* Block here until a newly seen client wants to log in to Rosetta. */
@@ -155,7 +163,8 @@ int main(int argc, char* argv[])
         /* Unblocked and continues here. A login handshake has begun. */
         login_not_finished = 1;
 
-        if(ret){
+        if(ret)
+        {
             printf("[ERR] Server: accepting a newly seen client failed!\n");
             login_not_finished = 0;
             continue;
@@ -164,34 +173,26 @@ int main(int argc, char* argv[])
         /**********************************************************************/
 
         /* Fill in arguments for the thread function for this user's thread. */
-        memcpy( thread_func_arg_buf
-               ,&curr_free_user_ix
-               ,sizeof(curr_free_user_ix)
-              );
+        memcpy(thread_func_arg_buf, &curr_free_user_ix,
+               sizeof(curr_free_user_ix));
 
         pthread_mutex_lock(&mutex);
 
-        pthread_create(
-            &(client_thread_ids[curr_free_user_ix])
-           ,NULL
-           , start_new_client_thread
-           ,(void*)thread_func_arg_buf
-        );
+        pthread_create(&(client_thread_ids[curr_free_user_ix]), NULL,
+                       start_new_client_thread, (void*)thread_func_arg_buf);
 
         pthread_detach(client_thread_ids[curr_free_user_ix]);
-
         ++curr_free_user_ix;
 
         /* Find the next available connected client descriptor index. */
-        while(curr_free_user_ix < MAX_CLIENTS){
-            if(!(users_status_bitmask & (1ULL<<(63ULL - curr_free_user_ix)))){
+        while(curr_free_user_ix < MAX_CLIENTS)
+        {
+            if(!(users_status_bitmask & (1ULL<<(63ULL - curr_free_user_ix))))
                 break;
-            }
+
             ++curr_free_user_ix;
         }
-
         pthread_mutex_unlock(&mutex);
     }
-
     return 0;
 }

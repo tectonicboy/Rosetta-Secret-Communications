@@ -6,33 +6,38 @@ u8 self_init()
     FILE* privkey_dat = NULL;
     u8 status = 0;
 
-        /* Set a signal disposition (handler function) for the SIGPIPE signal,
-         * telling the server to ignore that signal. This is because a client
-         * could crash or otherwise disappear suddenly, while a poll request
-         * sent by them is still on its way to the server (or being processed
-         * by the server already), in which case, at least for interprocess
-         * communication (AF_UNIX) sockets, the OS sends a SIGPIPE to the server,
-         * killing it if no handler has been set for that signal. When ignoring it,
-         * write() and send() issued by the server to that no longer present client
-         * will return -1 and sent errno to EPIPE, which can be handled eleganrtly
-         * by the server, instead of the server process getting terminated.
-         */
+    /* Set a signal disposition (handler function) for the SIGPIPE signal,
+     * telling the server to ignore that signal. This is because a client
+     * could crash or otherwise disappear suddenly, while a poll request
+     * sent by them is still on its way to the server (or being processed
+     * by the server already), in which case, at least for interprocess
+     * communication (AF_UNIX) sockets, the OS sends a SIGPIPE to the server,
+     * killing it if no handler has been set for that signal. When ignoring it,
+     * write() and send() issued by the server to that no longer present client
+     * will return -1 and sent errno to EPIPE, which can be handled eleganrtly
+     * by the server, instead of the server process getting terminated.
+     */
     struct sigaction sa;
-        sa.sa_handler = SIG_IGN;
+    sa.sa_handler = SIG_IGN;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
-        if(sigaction(SIGPIPE, &sa, NULL) == -1){
+
+    if(sigaction(SIGPIPE, &sa, NULL) == -1)
+    {
         perror("[ERR] Server: Setting SIG_IGN disposition for SIGPIPE failed:");
-                exit(1);
-        }
+        exit(1);
+    }
     printf("[OK]  Server: Signal handler SIG_IGN for SIGPIPE has been set.\n");
 
     temp_handshake_buf = NULL;
+
     status = init_communication();
-    if(status){
+    if(status)
+    {
         printf("[ERR] Server: Communication init function ptr call fail.\n");
         goto label_cleanup;
     }
+
     /* Allocate memory for the temporary login handshake memory region. */
     temp_handshake_buf = calloc(1, TEMP_BUF_SIZ);
 
@@ -41,54 +46,64 @@ u8 self_init()
      *  server's long-term public key they already have at install time.
      */
     privkey_dat = fopen(SERV_PRIVKEY_PATH, "r");
-    if(!privkey_dat){
+    if(!privkey_dat)
+    {
         perror("[ERR] Server: couldn't open private key DAT file:\n");
         status = 1;
-          goto label_cleanup;
+        goto label_cleanup;
     }
-    if(fread(server_privkey, 1, PRIVKEY_LEN, privkey_dat) != PRIVKEY_LEN){
+    if(fread(server_privkey, 1, PRIVKEY_LEN, privkey_dat) != PRIVKEY_LEN)
+    {
         printf("[ERR] Server: couldn't get private key from file. Aborting.\n");
         status = 1;
-          goto label_cleanup;
+        goto label_cleanup;
     }
-    else{
+    else
         printf("[OK]  Server: Successfully loaded private key.\n");
-    }
+
     /* Initialize the global BigInt that stores the server's private key. */
     bigint_create_from_u32(&server_privkey_bigint, MAX_USED_BITWIDTH, 0);
     memcpy(server_privkey_bigint.bits, server_privkey, PRIVKEY_LEN);
+
     server_privkey_bigint.used_bits =
-      get_used_bits(server_privkey, PRIVKEY_LEN);
+        get_used_bits(server_privkey, PRIVKEY_LEN);
+
     /* Load in other BigInts needed for the cryptography to work.   */
     /* Diffie-Hellman modulus M, large prime number around 3070-bit */
     M = get_bigint_from_dat
-          (DH_MODULUS_M_PATH, DH_M_BITWIDTH, MAX_USED_BITWIDTH);
+            (DH_MODULUS_M_PATH, DH_M_BITWIDTH, MAX_USED_BITWIDTH);
+
     /* DH prime order Q, dividing M-1, around 320-bit. Gives M security. */
     Q = get_bigint_from_dat
-          (DH_PRIME_ORDER_Q_PATH, DH_Q_BITWIDTH, MAX_USED_BITWIDTH);
+            (DH_PRIME_ORDER_Q_PATH, DH_Q_BITWIDTH, MAX_USED_BITWIDTH);
+
     /* Diffie-Hellman generator G = [2 ^ ((M-1) / Q)] mod M */
     G = get_bigint_from_dat
-          (DH_GENERATOR_G_PATH, DH_G_BITWIDTH, MAX_USED_BITWIDTH);
+            (DH_GENERATOR_G_PATH, DH_G_BITWIDTH, MAX_USED_BITWIDTH);
+
     /* Montgomery Form of G, since we use Montgomery Modular Multiplication. */
     Gm = get_bigint_from_dat
-          (DH_G_MONT_PATH, DH_G_MONT_BITWIDTH, MAX_USED_BITWIDTH);
+             (DH_G_MONT_PATH, DH_G_MONT_BITWIDTH, MAX_USED_BITWIDTH);
+
     /* The public key of the Rosetta server, ~ same bitwidth as M. */
-    server_pubkey_bigint = get_bigint_from_dat(SERV_PUBKEY_PATH,
-                                               SERV_PUBKEY_BITWIDTH,
-                                               MAX_USED_BITWIDTH);
+    server_pubkey_bigint = get_bigint_from_dat
+                    (SERV_PUBKEY_PATH, SERV_PUBKEY_BITWIDTH, MAX_USED_BITWIDTH);
+
     /* Initialize the mutex that will be used to prevent the main thread and
      * the connection checker thread from getting into a race condition.
      */
-    if(pthread_mutex_init(&mutex, NULL) != 0) {
+    if(pthread_mutex_init(&mutex, NULL) != 0)
+    {
         printf("[ERR] Server: Mutex could not be initialized. Aborting.\n");
         status = 1;
         goto label_cleanup;
     }
 
 label_cleanup:
-    if(privkey_dat){
+
+    if(privkey_dat)
         fclose(privkey_dat);
-    }
+
     free(temp_handshake_buf);
     return status;
 }
@@ -125,45 +140,52 @@ u8 identify_new_transmission(u8* client_msg_buf, s64 bytes_read, u64 sock_ix)
     /* Read the first 8 bytes to see what type of init transmission it is. */
     memcpy(&transmission_type, client_msg_buf, SMALL_FIELD_LEN);
 
-    switch(transmission_type){
-
+    switch(transmission_type)
+    {
     /* A client tried to log in Rosetta */
-    case(PACKET_ID_00):{
+    case(PACKET_ID_00):
+    {
         expected_siz = SMALL_FIELD_LEN + PUBKEY_LEN;
         strncpy(msg_type_str, "00\0", 3);
-        if(bytes_read != expected_siz){
+        if(bytes_read != expected_siz)
+        {
             status = 200;
             login_not_finished = 0;
             goto label_error;
         }
         /* If transmission is of a valid type and size, process it. */
         status = (uint32_t)process_msg_00(client_msg_buf, sock_ix);
-        if(status){
+        if(status)
+        {
             login_not_finished = 0;
             status = 200;
         }
         break;
     }
     /* Login part 2 - client sent their encrypted long-term public key. */
-    case(PACKET_ID_01):{
+    case(PACKET_ID_01):
+    {
         expected_siz = SMALL_FIELD_LEN + PUBKEY_LEN + HMAC_TRUNC_BYTES;
         strncpy(msg_type_str, "01\0", 3);
-        if(bytes_read != expected_siz){
+        if(bytes_read != expected_siz)
+        {
             status = 1;
             goto label_error;
         }
         /* If transmission is of a valid type and size, process it. */
         status = (uint32_t)process_msg_01(client_msg_buf, sock_ix);
-        if(status){
+        if(status)
             status = 200;
-        }
+
         break;
     }
     /* A client wants to create a new chatroom of their own. */
-    case(PACKET_ID_10):{
+    case(PACKET_ID_10):
+    {
         expected_siz = (4 * SMALL_FIELD_LEN) + ONE_TIME_KEY_LEN + SIGNATURE_LEN;
         strncpy(msg_type_str, "10\0", 3);
-        if(bytes_read != expected_siz){
+        if(bytes_read != expected_siz)
+        {
             status = 1;
             goto label_error;
         }
@@ -172,10 +194,12 @@ u8 identify_new_transmission(u8* client_msg_buf, s64 bytes_read, u64 sock_ix)
         break;
     }
     /* A client wants to join an existing chatroom. */
-    case(PACKET_ID_20):{
+    case(PACKET_ID_20):
+    {
         expected_siz = (4 * SMALL_FIELD_LEN) + ONE_TIME_KEY_LEN + SIGNATURE_LEN;
         strncpy(msg_type_str, "20\0", 3);
-        if(bytes_read != expected_siz){
+        if(bytes_read != expected_siz)
+        {
             status = 1;
             goto label_error;
         }
@@ -184,33 +208,29 @@ u8 identify_new_transmission(u8* client_msg_buf, s64 bytes_read, u64 sock_ix)
         break;
     }
     /* A client wants to send a text message to everyone else in the chatroom */
-    case(PACKET_ID_30):{
+    case(PACKET_ID_30):
+    {
         strncpy(msg_type_str, "30\0", 3);
 
         /* Size must be in bytes:
-         *
          *   (3 * SMALL_FIELD_LEN) + L + SIG_LEN
-         *
          *   where L is the length of associated data:
-         *
          *   L = (people in room - 1) * (SMALL_LEN + ONE_TIME_KEY_LEN + TXT_LEN)
-         *
          *   where TXT_LEN is given in the 3rd SMALL_FIELD_LEN field.
          */
-        for(u64 x = 0; x < MAX_CLIENTS; ++x){
-            if(strncmp( clients[x].user_id
-                       ,(const char*)(client_msg_buf + SMALL_FIELD_LEN)
-                       ,SMALL_FIELD_LEN
-                      ) == 0)
+        for(u64 x = 0; x < MAX_CLIENTS; ++x)
+        {
+            if(strncmp( clients[x].user_id,
+                        (const char*)(client_msg_buf + SMALL_FIELD_LEN),
+                        SMALL_FIELD_LEN) == 0)
             {
                 found_user_ix = x;
                 break;
             }
         }
-        memcpy( &text_msg_len
-               ,client_msg_buf + (2 * SMALL_FIELD_LEN)
-               ,SMALL_FIELD_LEN
-              );
+        memcpy(&text_msg_len, client_msg_buf + (2 * SMALL_FIELD_LEN),
+               SMALL_FIELD_LEN);
+
         expected_siz =   (3 * SMALL_FIELD_LEN)
                        + (
                           (rooms[clients[found_user_ix].room_ix].num_people - 1)
@@ -219,23 +239,23 @@ u8 identify_new_transmission(u8* client_msg_buf, s64 bytes_read, u64 sock_ix)
                          )
                        + SIGNATURE_LEN;
 
-        if(bytes_read != expected_siz){
+        if(bytes_read != expected_siz)
+        {
             status = 1;
             goto label_error;
         }
         /* If transmission is of a valid type and size, process it. */
-        process_msg_30( client_msg_buf
-                       ,expected_siz
-                       ,expected_siz - SIGNATURE_LEN
-                       ,found_user_ix
-                      );
+        process_msg_30(client_msg_buf, expected_siz,
+                       expected_siz - SIGNATURE_LEN, found_user_ix);
         break;
     }
     /* A client polled the server asking for any pending unreceived messages. */
-    case(PACKET_ID_40):{
+    case(PACKET_ID_40):
+    {
         strncpy(msg_type_str, "40\0", 3);
         expected_siz = (2 * SMALL_FIELD_LEN) + SIGNATURE_LEN;
-        if(bytes_read != expected_siz){
+        if(bytes_read != expected_siz)
+        {
             status = 1;
             goto label_error;
         }
@@ -244,10 +264,12 @@ u8 identify_new_transmission(u8* client_msg_buf, s64 bytes_read, u64 sock_ix)
         break;
     }
     /* A client decided to exit the chatroom they're currently in. */
-    case(PACKET_ID_50):{
+    case(PACKET_ID_50):
+    {
         strncpy(msg_type_str, "50\0", 3);
         expected_siz = (2 * SMALL_FIELD_LEN) + SIGNATURE_LEN;
-        if(bytes_read != expected_siz){
+        if(bytes_read != expected_siz)
+        {
             status = 1;
             goto label_error;
         }
@@ -256,39 +278,45 @@ u8 identify_new_transmission(u8* client_msg_buf, s64 bytes_read, u64 sock_ix)
         break;
     }
     /* A client decided to log off Rosetta. */
-    case(PACKET_ID_60):{
+    case(PACKET_ID_60):
+    {
         strncpy(msg_type_str, "60\0", 3);
         expected_siz = (2 * SMALL_FIELD_LEN) + SIGNATURE_LEN;
-        if(bytes_read != expected_siz){
+        if(bytes_read != expected_siz)
+        {
             status = 1;
             goto label_error;
         }
         /* If transmission is of a valid type and size, process it. */
         process_msg_60(client_msg_buf);
+
         /* Indicate to this client's poll listening thread function to return */
         status = 100;
         break;
     }
 
     /* Also do something in case it was a bad unrecognized transmission.  */
-    default:{
+    default:
+    {
         /* DO NOT REACT TO BAD PACKETS!! Drop them silently instead. */
         break;
-    } /* end of default */
-    } /* end of switch  */
+    } /* end of default case.     */
+    } /* end of switch statement.  */
 
     goto label_cleanup;
 
 label_error:
+
     printf("[ERR] Server: MSG Type was %s but of wrong size or contents\n"
-           "              or another error occurred, check log.\n\n"
-           ,msg_type_str);
+           "              or another error occurred, check log.\n\n",
+           msg_type_str);
 
     printf("              Size was: %ld\n", bytes_read);
     printf("              Expected: %ld\n", expected_siz);
     printf("\n[OK]  Server: Discarding transmission.\n\n ");
 
 label_cleanup:
+
     free(msg_type_str);
     return status;
 }
@@ -303,11 +331,15 @@ void* start_new_client_thread(void* ix_ptr)
     memcpy(&ix, ix_ptr, sizeof(ix));
     memset(client_msg_buf, 0, MAX_MSG_LEN);
 
-    while(1){
+    while(1)
+    {
         /* Blocking. TIMES OUT automatically via SO_RCVTIMEO socket option. */
         bytes_read = receive_payload(ix, client_msg_buf, MAX_MSG_LEN);
-        if( __builtin_expect (bytes_read <= 0, 0) ){
-            if(temp_handshake_memory_region_isLocked == 1){
+
+        if( __builtin_expect (bytes_read <= 0, 0) )
+        {
+            if(temp_handshake_memory_region_isLocked == 1)
+            {
                 /* At various points of this buffer's lifetime, various pointers
                  * in it point to heap memory. Sudden disruption of login
                  * leading to here DOES NOT free() them or erase the memory
@@ -317,16 +349,16 @@ void* start_new_client_thread(void* ix_ptr)
                 memset(temp_handshake_buf, 0, TEMP_BUF_SIZ);
                 temp_handshake_memory_region_isLocked = 0;
             }
-            if(login_not_finished){
+            if(login_not_finished)
+            {
                 login_not_finished = 0;
                 close(client_socket_fd[ix]);
-                if(ix < curr_free_user_ix){
-                                        curr_free_user_ix = ix;
-                                }
+                if(ix < curr_free_user_ix)
+                        curr_free_user_ix = ix;
             }
-            else{
+            else
                 remove_user_from_rosetta(ix);
-            }
+
             break;
         }
         pthread_mutex_lock(&mutex);
@@ -337,29 +369,33 @@ void* start_new_client_thread(void* ix_ptr)
          *       has been moved. Move it back, release the socket, stop this
          *       thread.
          */
-        if(status == 200){
+        if(status == 200)
+        {
             /* At various points of this buffer's lifetime, various pointers
              * in it point to heap memory. Sudden disruption of login leading to
              * here DOES NOT free() them or erase the memory they point to.
              * TODO ^
              */
             u8 socket_closed = 0;
-            if( users_status_bitmask & (1ULL << (63ULL - ix)) ){
+
+            if( users_status_bitmask & (1ULL << (63ULL - ix)) )
+            {
                 remove_user_from_rosetta(ix);
                 socket_closed = 1;
             }
             memset(temp_handshake_buf, 0, TEMP_BUF_SIZ);
             temp_handshake_memory_region_isLocked = 0;
-            if(!socket_closed){
+
+            if(!socket_closed)
                 close(client_socket_fd[ix]);
-                        }
-                        if(ix < curr_free_user_ix){
-                                curr_free_user_ix = ix;
-                        }
-                        pthread_mutex_unlock(&mutex);
+            if(ix < curr_free_user_ix)
+                curr_free_user_ix = ix;
+
+            pthread_mutex_unlock(&mutex);
             break;
         }
-        if(status != 100 && status > 0){
+        if(status != 100 && status > 0)
+        {
             printf("[ERR] Server: identifying new transmission went bad!\n");
             remove_user_from_rosetta(ix);
             pthread_mutex_unlock(&mutex);
@@ -369,19 +405,16 @@ void* start_new_client_thread(void* ix_ptr)
          * poll requests by this client since they know they're not in the room
          * anymore since they initiated their leaving.
          */
-        if( status == 100 ) {
+        if( status == 100 )
+        {
             printf("[OK] Server: client poll thread [%lu] exits: "
-                   "User logged out!\n"
-                   ,ix
-                  );
+                   "User logged out!\n", ix);
             pthread_mutex_unlock(&mutex);
             break;
         }
-
         memset(client_msg_buf, 0, bytes_read);
         pthread_mutex_unlock(&mutex);
     }
-
     free(client_msg_buf);
     return NULL;
 }
