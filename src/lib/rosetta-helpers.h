@@ -60,6 +60,19 @@ void erase_mem_secure(volatile uint8_t* buf, uint64_t num_bytes_to_erase)
     return;
 }
 
+/* After each heap allocation call, we have to check if it returned an error.
+ * Make the code for these checks more compact using this parameterized macro.
+ *
+ * The default branch prediction probability for plain __builtin_expect is 90%.
+ * Increase that probability to 99% here.
+ */
+#define PRINT_ERR_AND_EXIT_IF_NULL_PTR(ptr, msg)                             \
+    if( __builtin_expect_with_probability( ((ptr) == NULL), false, 0.99 ) )  \
+    {                                                                        \
+        perror((msg));                                                       \
+        exit(1);                                                             \
+    }
+
 /* Change the printf() output color. */
 void output_red(){ printf("\033[1;31m"); }
 void output_yel(){ printf("\033[1;33m"); }

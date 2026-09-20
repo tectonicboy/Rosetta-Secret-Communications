@@ -1455,7 +1455,7 @@ uint8_t signature_validate(bigint* Gmont, bigint* Amont, bigint* M, bigint* Q,
     memcpy(val_e.bits, blake2b_outbuf, DH_Q_BITWIDTH / 8);
     val_e.used_bits = get_used_bits(val_e.bits, DH_Q_BITWIDTH / 8);
 
-    if( __builtin_expect(bigint_compare2(e, &val_e) != CMP_EQUALS), false )
+    if( __builtin_expect( (bigint_compare2(e, &val_e) != CMP_EQUALS), false) )
     {
         printf("[WARN] Cryptolib: SIG_VAL: val_e != passed e. Ret 0.\n");
         printf("Passed e:\n");

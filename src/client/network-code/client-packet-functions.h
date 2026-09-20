@@ -129,8 +129,14 @@ u8 authenticate_server(u8* signed_ptr, u64 signed_len, u64 sign_offset)
     /* Reconstruct the sender's signature as its 2 building blocks: s and e. */
     recv_s = (bigint*)(signed_ptr + s_offset);
     recv_e = (bigint*)(signed_ptr + e_offset);
+
     recv_s->bits = (u8*)calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(recv_s->bits,
+        "[ERR] Heap alloc in auth_server for recv_s->bits failed: ")
+
     recv_e->bits = (u8*)calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(recv_e->bits,
+        "[ERR] Heap alloc in auth_server for recv_e->bits failed: ")
 
     memcpy(recv_s->bits, signed_ptr + (sign_offset + sizeof(bigint)),
            PRIVKEY_LEN);
@@ -176,7 +182,13 @@ u8 construct_msg_00(u8** msg_buf, u64* msg_len)
 
     *msg_len = SMALL_FIELD_LEN + PUBKEY_LEN;
     *msg_buf = (u8*)(void*)calloc(1, *msg_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(*msg_buf,
+        "[ERR] Heap alloc in construct_msg00 for *msg_buf failed: ")
+
     temp_privkey.bits = (u8*)calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(temp_privkey.bits,
+        "[ERR] Heap alloc in constr_msg00 for temp_privkey.bits fail: ")
+
     temp_handshake_memory_region_isLocked = 1;
     status = gen_priv_key(PRIVKEY_LEN, temp_handshake_buf);
 
@@ -253,6 +265,8 @@ u8 process_msg_00(u8* received_buf, u8** msg_01_buf, u64* msg_01_len)
     *msg_01_len = SMALL_FIELD_LEN + PUBKEY_LEN + HMAC_TRUNC_BYTES;
     free(*msg_01_buf);
     *msg_01_buf = (u8*)(void*)calloc(1, *msg_01_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(*msg_01_buf,
+        "[ERR] Heap alloc in process_msg00 for *msg_01_buf failed: ")
 
     memset(K0,                  0, B);
     memset(ipad,                0, B);
@@ -266,6 +280,9 @@ u8 process_msg_00(u8* received_buf, u8** msg_01_buf, u64* msg_01_len)
 
     /* Grab the server's short-term public key from the received payload. */
     B_s.bits = (u8*)calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(B_s.bits,
+        "[ERR] Heap alloc in process_msg00 for B_s.bits failed: ")
+
     memcpy(B_s.bits, received_buf + SMALL_FIELD_LEN, PUBKEY_LEN);
     B_s.size_bits = MAX_USED_BITWIDTH;
     B_s.used_bits = get_used_bits(B_s.bits, PUBKEY_LEN);
@@ -291,7 +308,8 @@ u8 process_msg_00(u8* received_buf, u8** msg_01_buf, u64* msg_01_len)
         ||
           ((bigint_compare2(M, &B_s)) != CMP_FIRST_BIGGER)
         //|| TODO: Look into why this third check fails and whether it matters.
-        // (check_pubkey_form(&B_sM, M, Q) == 1))
+        // (check_pubkey_form(&B_sM, M, Q) == 1)
+      )
     {
         printf("[ERR] Client: Server's short-term public key is invalid.\n");
         printf("              Its info and ALL %u bits:\n\n", B_s.size_bits);
@@ -605,10 +623,9 @@ label_cleanup:
 --------------------------------------------------------------------------------
 
 */
-u8 construct_msg_10(unsigned char* requested_userid,
-                    unsigned char* requested_roomid,
-                        uint8_t**      msg_buf,
-                        uint64_t*      msg_len)
+u8 construct_msg_10
+    (unsigned char* requested_userid, unsigned char* requested_roomid,
+     uint8_t** msg_buf, uint64_t* msg_len)
 {
     bigint one;
     bigint aux1;
@@ -622,6 +639,9 @@ u8 construct_msg_10(unsigned char* requested_userid,
 
     *msg_len = signed_len + SIGNATURE_LEN;
     *msg_buf = (u8*)(void*)calloc(1, *msg_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(*msg_buf,
+        "[ERR] Heap alloc in construct_msg10 for *msg_buf failed: ")
+
     memset(send_K, 0, ONE_TIME_KEY_LEN);
     memset(roomID_userID, 0, 2 * SMALL_FIELD_LEN);
     bigint_create_from_u32(&one,  MAX_USED_BITWIDTH, 1);
@@ -800,6 +820,9 @@ u8 construct_msg_20
     memset(roomID_userID, 0, 2 * SMALL_FIELD_LEN);
     *msg_len = signed_len + SIGNATURE_LEN;
     *msg_buf = (u8*)(void*)calloc(1, *msg_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(*msg_buf,
+        "[ERR] Heap alloc in construct_msg20 for *msg_buf failed: ")
+
     bigint_create_from_u32(&one,  MAX_USED_BITWIDTH, 1);
     bigint_create_from_u32(&aux1, MAX_USED_BITWIDTH, 0);
 
@@ -945,6 +968,8 @@ u8 process_msg_20(u8* msg, u64 msg_len)
         goto label_cleanup;
     }
     buf_decrypted_AD = (u8*)calloc(1, recv_type20_AD_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(buf_decrypted_AD,
+        "[ERR] Heap alloc in process_msg20 for buf_decrypted_AD failed: ")
 
     recv_type20_signed_len = (2 * SMALL_FIELD_LEN) + ONE_TIME_KEY_LEN
                              + recv_type20_AD_len;
@@ -1016,6 +1041,8 @@ u8 process_msg_20(u8* msg, u64 msg_len)
 
         this_pubkey->bits =
             (u8*)calloc(1, ((size_t)((double)MAX_USED_BITWIDTH / 8)));
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(this_pubkey->bits,
+            "[ERR] Heap alloc in process_msg20 for this_pubkey->bits failed: ")
 
         memcpy(this_pubkey->bits,
                buf_decrypted_AD + (i * guest_info_slot_siz) + SMALL_FIELD_LEN,
@@ -1039,9 +1066,17 @@ u8 process_msg_20(u8* msg, u64 msg_len)
         mont_pow_mod_m(&(roommates[i].guest_pubkey_mont), &own_privkey, M,
                        &temp_shared_secret);
 
-        roommates[i].guest_KBA   = (u8*)calloc(1, SESSION_KEY_LEN);
+        roommates[i].guest_KBA = (u8*)calloc(1, SESSION_KEY_LEN);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(roommates[i].guest_KBA,
+          "[ERR] Heap alloc in process_msg20 for roommates[i].guest_KBA fail: ")
+
         roommates[i].guest_KAB   = (u8*)calloc(1, SESSION_KEY_LEN);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(roommates[i].guest_KAB,
+          "[ERR] Heap alloc in process_msg20 for roommates[i].guest_KAB fail: ")
+
         roommates[i].guest_Nonce = (u8*)calloc(1, LONG_NONCE_LEN);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(roommates[i].guest_Nonce,
+        "[ERR] Heap alloc in process_msg20 for roommates[i].guest_Nonce fail: ")
 
         /* Now extract guest_KBA, guest_KAB and guest's symmetric Nonce. */
         memcpy(roommates[i].guest_KBA, temp_shared_secret.bits,SESSION_KEY_LEN);
@@ -1175,6 +1210,8 @@ void process_msg_21(u8* msg)
 
     this_pubkey->bits = (u8*)calloc
                                (1, ((size_t)((double)MAX_USED_BITWIDTH / 8)));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(this_pubkey->bits,
+        "[ERR] Heap alloc in process_msg21 for this_pubkey->bits failed: ")
 
     memcpy(this_pubkey->bits, buf_decrypted_guest_info + SMALL_FIELD_LEN,
            PUBKEY_LEN);
@@ -1195,9 +1232,17 @@ void process_msg_21(u8* msg)
                    &temp_shared_secret);
 
     /* Extract bidirectional session key pair (KBA, KAB) and a chacha Nonce. */
-    roommates[guest_ix].guest_KBA   = (u8*)calloc(1, SESSION_KEY_LEN);
-    roommates[guest_ix].guest_KAB   = (u8*)calloc(1, SESSION_KEY_LEN);
+    roommates[guest_ix].guest_KBA = (u8*)calloc(1, SESSION_KEY_LEN);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(roommates[guest_ix].guest_KBA,
+      "[ERR] Heap alloc in process_msg21 for roommates[ix] guest_KBA failed: ")
+
+    roommates[guest_ix].guest_KAB = (u8*)calloc(1, SESSION_KEY_LEN);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(roommates[guest_ix].guest_KAB,
+      "[ERR] Heap alloc in process_msg21 for roommates[ix].guest_KAB failed: ")
+
     roommates[guest_ix].guest_Nonce = (u8*)calloc(1, LONG_NONCE_LEN);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(roommates[guest_ix].guest_Nonce,
+     "[ERR] Heap alloc in process_msg21 for roommates[ix].guest_Nonce failed: ")
 
     memcpy(roommates[guest_ix].guest_KBA, temp_shared_secret.bits,
            SESSION_KEY_LEN);
@@ -1271,9 +1316,16 @@ u8 construct_msg_30(unsigned char* text_msg, u64 text_msg_len,
     bigint one;
     bigint aux1;
     size_t ret_val;
+
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(associated_data,
+        "[ERR] Heap alloc in construct_msg30 for associated_data failed: ")
+
     *msg_len   = L + (3 * SMALL_FIELD_LEN) + SIGNATURE_LEN;
     signed_len = *msg_len - SIGNATURE_LEN;
-    *msg_buf   = (u8*)(void*)calloc(1, *msg_len);
+
+    *msg_buf = (u8*)(void*)calloc(1, *msg_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(*msg_buf,
+        "[ERR] Heap alloc in construct_msg30 for *msg_buf failed: ")
 
     memset(send_K, 0, ONE_TIME_KEY_LEN);
     bigint_create_from_u32(&one,  MAX_USED_BITWIDTH, 1);
@@ -1281,6 +1333,9 @@ u8 construct_msg_30(unsigned char* text_msg, u64 text_msg_len,
 
     guest_nonce_bigint.bits =
        (u8*)(void*)calloc(1, ((size_t)((double)MAX_USED_BITWIDTH / (double)8)));
+
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(guest_nonce_bigint.bits,
+     "[ERR] Heap alloc in construct_msg30 for guest_nonce_bigint.bits failed: ")
 
     /* Construct the first 3 sections of the payload. */
     u64 packet_id30 = PACKET_ID_30;
@@ -1463,9 +1518,16 @@ void process_msg_30(u8* payload, u8* name_with_msg_string, u64* result_chars)
     bigint  one;
     bigint  aux1;
 
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(decrypted_msg,
+        "[ERR] Heap alloc in process_msg30 for decrypted_msg failed: ")
+
     bigint_create_from_u32(&one,  MAX_USED_BITWIDTH, 1);
     bigint_create_from_u32(&aux1, MAX_USED_BITWIDTH, 0);
+
     guest_nonce_bigint.bits = (u8*)calloc(1, MAX_USED_BITWIDTH / 8);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(guest_nonce_bigint.bits,
+       "[ERR] Heap alloc in process_msg30 for guest_nonce_bigint.bits failed: ")
+
     memset(decrypted_key, 0, ONE_TIME_KEY_LEN);
     memset(temp_user_id,  0, SMALL_FIELD_LEN);
 
@@ -1517,8 +1579,14 @@ void process_msg_30(u8* payload, u8* name_with_msg_string, u64* result_chars)
     e_offset = sign1_offset + sizeof(bigint) + PRIVKEY_LEN;
     recv_s = (bigint*)(payload + s_offset);
     recv_e = (bigint*)(payload + e_offset);
+
     recv_s->bits = (u8*)calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(recv_s->bits,
+        "[ERR] Heap alloc in process_msg30 for recv_s->bits failed: ")
+
     recv_e->bits = (u8*)calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(recv_e->bits,
+        "[ERR] Heap alloc in process_msg30 for recv_e->bits failed: ")
 
     memcpy(recv_s->bits, payload + (sign1_offset + sizeof(bigint)),
            PRIVKEY_LEN);
@@ -1668,6 +1736,9 @@ u8 construct_msg_40(u8** msg_buf, u64* msg_len)
     u8 status = 0;
     *msg_buf = (u8*)(void*)calloc(1, *msg_len);
     u64 packet_id40 = PACKET_ID_40;
+
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(*msg_buf,
+        "[ERR] Heap alloc in construct_msg40 for *msg_buf failed: ")
 
     memcpy(*msg_buf, &packet_id40, SMALL_FIELD_LEN);
     memcpy((*msg_buf) + SMALL_FIELD_LEN, &own_ix, SMALL_FIELD_LEN);
@@ -1841,6 +1912,8 @@ u8 construct_msg_50(uint8_t** msg_buf, uint64_t* msg_len)
 
     *msg_len = (2 * SMALL_FIELD_LEN) + SIGNATURE_LEN;
     *msg_buf = (u8*)(void*)calloc(1, *msg_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(*msg_buf,
+        "[ERR] Heap alloc in construct_msg50 for *msg_buf failed: ")
 
     for(u64 i = 0; i < MAX_CLIENTS; ++i)
     {
@@ -1986,6 +2059,9 @@ u8 construct_msg_60(uint8_t** msg_buf, uint64_t* msg_len)
 
     *msg_len = (2 * SMALL_FIELD_LEN) + SIGNATURE_LEN;
     *msg_buf = (u8*)(void*)calloc(1, *msg_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(*msg_buf,
+        "[ERR] Heap alloc in construct_msg60 for *msg_buf failed: ")
+
     memcpy(*msg_buf, &packet_id60, SMALL_FIELD_LEN);
     memcpy(((*msg_buf) + SMALL_FIELD_LEN), &own_ix, SMALL_FIELD_LEN);
 

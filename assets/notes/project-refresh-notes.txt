@@ -10,12 +10,13 @@
  3. ENCRYPTED section visuals ascii art needs improving and make sure it is
     present in every payload diagram for ALL of its encrypted parts. Separate
     visualisations for parts that are encrypted with separate keys!
- [IN PROGRESS]
+ [COMPLETED]
 
  4. Calls to error-returning functions don't check for errors - malloc/calloc.
     Check everywhere and make sure errors are checked for!
 
  5. Project coding style guidelines need defining and following everywhere.
+ [COMPLETED]
 
  6. Put [[unlikely]] on if-statements that only check for returned errors.
 

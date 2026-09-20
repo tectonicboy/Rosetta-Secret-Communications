@@ -288,6 +288,8 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
     /* calloc needs it in bytes, MAX_USED_BITWIDTH is in bits, so divide by 8 */
     server_nonce_bigint.bits =
         (u8*)calloc(1, ((size_t)((double)MAX_USED_BITWIDTH / (double)8)));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(server_nonce_bigint.bits,
+        "[ERR] Client: init: Heap alloc for server_nonce_bigint.bits failed: ")
 
     memcpy(server_nonce_bigint.bits,
            server_shared_secret.bits + (2 * SESSION_KEY_LEN), LONG_NONCE_LEN);
@@ -620,6 +622,9 @@ u8 reg(u8* password, int password_len, const char* save_dir)
     struct Argon2_parms prms;
 
     temp_privkey.bits = (u8*)calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(temp_privkey.bits,
+        "[ERR] Client: reg: Heap alloc for temp_privkey.bits failed: ")
+
     memset(&prms, 0, sizeof(struct Argon2_parms));
 
     /* Registration step 1: Generate a long-term private/public keys (a, A). */
