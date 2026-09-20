@@ -1,12 +1,15 @@
 #include "../../src/client/network-code/client-primary-functions.h"
-int main(){
-
+int main()
+{
+    /* Select the Rosetta Communication Interface for local interprocess
+     * communication sockets.
+     */
     init_communication = ipc_init_communication;
     transmit_payload   = ipc_transmit_payload;
     receive_payload    = ipc_receive_payload;
     end_communication  = ipc_end_communication;
 
-    uint8_t status;
+    uint8_t     status;
     const char* savedir  = TEST_FRAMEWORK_USER_SAVEFILES_DIR;
     const char* savefile = "kevin";
     char        pwd[PASSWORD_BUF_SIZ];
@@ -25,7 +28,8 @@ int main(){
     printf("[OK]  RTF Simulation 1: Kev is calling login() now.\n");
 
     status = login((unsigned char*)pwd, pwd_len, full_save_dir);
-    if(status){
+    if(status)
+    {
         printf("[ERR] RTF Simulation 1: Kev could not login.\n");
         exit(1);
     }
@@ -33,26 +37,29 @@ int main(){
 
     status = make_new_chatroom((unsigned char*)room_name, room_name_len,
                                (unsigned char*)username,  username_len);
-    if(status){
-            printf("[ERR] RTF Simulation 1: Kev could not make a chat room.\n");
-            if(status == 2){
-                    printf("[ERR] RTF Simulation 1: Server reply to Kev's MAKE_ROOM \n"
-                                 "                        request took too long.\n");
-            }
-            exit(1);
+    if(status)
+    {
+        printf("[ERR] RTF Simulation 1: Kev could not make a chat room.\n");
+        if(status == 2)
+            printf("[ERR] RTF Simulation 1: Server reply to Kev's MAKE_ROOM \n"
+                   "                        request took too long.\n");
+        exit(1);
     }
     printf("[OK]  RTF Simulation 1: Kev created a new chat room!\n");
 
     sleep(12);
 
-    /* send texts too, then close the chat room, wait (2) and exit rosetta */
+    /* Send messages, close the chat room, wait 2 sec, then exit Rosetta. */
+
     /* Send messages */
-    const char* msgs[] = {"Hi from kev\0", "kev_msg_2a\0", "kev_msg_3b\0"};
-    for(size_t i = 0; i < 3; ++i){
+    const char* msgs[] = {"Hi from kev", "kev_msg_2a", "kev_msg_3b"};
+
+    for(size_t i = 0; i < 3; ++i)
+    {
         send_text((unsigned char*)(msgs[i]), (uint64_t)(strlen(msgs[i])));
         printf("{OWN_INDEX: %lu} Displaying own msg: %s\n", own_ix, msgs[i]);
         sleep(1);
     }
-        sleep(12);
+    sleep(12);
     return 0;
 }

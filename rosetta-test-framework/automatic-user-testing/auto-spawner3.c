@@ -1,6 +1,10 @@
 #include "../../src/client/network-code/client-primary-functions.h"
-int main(){
 
+int main()
+{
+    /* Select the Rosetta Communication Interface for local interprocess
+     * communication sockets.
+     */
     init_communication = ipc_init_communication;
     transmit_payload   = ipc_transmit_payload;
     receive_payload    = ipc_receive_payload;
@@ -17,22 +21,25 @@ int main(){
     size_t  room_name_len = 5;
     size_t  pwd_len       = 6;
     char    full_save_dir[1024];
+
     memset(full_save_dir, 0x00, 1024);
     strncpy(full_save_dir, savedir, strlen(savedir));
     strncpy(full_save_dir + strlen(savedir), savefile, strlen(savefile));
     strncpy(pwd, password, pwd_len);
     printf("[OK]  RTF Simulation 1: Devi is calling login() now.\n");
+
     status = login((unsigned char*)pwd, pwd_len, full_save_dir);
-    if(status){
+    if(status)
+    {
         printf("[ERR] RTF Simulation 1: Devi could not login.\n");
         exit(1);
     }
-    else{
-        printf("[OK]  RTF Simulation 1: Devi logged in!\n");
-    }
+    printf("[OK]  RTF Simulation 1: Devi logged in!\n");
+
     status = join_chatroom((unsigned char*)room_name, room_name_len,
                            (unsigned char*)username,  username_len);
-    if(status){
+    if(status)
+    {
         printf("[ERR] RTF Simulation 1: Devi could not join a chat room.\n");
         if(status == 2){
             printf("[ERR] RTF Simulation 1: Server reply to Devi's JOIN_ROOM\n"
@@ -40,15 +47,17 @@ int main(){
         }
         exit(1);
     }
-    else{
-        printf("[OK]  RTF Simulation 1: Devi join a chat room!\n");
-    }
+    printf("[OK]  RTF Simulation 1: Devi join a chat room!\n");
+
     sleep(3);
-        /* Send messages */
-    const char* msgs[] = {"Hi from devi\0", "devi_msg_2a\0", "devi_msg_3b\0"};
-    for(size_t i = 0; i < 3; ++i){
+
+    /* Send messages */
+    const char* msgs[] = {"Hi from devi", "devi_msg_2a", "devi_msg_3b"};
+
+    for(size_t i = 0; i < 3; ++i)
+    {
         send_text((unsigned char*)(msgs[i]), (uint64_t)(strlen(msgs[i])));
-                printf("{OWN_INDEX: %lu} Displaying own msg: %s\n", own_ix, msgs[i]);
+        printf("{OWN_INDEX: %lu} Displaying own msg: %s\n", own_ix, msgs[i]);
         sleep(1);
     }
     sleep(10);
