@@ -76,6 +76,7 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
     FILE* savefile = NULL;
     bigint* calculated_A = NULL;
     struct Argon2_parms prms;
+
     memset(&prms,               0, sizeof(struct Argon2_parms));
     memset(roommates,           0, ROOMMATES_ARR_SIZ * sizeof(struct roommate));
     memset(own_privkey_buf,     0, PRIVKEY_LEN);
@@ -83,7 +84,9 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
 
     /* Load user's public key, decrypt and load user's private key. */
     savefile = fopen(save_dir, "r");
-    if(savefile == NULL){
+
+    if(savefile == NULL)
+    {
         printf("[ERR] Client: couldn't open the user's save file. Aborting.\n");
         status = 1;
         goto label_cleanup;
@@ -92,28 +95,32 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
     /* Read savefile in the same order that Registration writes it in. */
 
     /* First is Nonce for decrypting the saved private key. */
-    if(fread(saved_nonce, 1, LONG_NONCE_LEN, savefile) != LONG_NONCE_LEN){
+    if(fread(saved_nonce, 1, LONG_NONCE_LEN, savefile) != LONG_NONCE_LEN)
+    {
         printf("[ERR] Client: couldn't get nonce from savefile[0].\n");
         status = 1;
         goto label_cleanup;
     }
 
     /* Second is the user's long-term private key in encrypted form. */
-    if(fread(saved_privkey, 1, PRIVKEY_LEN, savefile) != PRIVKEY_LEN){
+    if(fread(saved_privkey, 1, PRIVKEY_LEN, savefile) != PRIVKEY_LEN)
+    {
         printf("[ERR] Client: couldn't get encr. privkey from savefile[1].\n");
         status = 1;
         goto label_cleanup;
     }
 
     /* Third is the user's long-term public key non-encrypted. */
-    if(fread(saved_pubkey, 1, PUBKEY_LEN, savefile) != PUBKEY_LEN){
+    if(fread(saved_pubkey, 1, PUBKEY_LEN, savefile) != PUBKEY_LEN)
+    {
         printf("[ERR] Client: couldn't get pubkey from savefile[2].\n");
         status = 1;
         goto label_cleanup;
     }
 
     /* Fourth and last is the 8-byte string - part of Argon2 parameter S. */
-    if(fread(saved_string, 1, ARGON_STRING_LEN, savefile) != ARGON_STRING_LEN){
+    if(fread(saved_string, 1, ARGON_STRING_LEN, savefile) != ARGON_STRING_LEN)
+    {
         printf("[ERR] Client: couldn't get string from savefile[3].\n");
         status = 1;
         goto label_cleanup;
@@ -131,9 +138,9 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
 
     /* Zero-extend the password to 16 bytes including a null terminator.     */
     /* Len does not include the null terminator placed by the wxWidgets GUI. */
-    if(pw_bytes_for_zeroing > 0){
+    if(pw_bytes_for_zeroing > 0)
         memset(password + password_len, 0, pw_bytes_for_zeroing);
-    }
+
     prms.P = password;
 
     /* Construct the Argon2 Salt parameter. We already have the first part.
@@ -189,14 +196,14 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
      */
     calculated_A = gen_pub_key(&own_privkey);
 
-    if(bigint_compare2(calculated_A, &own_pubkey) != CMP_EQUALS){
+    if(bigint_compare2(calculated_A, &own_pubkey) != CMP_EQUALS)
+    {
         printf("[ERR] Client: Password did NOT lead to correct privkey.\n\n");
         status = 1;
         goto label_cleanup;
     }
-    else{
+    else
         printf("[OK]  Client: Password unlocked the private key correctly!\n");
-    }
 
     /* Load other cryptography-related BigInts. */
 
@@ -204,7 +211,8 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
     M = get_bigint_from_dat
           (DH_MODULUS_M_PATH, DH_M_BITWIDTH, MAX_USED_BITWIDTH);
 
-    if(M == NULL){
+    if(M == NULL)
+    {
         printf("[ERR] Client: Failed to get M from DAT file.\n\n");
         status = 1;
         goto label_cleanup;
@@ -214,7 +222,8 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
     Q = get_bigint_from_dat
           (DH_PRIME_ORDER_Q_PATH, DH_Q_BITWIDTH, MAX_USED_BITWIDTH);
 
-    if(Q == NULL){
+    if(Q == NULL)
+    {
         printf("[ERR] Client: Failed to get Q from DAT file.\n\n");
         status = 1;
         goto label_cleanup;
@@ -224,7 +233,8 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
     G = get_bigint_from_dat
           (DH_GENERATOR_G_PATH, DH_G_BITWIDTH, MAX_USED_BITWIDTH);
 
-    if(G == NULL){
+    if(G == NULL)
+    {
         printf("[ERR] Client: Failed to get G from DAT file.\n\n");
         status = 1;
         goto label_cleanup;
@@ -234,18 +244,19 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
     Gm = get_bigint_from_dat
            (DH_G_MONT_PATH, DH_G_MONT_BITWIDTH, MAX_USED_BITWIDTH);
 
-    if(Gm == NULL){
+    if(Gm == NULL)
+    {
         printf("[ERR] Client: Failed to get Gm from DAT file.\n\n");
         status = 1;
         goto label_cleanup;
     }
 
     /* Grab the server's public key. Available to clients at install time. */
-    server_pubkey = get_bigint_from_dat(SERV_PUBKEY_PATH,
-                                        SERV_PUBKEY_BITWIDTH,
-                                        MAX_USED_BITWIDTH);
+    server_pubkey = get_bigint_from_dat
+                    (SERV_PUBKEY_PATH, SERV_PUBKEY_BITWIDTH, MAX_USED_BITWIDTH);
 
-    if(server_pubkey == NULL){
+    if(server_pubkey == NULL)
+    {
         printf("[ERR] Client: Failed to get server pubkey from DAT file.\n\n");
         status = 1;
         goto label_cleanup;
@@ -263,35 +274,38 @@ u8 self_init(u8* password, int password_len, const char* save_dir)
      *       - KBA = next 32 bytes of shared secret
      *       - swap KBA with KAB if A < B  (our and server's public keys)
      */
-    if( (bigint_compare2(&own_pubkey, server_pubkey)) == CMP_SECOND_BIGGER){
+    if((bigint_compare2(&own_pubkey, server_pubkey)) == CMP_SECOND_BIGGER)
+    {
         KAB = server_shared_secret.bits + SESSION_KEY_LEN;
         KBA = server_shared_secret.bits;
     }
-    else{
+    else
+    {
         KAB = server_shared_secret.bits;
         KBA = server_shared_secret.bits + SESSION_KEY_LEN;
     }
 
     /* calloc needs it in bytes, MAX_USED_BITWIDTH is in bits, so divide by 8 */
     server_nonce_bigint.bits =
-      (u8*)calloc(1, ((size_t)((double)MAX_USED_BITWIDTH / (double)8)));
+        (u8*)calloc(1, ((size_t)((double)MAX_USED_BITWIDTH / (double)8)));
 
     memcpy(server_nonce_bigint.bits,
-           server_shared_secret.bits + (2 * SESSION_KEY_LEN),
-           LONG_NONCE_LEN);
+           server_shared_secret.bits + (2 * SESSION_KEY_LEN), LONG_NONCE_LEN);
 
-    server_nonce_bigint.used_bits = get_used_bits
-                                     (server_nonce_bigint.bits, LONG_NONCE_LEN);
+    server_nonce_bigint.used_bits =
+        get_used_bits(server_nonce_bigint.bits, LONG_NONCE_LEN);
 
     server_nonce_bigint.size_bits = MAX_USED_BITWIDTH;
     status = init_communication();
     pthread_mutex_init(&poll_mutex, NULL);
 
 label_cleanup:
-    if(savefile){
+
+    if(savefile)
         fclose(savefile);
-    }
-    if(calculated_A != NULL){
+
+    if(calculated_A != NULL)
+    {
         bigint_cleanup(calculated_A);
         free(calculated_A);
     }
@@ -314,39 +328,49 @@ void* begin_polling(__attribute__((unused)) void* input)
     u64  curr_msg_len;
     u64  msg_len;
     u64  reply_len;
+    u64* aux_ptr64_replybuf;
 
     status = construct_msg_40(&msg_buf, &msg_len);
-    if(status){
+
+    if(status)
+    {
         printf("[ERR] Client: (CRIT) Constructing poll packet_40 failed!\n");
         exit(1);
     }
-    for(;;){
+    for(;;)
+    {
         flag_no_poll_reply = 0;
         memset(reply_buf, 0, MAX_TXT_LEN);
         usleep(POLL_INTERVAL_MICROS);
+
         status = transmit_payload(msg_buf, msg_len);
-        if(status){
+        if(status)
+        {
             printf("[ERR] Client: Sending poll packet_40 to server failed.\n");
             continue;
         }
+
         status = receive_payload(reply_buf, &reply_len);
-        if(status == 2){
+        if(status == 2)
+        {
             printf("[ERR] Client: Poll thread: Server reply took too long.\n");
             pthread_kill(main_thread_id, SIGUSR1);
             goto thread_cleanup;
         }
-        if(status == 1){
+        if(status == 1)
+        {
             printf("[ERR] Client: Poll thread: receive_payload() failed.\n");
             pthread_kill(main_thread_id, SIGUSR1);
             goto thread_cleanup;
         }
-        u64* aux_ptr64_replybuf;
 
         /* Call the appropriate function depending on server's response. */
         /* Handle replies for join_room and create_room user actions here. */
-        if( *reply_type_ptr == PACKET_ID_10 ){
+        if(*reply_type_ptr == PACKET_ID_10)
+        {
             status = process_msg_10(reply_buf);
-            if (status){
+            if(status)
+            {
                 printf("[ERR] Client: process_msg_10 failed.\n\n");
                 pthread_kill(main_thread_id, SIGUSR1);
                 goto thread_cleanup;
@@ -354,9 +378,11 @@ void* begin_polling(__attribute__((unused)) void* input)
             printf("[OK]  Client: Rosetta told us our room has been created\n");
             flag_no_poll_reply = 1;
         }
-        else if( *reply_type_ptr == PACKET_ID_11 ){
+        else if(*reply_type_ptr == PACKET_ID_11)
+        {
             status = process_msg_11(reply_buf);
-            if (status){
+            if(status)
+            {
                 printf("[ERR] Client: process_msg_11 failed.\n\n");
                 pthread_kill(main_thread_id, SIGUSR1);
                 goto thread_cleanup;
@@ -364,9 +390,11 @@ void* begin_polling(__attribute__((unused)) void* input)
             printf("[OK]  Client: Rosetta told us: try later, room is full\n");
             flag_no_poll_reply = 1;
         }
-        else if(*reply_type_ptr == PACKET_ID_20){
+        else if(*reply_type_ptr == PACKET_ID_20)
+        {
             status = process_msg_20(reply_buf, reply_len);
-            if (status){
+            if(status)
+            {
                 printf("[ERR] Client: process_msg_20 failed.\n\n");
                 pthread_kill(main_thread_id, SIGUSR1);
                 goto thread_cleanup;
@@ -379,7 +407,8 @@ void* begin_polling(__attribute__((unused)) void* input)
              */
             flag_no_poll_reply = 1;
         }
-        if( __builtin_expect (flag_no_poll_reply == 1, false) ){
+        if( __builtin_expect (flag_no_poll_reply == 1, false) )
+        {
             memset(reply_buf, 0, MAX_TXT_LEN);
 
             /* A reply to an asynchronous user action, e.g. join_room,
@@ -387,21 +416,24 @@ void* begin_polling(__attribute__((unused)) void* input)
              * do another recv() to finish this loop cycle's poll request now.
              */
             status = receive_payload(reply_buf, &reply_len);
-
-            if(status == 2){
+            if(status == 2)
+            {
                 printf("[ERR] Client PollThread: Server reply took too long\n");
                 pthread_kill(main_thread_id, SIGUSR1);
                 goto thread_cleanup;
             }
-            else if(status == 1){
+            else if(status == 1)
+            {
                 printf("[ERR] Client PollTthread: receive_payload() failed.\n");
                 pthread_kill(main_thread_id, SIGUSR1);
                 goto thread_cleanup;
             }
         }
-        if(*reply_type_ptr == PACKET_ID_40 ){
+        if(*reply_type_ptr == PACKET_ID_40 )
+        {
             status = process_msg_40(reply_buf);
-            if(status){
+            if(status)
+            {
                 printf("[ERR] Client: Packet_40_Reply auth failed!\n");
                 pthread_kill(main_thread_id, SIGUSR1);
                 goto thread_cleanup;
@@ -419,21 +451,23 @@ void* begin_polling(__attribute__((unused)) void* input)
 --------------------------------------------------------------------------------
 
 */
-        if ( *reply_type_ptr == PACKET_ID_41 ) {
+        if(*reply_type_ptr == PACKET_ID_41)
+        {
             aux_ptr64_replybuf = (u64*)(reply_buf + SMALL_FIELD_LEN);
             pending_messages = *aux_ptr64_replybuf;
             read_ix = 2 * SMALL_FIELD_LEN;
 
             /* At end, read_ix = how many bytes a signature was computed on. */
-            for(u64 i = 0; i < pending_messages; ++i){
+            for(u64 i = 0; i < pending_messages; ++i)
+            {
                 aux_ptr64_replybuf = (u64*)(reply_buf + read_ix);
                 block_len = *aux_ptr64_replybuf;
                 read_ix += block_len + SMALL_FIELD_LEN;
             }
-
             /* Validate the server's signature now. */
             status = authenticate_server(reply_buf, read_ix, read_ix);
-            if(status == 1){
+            if(status == 1)
+            {
                 printf("[ERR] Client: Bad signature in polling reply.\n\n");
                 pthread_kill(main_thread_id, SIGUSR1);
                 goto thread_cleanup;
@@ -443,17 +477,21 @@ void* begin_polling(__attribute__((unused)) void* input)
 
             /* Valid pending message types: 50, 51, 21, 30 */
             /* packetID and signature are valid, process all pending messages */
-            for(u64 i = 0; i < pending_messages; ++i){
+            for(u64 i = 0; i < pending_messages; ++i)
+            {
                 aux_ptr64_replybuf = (u64*)(reply_buf + read_ix);
                 curr_msg_type = *aux_ptr64_replybuf;
                 aux_ptr64_replybuf =(u64*)(reply_buf +read_ix -SMALL_FIELD_LEN);
                 curr_msg_len = *aux_ptr64_replybuf;
-                if(curr_msg_type == PACKET_ID_50){
+
+                if(curr_msg_type == PACKET_ID_50)
+                {
                     process_msg_50(reply_buf + read_ix);
                     read_ix += SMALL_FIELD_LEN + curr_msg_len;
                     continue;
                 }
-                else if(curr_msg_type == PACKET_ID_51){
+                else if(curr_msg_type == PACKET_ID_51)
+                {
                     process_msg_51(reply_buf + read_ix);
 
                     /* If running the user-facing wxWidgets GUI client driver,
@@ -467,12 +505,14 @@ void* begin_polling(__attribute__((unused)) void* input)
                     read_ix += SMALL_FIELD_LEN + curr_msg_len;
                     continue;
                 }
-                else if(curr_msg_type == PACKET_ID_21){
+                else if(curr_msg_type == PACKET_ID_21)
+                {
                     process_msg_21(reply_buf + read_ix);
                     read_ix += SMALL_FIELD_LEN + curr_msg_len;
                     continue;
                 }
-                else if(curr_msg_type == PACKET_ID_30){
+                else if(curr_msg_type == PACKET_ID_30)
+                {
                     process_msg_30(reply_buf + read_ix, text_message_line,
                                    &obtained_text_message_line_len);
 
@@ -497,6 +537,7 @@ void* begin_polling(__attribute__((unused)) void* input)
     }
 
 thread_cleanup:
+
     memset(msg_buf,           0x00, msg_len);
     memset(reply_buf,         0x00, MAX_TXT_LEN);
     memset(text_message_line, 0x00, MESSAGE_LINE_LEN);
@@ -523,11 +564,10 @@ thread_cleanup:
 #ifndef USE_WX_GUI
 void handle_signal_sigusr1(__attribute__((unused)) int sig)
 {
-    write(
-     STDOUT_FILENO
-    ,"[DEBUG] Client: main got a signal by poll thread! Stop scanf.\n"
-    ,strlen("[DEBUG] Client: main got a signal by poll thread! Stop scanf.\n\0")
-    );
+    const char* debug_str =
+        "[DEBUG] Client: main got a signal by poll thread! Stop scanf.\n";
+
+    write(STDOUT_FILENO, debug_str, strlen(debug_str));
     return;
 }
 #endif
@@ -537,7 +577,8 @@ void handle_signal_sigusr1(__attribute__((unused)) int sig)
  */
 void start_polling_thread()
 {
-    if( (pthread_create(&poller_threadID, NULL, &begin_polling, NULL)) != 0){
+    if( (pthread_create(&poller_threadID, NULL, &begin_polling, NULL)) != 0)
+    {
         printf("[ERR] Client: pthread_create failed for polling function.\n\n");
         exit(1);
     }
@@ -551,11 +592,12 @@ void start_polling_thread()
 u8 reg(u8* password, int password_len, const char* save_dir)
 {
     const u32 chacha_key_len = 32;
-          u32 pw_bytes_for_zeroing = PASSWORD_BUF_SIZ - password_len;
+    u32       pw_bytes_for_zeroing = PASSWORD_BUF_SIZ - password_len;
     const u64 argon2_len_Salt = ARGON_STRING_LEN + 64;
-          u64 save_offset = 0;
-    const u64 save_len =
-            ARGON_STRING_LEN + PUBKEY_LEN + PRIVKEY_LEN + LONG_NONCE_LEN;
+    u64       save_offset = 0;
+
+    const u64 save_len = ARGON_STRING_LEN + PUBKEY_LEN +
+                         PRIVKEY_LEN + LONG_NONCE_LEN;
     u8 status = 0;
     u8 privkey_buf          [PRIVKEY_LEN];
     u8 argon2_salt_string   [ARGON_STRING_LEN];
@@ -571,11 +613,11 @@ u8 reg(u8* password, int password_len, const char* save_dir)
     /* S is a random 8 byte string, so Salt length is 64+8 = 72 bytes. */
     /* Access /dev/urandom for random 8-byte string S for Argon2 Salt. */
 
-    FILE* ranfile   = NULL;
-    FILE* user_save = NULL;
-    struct Argon2_parms prms;
+    FILE*   ranfile    = NULL;
+    FILE*   user_save  = NULL;
     bigint* A_longterm = NULL;
-    bigint temp_privkey;
+    bigint  temp_privkey;
+    struct Argon2_parms prms;
 
     temp_privkey.bits = (u8*)calloc(1, MAX_USED_BITWIDTH);
     memset(&prms, 0, sizeof(struct Argon2_parms));
@@ -584,7 +626,8 @@ u8 reg(u8* password, int password_len, const char* save_dir)
     /* a = random in the range [1, Q), from a good pseudorandom byte source. */
     status = gen_priv_key(PRIVKEY_LEN, privkey_buf);
 
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: gen_priv_key return > 0.\n");
         status = 1;
         goto label_cleanup;
@@ -611,9 +654,9 @@ u8 reg(u8* password, int password_len, const char* save_dir)
 
     /* Zero-extend the password to 16 bytes including a null terminator.     */
     /* Len does not include the null terminator already placed by wxWidgets. */
-    if(pw_bytes_for_zeroing > 0){
+    if(pw_bytes_for_zeroing > 0)
         memset(password + password_len, 0, pw_bytes_for_zeroing);
-    }
+
     prms.P = password;
 
     /* Now construct the Argon2 Salt parameter.
@@ -635,8 +678,8 @@ u8 reg(u8* password, int password_len, const char* save_dir)
     blake2b_init(A_longterm->bits, PUBKEY_LEN, 0, 64, b2b_pubkey_output);
 
     /* Now construct the complete Salt parameter with the two components. */
-    memcpy(Salt,     argon2_salt_string,  ARGON_STRING_LEN);
-    memcpy(Salt + ARGON_STRING_LEN, b2b_pubkey_output,  64);
+    memcpy(Salt, argon2_salt_string, ARGON_STRING_LEN);
+    memcpy(Salt + ARGON_STRING_LEN, b2b_pubkey_output, 64);
     prms.S = Salt;
 
     /* Set the rest of the Argon2 parameters. */
@@ -659,7 +702,8 @@ u8 reg(u8* password, int password_len, const char* save_dir)
     memcpy(V, argon2_output_tag, chacha_key_len);
 
     /* Get the pseudorandom chacha20 Nonce. */
-    if(fread(chacha_nonce_buf, 1, LONG_NONCE_LEN, ranfile) != LONG_NONCE_LEN){
+    if(fread(chacha_nonce_buf, 1, LONG_NONCE_LEN, ranfile) != LONG_NONCE_LEN)
+    {
         printf("[ERR] Client: Reg failed to read urandom. Alert GUI.\n\n");
         status = 1;
         goto label_cleanup;
@@ -685,7 +729,8 @@ u8 reg(u8* password, int password_len, const char* save_dir)
      */
     user_save = fopen(save_dir, "w");
 
-    if(!user_save){
+    if(!user_save)
+    {
         perror("[ERR] Client: Reg failed to open user_save:");
         status = 1;
         goto label_cleanup;
@@ -693,24 +738,29 @@ u8 reg(u8* password, int password_len, const char* save_dir)
 
     /* Prepare a buffer containing all the artifacts to be saved. */
     memcpy(user_save_buf + save_offset, chacha_nonce_buf, LONG_NONCE_LEN);
+
     save_offset += LONG_NONCE_LEN;
     memcpy(user_save_buf + save_offset, encrypted_privkey_buf, PRIVKEY_LEN);
+
     save_offset += PRIVKEY_LEN;
     memcpy(user_save_buf + save_offset, A_longterm->bits, PUBKEY_LEN);
+
     save_offset += PUBKEY_LEN;
     memcpy(user_save_buf + save_offset, argon2_salt_string, 8);
+
     fwrite(user_save_buf, 1, save_len, user_save);
 
 label_cleanup:
+
     bigint_cleanup(A_longterm);
     free(A_longterm);
     bigint_cleanup(&temp_privkey);
-    if(ranfile){
+
+    if(ranfile)
         fclose(ranfile);
-    }
-    if(user_save){
+    if(user_save)
         fclose(user_save);
-    }
+
     return status;
 }
 
@@ -732,7 +782,8 @@ u8 login(u8* password, int password_len, const char* save_dir)
 
     status = self_init(password, password_len, save_dir);
 
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Core initialization failed. Aborting login.\n\n");
         goto label_cleanup;
     }
@@ -743,38 +794,40 @@ u8 login(u8* password, int password_len, const char* save_dir)
      * and shared secret that get destroyed right after this login handshake.
      */
     status = construct_msg_00(&msg_buf, &msg_len);
-
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Couldn't construct MSG_00 for Login. Abort.\n");
         goto label_cleanup;
     }
 
     status = transmit_payload(msg_buf, msg_len);
-
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Couldn't send MSG_00 for Login. Abort.\n");
         goto label_cleanup;
     }
 
     status = receive_payload(reply_buf, (uint64_t*)&reply_len);
-
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Couldn't receive MSG_00 reply by server.\n\n");
         goto label_cleanup;
     }
-    if(*reply_type_ptr != PACKET_ID_02 && *reply_type_ptr != PACKET_ID_00){
+    if(*reply_type_ptr != PACKET_ID_02 && *reply_type_ptr != PACKET_ID_00)
+    {
         printf("[ERR] Client: Unexpected reply by the server to msg_00\n\n");
         goto label_cleanup;
     }
-    if(*reply_type_ptr == PACKET_ID_00){
+    if(*reply_type_ptr == PACKET_ID_00)
+    {
         /* Do not release the memory area pointed to by msg_buf just yet, as
          * process_msg_00 continues the 2-part login handshake. It, on its own,
          * will reallocate memory for the payload buffer. It processes msg_00
          * AND constructs msg_01.
          */
         status = process_msg_00(reply_buf, &msg_buf, &msg_len);
-
-        if(status){
+        if(status)
+        {
             printf("[ERR] Client: process_msg_00 failed. Abort login.\n\n");
             goto label_cleanup;
         }
@@ -791,55 +844,66 @@ u8 login(u8* password, int password_len, const char* save_dir)
 
 */
         status = transmit_payload(msg_buf, msg_len);
-        if(status){
+        if(status)
+        {
             printf("[ERR] Client: Sending MSG_01 failed.");
             goto label_cleanup;
         }
     }
-    else{
+    else
+    {
         printf("[OK]  Client: Server told us to try login later.\n\n");
         status = process_msg_02(reply_buf);
-        if (status){
+        if(status)
+        {
             printf("[ERR] Client: process_msg_02 failed. Abort login.\n\n");
             goto label_cleanup;
         }
         status = 10;
-          goto label_cleanup;
+        goto label_cleanup;
     }
+
     memset(reply_buf, 0, MAX_TXT_LEN);
     status = receive_payload(reply_buf, (uint64_t*)&reply_len);
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Couldn't receive a reply to msg_01.\n\n");
         goto label_cleanup;
     }
-    if(*reply_type_ptr == PACKET_ID_01){
+    if(*reply_type_ptr == PACKET_ID_01)
+    {
         printf("[OK]  Client: Rosetta server told us login succeeded!\n\n");
         status = process_msg_01(reply_buf);
-        if (status){
+        if (status)
+        {
             printf("[ERR] Client: process_msg_01 failed. Abort login.\n\n");
             goto label_cleanup;
         }
     }
-    else if(*reply_type_ptr == PACKET_ID_02){
+    else if(*reply_type_ptr == PACKET_ID_02)
+    {
         printf("[OK]  Client: Rosetta server told us to try later, full!\n\n");
         status = process_msg_02(msg_buf);
-        if (status){
+        if (status)
+        {
             printf("[ERR] Client: process_msg_02 failed. Abort login.\n\n");
             goto label_cleanup;
         }
         status = 10;
-          goto label_cleanup;
+        goto label_cleanup;
     }
-    else{
+    else
+    {
         printf("[ERR] Client: Unexpected reply by the server to msg_01.\n\n");
         status = 1;
-          goto label_cleanup;
+        goto label_cleanup;
     }
     texting_should_stop = 0;
     start_polling_thread();
     printf("******** LOGIN COMPLETED *********\n");
 
 label_cleanup:
+
     free(msg_buf);
     return status;
 }
@@ -858,32 +922,33 @@ u8 make_new_chatroom(unsigned char* roomid, int roomid_len,
 
     /* Zero-extend the userID to 8 bytes including a null terminator.       */
     /* Len does not include the null terminator already placed by the GUI.  */
-    if(userid_bytes_for_zeroing > 0){
+    if(userid_bytes_for_zeroing > 0)
         memset(userid + userid_len, 0, userid_bytes_for_zeroing);
-    }
 
     /* Do the same for roomID. */
-    if(roomid_bytes_for_zeroing > 0){
+    if(roomid_bytes_for_zeroing > 0)
         memset(roomid + roomid_len, 0, roomid_bytes_for_zeroing);
-    }
 
     /* Send a request to the Rosetta server to create a new chatroom. */
     status = construct_msg_10(userid, roomid, &msg_buf, &msg_len);
 
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Couldn't construct msg_10\n\n");
-          goto label_cleanup;
+        goto label_cleanup;
     }
 
     status = transmit_payload(msg_buf, msg_len);
 
-    if(status){
+    if(status)
+    {
         printf("\n[ERR] Client: Couldn't send MSG_10 (make_room). Abort.\n");
         goto label_cleanup;
     }
     printf("[OK]  Client: Sent MSG_10 (make_room) to the Rosetta server.\n");
 
 label_cleanup:
+
     free(msg_buf);
     return status;
 }
@@ -900,31 +965,32 @@ u8 join_chatroom(unsigned char* roomid, int roomid_len,
 
     /* Zero-extend the userID to 8 bytes including a null terminator.       */
     /* Len does not include the null terminator already placed by the GUI.  */
-    if(userid_bytes_for_zeroing > 0){
+    if(userid_bytes_for_zeroing > 0)
         memset(userid + userid_len, 0, userid_bytes_for_zeroing);
-    }
 
     /* Do the same for roomID. */
-    if(roomid_bytes_for_zeroing > 0){
+    if(roomid_bytes_for_zeroing > 0)
         memset(roomid + roomid_len, 0, roomid_bytes_for_zeroing);
-    }
 
     /* Send a request to the Rosetta server to create a new chatroom. */
     status = construct_msg_20(userid, roomid, &msg_buf, &msg_len);
 
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Could not construct msg_20 to join a room!\n\n");
         goto label_cleanup;
     }
 
     status = transmit_payload(msg_buf, msg_len);
-    if(status){
+    if(status)
+    {
         printf("\n[ERR] Client: Couldn't send MSG_20 (make_room). Abort.\n");
         goto label_cleanup;
     }
     printf("[OK]  Client: Sent MSG_20 (join_room) to Rosetta server.\n");
 
 label_cleanup:
+
     free(msg_buf);
     return status;
 }
@@ -937,20 +1003,21 @@ uint8_t send_text(unsigned char* text, uint64_t text_len)
     u8* msg_buf = NULL;
 
     status = construct_msg_30(text, text_len, &msg_buf, &msg_len);
-
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Could not construct msg_30 to send a text!\n\n");
         goto label_cleanup;
     }
 
     status = transmit_payload(msg_buf, msg_len);
-
-    if(status){
+    if(status)
+    {
         printf("\n[ERR] Client: Couldn't send MSG_30 (send_text). Abort.\n");
         goto label_cleanup;
     }
 
 label_cleanup:
+
     free(msg_buf);
     return status;
 }
@@ -963,18 +1030,22 @@ u8 leave_chatroom(void)
     u8* msg_buf = NULL;
 
     status = construct_msg_50(&msg_buf, &msg_len);
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Could not construct msg_50 (exit_room).\n\n");
         goto label_cleanup;
     }
+
     status = transmit_payload(msg_buf, msg_len);
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Couldn't send MSG_50 (exit_room). Abort.\n");
         goto label_cleanup;
     }
     printf("[OK]  Client: Sent MSG_50 (exit_room) to Rosetta server.\n");
 
 label_cleanup:
+
     free(msg_buf);
     return status;
 }
@@ -987,12 +1058,15 @@ u8 logout(void)
     u8* msg_buf = NULL;
 
     status = construct_msg_60(&msg_buf, &msg_len);
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Could not construct msg_60 (logoff).\n\n");
         goto label_cleanup;
     }
+
     status = transmit_payload(msg_buf, msg_len);
-    if(status){
+    if(status)
+    {
         printf("[ERR] Client: Couldn't send MSG_60 (logoff). Abort.\n");
         goto label_cleanup;
     }
@@ -1001,6 +1075,7 @@ u8 logout(void)
     end_communication();
 
 label_cleanup:
+
     free(msg_buf);
     return status;
 }
