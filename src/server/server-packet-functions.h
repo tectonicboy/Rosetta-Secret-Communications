@@ -467,6 +467,7 @@ label_cleanup:
 
     Client ----> Server
 
+                  <------------ ENCRYPTED ------------->
 ================================================================================
 |  packet ID 01   | Client's encrypted long-term PubKey |  HMAC authenticator  |
 |=================|=====================================|======================|
@@ -734,6 +735,7 @@ uint64_t process_msg_01(u8* msg_buf, u64 user_ix)
 
     Server ----> Client
 
+               < ENCRYPTED >
 ================================================================================
 | packet ID 01 |  user_ix  |                    SIGNATURE                      |
 |==============|===========|===================================================|
@@ -773,8 +775,7 @@ label_cleanup:
 
 /* PAYLOAD DIAGRAM: A client requested to create a new chatroom.
 
-                                          ENCRYPTED
-                            /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+                           <--- ENCRYPTED ---> <-- ENCRYPTED -->
 ================================================================================
 | packet ID 10 |  user_ix  | Decryption Key   | Room_ID+user_ID |  Signature   |
 |==============|===========|==================|=================|==============|
@@ -992,8 +993,7 @@ label_cleanup:
 /* PAYLOAD DIAGRAM: A client has requested to join an existing chatroom.
 
    Client ----> Server
-                                          ENCRYPTED
-                            /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+                           <--- ENCRYPTED ---> <-- ENCRYPTED -->
 ================================================================================
 | packet ID 20 |  user_ix  | Decryption Key   | Room_ID+user_ID |  Signature   |
 |==============|===========|==================|=================|==============|
@@ -1009,8 +1009,8 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
     u64 room_ix;
     u64 send_type20_signed_len;
     u64 user_ixs_in_room[MAX_CLIENTS];
-    u64 buf_ixs_pubkeys_write_offset;
-    u64 buf_ixs_pubkeys_len;
+    u64 buf_ids_pubkeys_write_offset;
+    u64 buf_ids_pubkeys_len;
     u64 reply_len;
     u64 send_type21_encr_part_offset = SMALL_FIELD_LEN + ONE_TIME_KEY_LEN;
     u64 send_type20_AD_offset        = (2 * SMALL_FIELD_LEN) + ONE_TIME_KEY_LEN;
@@ -1027,7 +1027,7 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
     u8  recv_K[ONE_TIME_KEY_LEN];
     u8  send_K[ONE_TIME_KEY_LEN];
     u8  type21_encrypted_part[SMALL_FIELD_LEN + PUBKEY_LEN];
-    u8* buf_ixs_pubkeys = NULL;
+    u8* buf_ids_pubkeys = NULL;
     u8* reply_buf = NULL;
     u8  room_found;
     u8  ret = 0;
@@ -1172,11 +1172,11 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
         }
     }
     clients[user_ix].room_ix = room_ix;
-    buf_ixs_pubkeys_len = num_users_in_room * (SMALL_FIELD_LEN + PUBKEY_LEN);
+    buf_ids_pubkeys_len = num_users_in_room * (SMALL_FIELD_LEN + PUBKEY_LEN);
 
     reply_len =  (2 * SMALL_FIELD_LEN)
                + ONE_TIME_KEY_LEN
-               + SIGNATURE_LEN + buf_ixs_pubkeys_len;
+               + SIGNATURE_LEN + buf_ids_pubkeys_len;
 
     reply_buf = calloc(1, reply_len);
     uint64_t packet_id20 = PACKET_ID_20;
@@ -1227,27 +1227,27 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
     memcpy(reply_buf + (SMALL_FIELD_LEN + ONE_TIME_KEY_LEN),
            &num_users_in_room, SMALL_FIELD_LEN);
 
-    buf_ixs_pubkeys = calloc(1, buf_ixs_pubkeys_len);
+    buf_ids_pubkeys = calloc(1, buf_ids_pubkeys_len);
 
     /* Iterate over all users in this chatroom, to grab their public keys. */
-    buf_ixs_pubkeys_write_offset = 0;
+    buf_ids_pubkeys_write_offset = 0;
 
     for(u64 i = 0; i < num_users_in_room; ++i)
     {
-        memcpy(buf_ixs_pubkeys + buf_ixs_pubkeys_write_offset,
+        memcpy(buf_ids_pubkeys + buf_ids_pubkeys_write_offset,
                clients[user_ixs_in_room[i]].user_id, SMALL_FIELD_LEN);
 
-        buf_ixs_pubkeys_write_offset += SMALL_FIELD_LEN;
+        buf_ids_pubkeys_write_offset += SMALL_FIELD_LEN;
 
-        memcpy(buf_ixs_pubkeys + buf_ixs_pubkeys_write_offset,
+        memcpy(buf_ids_pubkeys + buf_ids_pubkeys_write_offset,
                clients[user_ixs_in_room[i]].client_pubkey.bits, PUBKEY_LEN);
 
-        buf_ixs_pubkeys_write_offset += PUBKEY_LEN;
+        buf_ids_pubkeys_write_offset += PUBKEY_LEN;
     }
 
     /* We need a counter for this ChaCha usage, to encrypt long public keys. */
-    chacha20( buf_ixs_pubkeys                      /* text - room people info */
-             ,buf_ixs_pubkeys_len                  /* text_len in bytes       */
+    chacha20( buf_ids_pubkeys                      /* text - room people info */
+             ,buf_ids_pubkeys_len                  /* text_len in bytes       */
              ,(u32*)(nonce_bigint.bits)            /* Nonce                   */
              ,(u32)(SHORT_NONCE_LEN / sizeof(u32)) /* nonce_len in uint32_t's */
              ,(u32*)(send_K)                       /* chacha Key              */
@@ -1261,7 +1261,7 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
 
     /* Generate a server signature so the new client can authenticate us. */
     send_type20_signed_len
-        = (2 * SMALL_FIELD_LEN) + ONE_TIME_KEY_LEN + buf_ixs_pubkeys_len;
+        = (2 * SMALL_FIELD_LEN) + ONE_TIME_KEY_LEN + buf_ids_pubkeys_len;
 
     signature_generate(M, Q, Gm, reply_buf, send_type20_signed_len,
                        reply_buf + send_type20_signed_len,
@@ -1277,6 +1277,7 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
 
     Server ---> Client
 
+              <--- ENCRYPTED --->             <-- ENCRYPTED -->
 ================================================================================
 | packetID 20 |        KC        |     N     | Associated Data |   Signature   |
 |=============|==================|===========|=================|===============|
@@ -1285,6 +1286,7 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
 
     where Associated Data of length L bytes:
 
+<-------------------------------- ENCRYPTED ----------------------------------->
 ================================================================================
 | user_id1  | long-term_public_key1 | ... | user_idN  | long-term_public_keyN  |
 |===========|=======================|=====|===========|========================|
@@ -1399,7 +1401,7 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
 
         /* Encrypt it with chacha, place the ciphertext in the paylod. */
         chacha20(
-         type21_encrypted_part                      /* text: user_ix + pubkey */
+         type21_encrypted_part                      /* text: user_id + pubkey */
         ,(SMALL_FIELD_LEN + PUBKEY_LEN)             /* text_len in bytes      */
         ,(u32*)(nonce_bigint.bits)                  /* Nonce                  */
         ,(u32)(SHORT_NONCE_LEN / sizeof(u32))       /* nonce_len in uint32t's */
@@ -1422,6 +1424,7 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
 
     Server ----> Client
 
+               <-- ENCRYPTED -->  <---------- ENCRYPTED ---------->
 ================================================================================
 | packet ID 21 |        KC       | new_guest_ID | new_guest_PubKey | Signature |
 |==============|=================|==============|==================|===========|
@@ -1438,7 +1441,7 @@ label_cleanup:
         fclose(ran_file);
 
     free(reply_buf);
-    free(buf_ixs_pubkeys);
+    free(buf_ids_pubkeys);
     bigint_cleanup(&nonce_bigint);
     bigint_cleanup(&one);
     bigint_cleanup(&aux1);
@@ -1459,6 +1462,7 @@ label_cleanup:
 
  AD - Associated Data, of length L bytes: From T = 1 to num_guests:
 
+            < ENCRYPTED > <ENCRYPTED>                 < ENCRYPTED > <ENCRYPTED>
 ================================================================================
 | guestID_1 | encr_key_1 | encr_msg_1| ... |guestID_T | encr_key_T | encr_msg_T|
 |===========|============|===========|=====|==========|============|===========|
@@ -1516,7 +1520,7 @@ void process_msg_30(u8* msg_buf, s64 packet_siz, u64 sign_offset, u64 sender_ix)
                     pending messages.
 
     Server ----> Client
-
+                                      <ENCRYPTED>
 ================================================================================
 | packetID 30 | sender_id |  TXT_LEN  |    AD   |     Sign1     |    Sign2     |
 |=============|===========|===========|=========|===============|==============|

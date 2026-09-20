@@ -469,6 +469,7 @@ label_cleanup:
 
     Server ----> Client
 
+               <-ENCRYPTED->
 ================================================================================
 | packet ID 01 |  user_ix  |                    SIGNATURE                      |
 |==============|===========|===================================================|
@@ -596,8 +597,7 @@ label_cleanup:
 
 /* PAYLOAD DIAGRAM: The user has requested to create a new chatroom.
 
-                                          ENCRYPTED
-                            /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+                           <--- ENCRYPTED ---> <-- ENCRYPTED -->
 ================================================================================
 | packet ID 10 |  user_ix  | Decryption Key   | Room_ID+user_ID |  Signature   |
 |==============|===========|==================|=================|==============|
@@ -773,8 +773,8 @@ u8 process_msg_10(u8* msg)
 /* PAYLOAD DIAGRAM: The user has requested to join an existing chat room.
 
    Client ----> Server
-                                          ENCRYPTED
-                            /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+
+                           <--- ENCRYPTED ---> <-- ENCRYPTED -->
 ================================================================================
 | packet ID 20 |  user_ix  | Decryption Key   | Room_ID+user_ID |  Signature   |
 |==============|===========|==================|=================|==============|
@@ -885,6 +885,7 @@ label_cleanup:
 
    Main packet structure:
 
+              <--- ENCRYPTED --->            <--- ENCRYPTED --->
 ================================================================================
 | packetID 20 |        KC        |     N     | Associated Data |   Signature   |
 |=============|==================|===========|=================|===============|
@@ -893,6 +894,7 @@ label_cleanup:
 
    where Associated Data of length L bytes is:
 
+<-------------------------------- ENCRYPTED ----------------------------------->
 ================================================================================
 | user_id1  | long-term_public_key1 | ... | user_idN  | long-term_public_keyN  |
 |===========|=======================|=====|===========|========================|
@@ -1234,7 +1236,7 @@ label_cleanup:
    Client ----> Server
 
    Main packet structure:
-
+                                       <ENCRYPTED>
 ================================================================================
 | packetID 30 |  user_id  |  TXT_LEN   |    AD   |          Signature1         |
 |=============|===========|============|=========|=============================|
@@ -1243,6 +1245,7 @@ label_cleanup:
 
    AD - Associated Data, of length L bytes: From T = 1 to (num_guests - 1):
 
+            <------ ENCRYPTED ------>                 <------ ENCRYPTED ------>
 ================================================================================
 | guestID_1 | encr_key_1 | encr_msg_1| ... |guestID_T | encr_key_T | encr_msg_T|
 |===========|============|===========|=====|==========|============|===========|
@@ -1402,7 +1405,7 @@ label_cleanup:
    Server ---> Client
 
    Main packet structure:
-
+                                      <ENCRYPTED>
 ================================================================================
 | packetID 30 | sender_id |  TXT_LEN  |    AD   |     Sign1     |    Sign2     |
 |=============|===========|===========|=========|===============|==============|
@@ -1411,6 +1414,7 @@ label_cleanup:
 
    AD - Associated Data, of length L bytes: From T = 1 to (num_guests - 1):
 
+            <------ ENCRYPTED ------>                 <------ ENCRYPTED ------>
 ================================================================================
 | guestID_1 | encr_key_1 | encr_msg_1| ... |guestID_T | encr_key_T | encr_msg_T|
 |===========|============|===========|=====|==========|============|===========|
@@ -1643,6 +1647,7 @@ label_cleanup:
 }
 
 /* PAYLOAD DIAGRAM:
+
    Our client is sending a poll request to the Rosetta server to see if there
    is anything new that just happened that we need to be aware of, such as
    one of our chat roommates sending a text message, a new roommate joining
@@ -1676,8 +1681,13 @@ u8 construct_msg_40(u8** msg_buf, u64* msg_len)
 
 /* PAYLOAD DIAGRAM: Server replied to our poll request with nothing new for us.
 
+                    Note: Packet_ID_41 is when our polling request made the
+                          server tell us we DO have messages waiting for us.
+                          There's no processor function for it here because it
+                          simply contains messages each with its own packet ID.
+
    Server ---> Client
-TODO: is this packet 40 or 41 or what?
+
 ================================================================================
 |  packet ID 40   |                  Cryptographic Signature                   |
 |=================|============================================================|
@@ -1698,6 +1708,7 @@ u8 process_msg_40(u8* payload)
 }
 
 /* PAYLOAD DIAGRAM:
+
    The Rosetta server replied to our polling request with information that
    a NON-OWNER room guest has left our chatroom. Remove that user from our
    global descriptors, bitmasks and other guest bookkeeping.

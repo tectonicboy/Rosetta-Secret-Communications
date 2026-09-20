@@ -836,6 +836,7 @@ u8 login(u8* password, int password_len, const char* save_dir)
 
    Client ----> Server
 
+                  <------------- ENCRYPTED ------------->
 ================================================================================
 |  packet ID 01   | Client's encrypted long-term PubKey |  HMAC authenticator  |
 |=================|=====================================|======================|
