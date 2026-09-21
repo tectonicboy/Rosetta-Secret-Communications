@@ -40,6 +40,8 @@ u8 self_init()
 
     /* Allocate memory for the temporary login handshake memory region. */
     temp_handshake_buf = calloc(1, TEMP_BUF_SIZ);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(temp_handshake_buf,
+        "[ERR] Heap alloc in server self_init for temp_handshake_buf failed: ")
 
     /*  Server will use its private key to compute cryptographic signatures of
      *  everything it transmits, so all users can authenticate it using the
@@ -136,6 +138,9 @@ u8 identify_new_transmission(u8* client_msg_buf, s64 bytes_read, u64 sock_ix)
     s64 expected_siz = 0;
     u32 status = 0;
     char *msg_type_str = calloc(1, 3);
+
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(msg_type_str,
+      "[ERR] Heap alloc in identify_new_transmission for msg_type_str failed: ")
 
     /* Read the first 8 bytes to see what type of init transmission it is. */
     memcpy(&transmission_type, client_msg_buf, SMALL_FIELD_LEN);
@@ -327,6 +332,9 @@ void* start_new_client_thread(void* ix_ptr)
     ssize_t bytes_read;
     u32 status;
     u64 ix;
+
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(client_msg_buf,
+      "[ERR] Heap alloc in start_new_client_thread for client_msg_buf failed: ")
 
     memcpy(&ix, ix_ptr, sizeof(ix));
     memset(client_msg_buf, 0, MAX_MSG_LEN);

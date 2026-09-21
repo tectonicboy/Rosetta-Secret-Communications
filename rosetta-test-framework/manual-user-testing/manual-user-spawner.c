@@ -289,6 +289,8 @@ int main(int argc, char* argv[])
 
     full_save_dir = calloc
                        (1, strlen(savedir) + strlen((const char*)savefilename));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(full_save_dir,
+        "[ERR] Heap alloc in main for full_save_dir failed: ")
 
     memcpy(full_save_dir, savedir, strlen(savedir));
 

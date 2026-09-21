@@ -20,6 +20,8 @@ uint8_t make_new_test_acc(void)
 
     full_save_dir =
         calloc(1, strlen(savedir) + strlen((const char*)savefilename));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(full_save_dir,
+        "[ERR] Heap alloc in make_new_test_acc for full_save_dir failed: ")
 
     memcpy(full_save_dir, savedir, strlen(savedir));
 
@@ -122,7 +124,11 @@ void draw_menu_0()
     fseek(logo_file, 0, SEEK_END);
     logo_file_size = ftell(logo_file);
     rewind(logo_file);
+
     logo_buf = calloc(1, logo_file_size + 1);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(logo_buf,
+        "[ERR] Heap alloc in  draw_menu_0 for logo_buf failed: ")
+
     fread(logo_buf, 1, logo_file_size, logo_file);
     logo_buf[logo_file_size] = '\0';
     printf("\n\n%s\n\n\n\n", logo_buf);

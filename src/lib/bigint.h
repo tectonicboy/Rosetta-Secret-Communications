@@ -58,12 +58,9 @@ void bigint_create_from_u32
     num->size_bits = bitsize;
     num->bits      = (u8*)calloc(1, bitsize / 8);
     num->used_bits = 0;
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(num->bits,
+        "[ERR] Heap alloc in bigint_create_from_u32 for num->bits failed: ")
 
-    if( __builtin_expect(num->bits == NULL, false) )
-    {
-        perror("Memory allocation failed for a new bigint's bit buffer: ");
-        exit(1);
-    }
     memcpy(num->bits, &initial, sizeof(u32));
     num->used_bits = get_used_bits(num->bits, sizeof(u32));
     return;
@@ -148,6 +145,9 @@ void bigint_print_bits(const bigint* const n)
 
     bytes_used = (u32)((double)bits_to_8 / (double)8.0);
     bitstring  = (char*)calloc(1, (bytes_used * 8));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(bitstring,
+        "[ERR] Heap alloc in bigint_print_bits for bitstring failed: ")
+
     bigint_get_ascii_bits(n, bitstring);
     printf("\n\n");
 
@@ -180,7 +180,13 @@ void bigint_print_bits_bigend(const bigint* const n)
 
     bytes_used       = (u32)((double)bits_to_8 / (double)8.0);
     bitstring        = (char*)calloc(1, bytes_used * 8);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(bitstring,
+     "[ERR] Heap alloc in bigint_print_bits_bigend for bitstring fail: ")
+
     bitstring_bigend = (char*)calloc(1, bytes_used * 8);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(bitstring_bigend,
+     "[ERR] Heap alloc in bigint_print_bits_bigend for bitstring_bigend fail: ")
+
     bigint_get_ascii_bits(n, bitstring);
 
     for(u32 i = 0; i < bytes_used; ++i)
@@ -249,14 +255,8 @@ bigint* get_bigint_from_dat
     u32     file_bytes;
 
     big_n_ptr = (bigint*)calloc(1, sizeof(bigint));
-
-    if(big_n_ptr == NULL)
-    {
-        printf("[ERR] Heap allocation failed for a new BigInt that must be "
-                      "loaded from file: %s\n", filepath);
-        perror("Error: ");
-        exit(1);
-    }
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(big_b_ptr,
+        "[ERR] Heap alloc in get_bigint_from_dat for big_nn_ptr failed: ")
 
     bigint_create_from_u32(big_n_ptr, reserve_bits, 0);
 
@@ -952,6 +952,8 @@ void bigint_mod_pow(const bigint* const N, const bigint* const P,
     u32      arr1_curr_ind = 0;
 
     arr1 = (u32*)calloc(1, P->used_bits * (sizeof(u32)));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(arr1,
+        "[ERR] Heap alloc in bigint_mod_pow for arr1 failed: ")
 
     while(P_used_bytes % 8)
         ++P_used_bytes;
@@ -980,7 +982,12 @@ void bigint_mod_pow(const bigint* const N, const bigint* const P,
     bigint_create_from_u32(&div_res, M->size_bits, 1);
 
     arr2     = (bigint*) calloc(1, c1 * sizeof(bigint));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(arr2,
+        "[ERR] Heap alloc in bigint_mod_pow for arr2 failed: ")
+
     arr_ptrs = (bigint**)calloc(1, c1 * sizeof(bigint*));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(arr_ptrs,
+        "[ERR] Heap alloc in bigint_mod_pow for arr_ptrs failed: ")
 
     for(u32 i = 0; i < c1; ++i)
     {
@@ -1124,6 +1131,8 @@ u8 rabin_miller(const bigint* const N, const u32 passes)
 
     /* Create the different A's we will use */
     As = (bigint*)calloc(1, ( (passes * 2) + 1) * sizeof(bigint));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(As,
+        "[ERR] Heap alloc in rabin_miller for As failed: ")
 
     for(u32 i = 0; i < (passes * 2) + 1; ++i)
     {

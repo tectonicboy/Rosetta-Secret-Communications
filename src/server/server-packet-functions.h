@@ -82,6 +82,9 @@ void remove_user_from_room(u64 sender_ix)
         /* Construct the message and send it to everyone else in the chatroom.*/
         reply_len = (2 * SMALL_FIELD_LEN) + SIGNATURE_LEN;
         reply_buf = calloc(1, reply_len);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+         "[ERR] Heap alloc in remove_user_from_room for reply_buf 1 failed: ")
+
         tmp_packet_id = PACKET_ID_50;
 
         memcpy(reply_buf, &tmp_packet_id, sizeof(u64));
@@ -126,6 +129,9 @@ void remove_user_from_room(u64 sender_ix)
         printf("[OK] Removing room[%lu] owner!\n", clients[sender_ix].room_ix);
         reply_len = SMALL_FIELD_LEN + SIGNATURE_LEN;
         reply_buf = calloc(1, reply_len);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+         "[ERR] Heap alloc in remove_user_from_room for reply_buf 2 failed: ")
+
         tmp_packet_id = PACKET_ID_51;
         memcpy(reply_buf, &tmp_packet_id, sizeof(u64));
 
@@ -180,8 +186,14 @@ u8 authenticate_client( u64 client_ix,  u8* signed_ptr,
     /* Then proceed to validate the signature for the user's authenticity.    */
     recv_s = (bigint*)(signed_ptr + s_offset);
     recv_e = (bigint*)(signed_ptr + e_offset);
+
     recv_s->bits = calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(recv_s->bits,
+        "[ERR] Heap alloc in authenticate_client for recv_s->bits failed: ")
+
     recv_e->bits = calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(recv_e->bits,
+        "[ERR] Heap alloc in authenticate_client for recv_e->bits 1 failed: ")
 
     memcpy(recv_s->bits, signed_ptr + (sign_offset + sizeof(bigint)),
            PRIVKEY_LEN);
@@ -269,6 +281,9 @@ uint64_t process_msg_00(u8* msg_buf, u64 user_ix)
     u8* Y_s;
     u8  ret = 0;
 
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+        "[ERR] Heap alloc in process_msg_00 for reply_buf 1 failed: ")
+
     memset(signature_buf, 0, SIGNATURE_LEN);
 
     /* If the login handshake memory region is locked, that means another
@@ -280,8 +295,12 @@ uint64_t process_msg_00(u8* msg_buf, u64 user_ix)
         printf("[OK] Server: Caught a login attempt in the middle of another!\n"
                "             Rejecting this login attempt with packet_02.\n\n");
         reply_len = SMALL_FIELD_LEN + SIGNATURE_LEN;
+
         free(reply_buf);
         reply_buf = calloc(1, reply_len);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+            "[ERR] Heap alloc in process_msg_00 for reply_buf 2 failed: ")
+
         memcpy(reply_buf, &PACKET_ID02, SMALL_FIELD_LEN);
 
         signature_generate( M, Q, Gm, PACKET_ID02_addr, SMALL_FIELD_LEN,
@@ -323,6 +342,9 @@ uint64_t process_msg_00(u8* msg_buf, u64 user_ix)
     bigint_create_from_u32(&X_s, MAX_USED_BITWIDTH, 0);
     A_s = (bigint*)(temp_handshake_buf);
     A_s->bits = calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(A_s->bits,
+        "[ERR] Heap alloc in process_msg_00 for A_s->bits failed: ")
+
     memcpy(A_s->bits, msg_buf + SMALL_FIELD_LEN, PUBKEY_LEN);
     A_s->size_bits = MAX_USED_BITWIDTH;
     A_s->used_bits = get_used_bits(msg_buf + SMALL_FIELD_LEN, PUBKEY_LEN);
@@ -373,6 +395,8 @@ uint64_t process_msg_00(u8* msg_buf, u64 user_ix)
     }
 
     b_s.bits = (u8*)calloc(1, MAX_USED_BITWIDTH);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(b_s.bits,
+        "[ERR] Heap alloc in process_msg_00 for b_s.bits failed: ")
     memcpy(b_s.bits, temp_handshake_buf + sizeof(bigint), PRIVKEY_LEN);
     b_s.size_bits = MAX_USED_BITWIDTH;
     b_s.used_bits = get_used_bits(b_s.bits, PRIVKEY_LEN);
@@ -625,6 +649,9 @@ uint64_t process_msg_01(u8* msg_buf, u64 user_ix)
         printf("              Letting the user know and to try later.  \n");
         reply_len = SMALL_FIELD_LEN + SIGNATURE_LEN;
         reply_buf = calloc(1, reply_len);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+         "[ERR] Heap alloc in process_msg_01 for reply_buf 1 failed: ")
+
         uint64_t packet_id02 = PACKET_ID_02;
         memcpy(reply_buf, &packet_id02, SMALL_FIELD_LEN);
         signature_generate(M, Q, Gm, PACKET_ID02_addr, SMALL_FIELD_LEN,
@@ -664,6 +691,9 @@ uint64_t process_msg_01(u8* msg_buf, u64 user_ix)
      */
     reply_len  = (2 * SMALL_FIELD_LEN) + SIGNATURE_LEN;
     reply_buf  = calloc(1, reply_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+        "[ERR] Heap alloc in process_msg_01 for reply_buf 2 failed: ")
+
     uint64_t packet_id01 = PACKET_ID_01;
     memcpy(reply_buf, &packet_id01, SMALL_FIELD_LEN);
     handshake_buf_key_offset  = (3 * sizeof(bigint)) + (1 * SESSION_KEY_LEN);
@@ -687,7 +717,11 @@ uint64_t process_msg_01(u8* msg_buf, u64 user_ix)
     clients[user_ix].nonce_counter    = 0;
 
     for(size_t i = 0; i < MAX_PEND_MSGS; ++i)
+    {
         clients[user_ix].pending_msgs[i] = calloc(1, MAX_MSG_LEN);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(clients[user_ix].pending_msgs[i],
+         "[ERR] Heap alloc in process_msg_01 for pending_msgs[i] failed: ")
+    }
 
     memset(clients[user_ix].pending_msg_sizes, 0,
            (MAX_PEND_MSGS * SMALL_FIELD_LEN));
@@ -818,6 +852,8 @@ void process_msg_10(u8* msg_buf, u32 user_ix)
     /* MAX_USED_BITWIDTH is in bits, so divide by 8 to get reserved BYTES.  */
     nonce_bigint.bits = calloc
       (1, ((size_t)((double)MAX_USED_BITWIDTH / (double)8)));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(nonce_bigint.bits,
+        "[ERR] Heap alloc in process_msg_10 for nonce_bigint.bits failed: ")
 
     memcpy(nonce_bigint.bits,
            clients[user_ix].shared_secret.bits + (2 * SESSION_KEY_LEN),
@@ -916,6 +952,9 @@ void process_msg_10(u8* msg_buf, u32 user_ix)
 */
         reply_len = SMALL_FIELD_LEN + SIGNATURE_LEN;
         reply_buf = calloc(1, reply_len);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+         "[ERR] Heap alloc in process_msg_10 for reply_buf 1 failed: ")
+
         memcpy(reply_buf, &PACKET_ID11, SMALL_FIELD_LEN);
 
         signature_generate(M, Q, Gm, (u8*)(&PACKET_ID11), SMALL_FIELD_LEN,
@@ -944,6 +983,9 @@ void process_msg_10(u8* msg_buf, u32 user_ix)
 */
     reply_len  = SMALL_FIELD_LEN + SIGNATURE_LEN;
     reply_buf  = calloc(1, reply_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+        "[ERR] Heap alloc in process_msg_10 for reply_buf 2 failed: ")
+
     memcpy(reply_buf, &PACKET_ID10, SMALL_FIELD_LEN);
 
     signature_generate(M, Q, Gm, (u8*)(&PACKET_ID10), SMALL_FIELD_LEN,
@@ -1052,6 +1094,9 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
 
     nonce_bigint.bits =
       calloc(1, ((size_t)((double)MAX_USED_BITWIDTH / (double)8)));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(nonce_bigint.bits,
+        "[ERR] Heap alloc in process_msg_20 for nonce_bigint.bits failed: ")
+
 
     /* Validate the sending client's signature. */
     if( authenticate_client(user_ix, msg_buf, signed_len, sign_offset) == 1)
@@ -1179,6 +1224,9 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
                + SIGNATURE_LEN + buf_ids_pubkeys_len;
 
     reply_buf = calloc(1, reply_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+        "[ERR] Heap alloc in process_msg_20 for reply_buf failed: ")
+
     uint64_t packet_id20 = PACKET_ID_20;
     memcpy(reply_buf, &packet_id20, SMALL_FIELD_LEN);
 
@@ -1228,6 +1276,8 @@ void process_msg_20(u8* msg_buf, u32 user_ix)
            &num_users_in_room, SMALL_FIELD_LEN);
 
     buf_ids_pubkeys = calloc(1, buf_ids_pubkeys_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(buf_ids_pubkeys,
+        "[ERR] Heap alloc in process_msg_20 for buf_ids_pubkeys failed: ")
 
     /* Iterate over all users in this chatroom, to grab their public keys. */
     buf_ids_pubkeys_write_offset = 0;
@@ -1486,8 +1536,12 @@ void process_msg_30(u8* msg_buf, s64 packet_siz, u64 sign_offset, u64 sender_ix)
 
     receiver_ixs = calloc
           (1, (rooms[clients[sender_ix].room_ix].num_people - 1) * sizeof(u64));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(receiver_ixs,
+        "[ERR] Heap alloc in process_msg_30 for receiver_ixs failed: ")
 
     reply_buf = calloc(1, reply_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+        "[ERR] Heap alloc in process_msg_30 for reply_buf failed: ")
 
     /* Validate the sender's signature. */
     if( authenticate_client(sender_ix, msg_buf, signed_len, sign_offset) == 1)
@@ -1575,6 +1629,9 @@ void process_msg_40(u8* msg_buf, u32 user_ix)
     {
         reply_len = SMALL_FIELD_LEN + SIGNATURE_LEN;
         reply_buf = calloc(1, reply_len);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+         "[ERR] Heap alloc in process_msg_40 for reply_buf 1 failed: ")
+
         uint64_t packet_id40 = PACKET_ID_40;
         memcpy(reply_buf, &packet_id40, SMALL_FIELD_LEN);
 
@@ -1615,6 +1672,9 @@ void process_msg_40(u8* msg_buf, u32 user_ix)
                          + SMALL_FIELD_LEN;
 
         reply_buf = calloc(1, reply_len);
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(reply_buf,
+         "[ERR] Heap alloc in process_msg_40 for reply_buf 2 failed: ")
+
         uint64_t* aux_ptr64_replybuf = (u64*)reply_buf;
         *aux_ptr64_replybuf = PACKET_ID_41;
         aux_ptr64_replybuf  = (u64*)(reply_buf + SMALL_FIELD_LEN);

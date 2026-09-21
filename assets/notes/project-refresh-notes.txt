@@ -14,11 +14,13 @@
 
  4. Calls to error-returning functions don't check for errors - malloc/calloc.
     Check everywhere and make sure errors are checked for!
+ [COMPLETED]
 
  5. Project coding style guidelines need defining and following everywhere.
  [COMPLETED]
 
  6. Put [[unlikely]] on if-statements that only check for returned errors.
+ [DROPPED]
 
  7. Project directory structure needs improving. Smaller top-level dir.
 
@@ -51,4 +53,5 @@
 
 17. PRESENTATION: Make sure github landing page is clean, polished and relays
                   quickly to employers looking at it why they should be liking
-                  what they see.
+                  what they see. With updated README, not the current one that
+                  starts with "this has been an incredible project for me" ...

@@ -248,13 +248,20 @@ void chacha20(uint8_t* plaintext, uint32_t txt_len, uint32_t* nonce,
     }
 
     outputs = (u32**)calloc(1, num_matrices * sizeof(uint32_t*));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(outputs,
+        "[ERR] Heap alloc in chacha20 for outputs failed: ")
 
     for(i = 0; i < num_matrices; ++i)
+    {
         outputs[i] = (u32*)calloc(1, 64 * sizeof(uint8_t));
-
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(outputs[i],
+        "[ERR] Heap alloc in chacha20 for outputs[i] failed: ")
+    }
     if(counter_len > 0)
     {
         counter = (u32*)calloc(1, sizeof(uint32_t));
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(counter,
+            "[ERR] Heap alloc in chacha20 for counter failed: ")
         *counter = 1;
     }
     for(i = 0; i < num_matrices; ++i)
@@ -435,10 +442,14 @@ void blake2b_init(u8* m, u64 ll, u64 kk, u64 nn, u8* rr)
     uint64_t last_len = ll % 128;
 
     uint64_t** data_blocks = (u64**)calloc(1, dd * sizeof(uint64_t*));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(data_blocks,
+        "[ERR] Heap alloc in blake2b_init for data_blocks failed: ")
 
     for(uint64_t i = 0; i < dd; ++i)
     {
         data_blocks[i] = (u64*)calloc(1, 16 * sizeof(uint64_t));
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(data_blocks[i],
+            "[ERR] Heap alloc in blake2b_init for data_blocks[i] failed: ")
 
         /* At last block? */
         if(i == dd-1)
@@ -606,8 +617,14 @@ static void argon2_h_dash
      * next 64-byte memory block V[i] as the output destination of BLAKE2b.
      */
     uint32_t   r = ceil(out_len / 32) - 2;
-    block64_t* V = (block64_t*)calloc(1, (r+1) * sizeof(block64_t));
-    uint8_t*   H_input = (u8*)calloc(1, 4 + in_len);
+
+    block64_t* V = (block64_t*)calloc(1, (r + 1) * sizeof(block64_t));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(V,
+        "[ERR] Heap alloc in argon2_h_dash for V failed: ")
+
+    uint8_t* H_input = (u8*)calloc(1, 4 + in_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(H_input,
+        "[ERR] Heap alloc in argon2_h_dash for H_input failed: ")
 
     memcpy(H_input + 0, &out_len, sizeof(uint32_t));
     memcpy(H_input + 4, input,    in_len);
@@ -786,7 +803,11 @@ void* argon2_transform_segment(void* thread_input)
 
     num_blocks = ceil((double)q / (double)(128 * 4));
     memcpy(&B, thread_input, sizeof(B));
+
     J1J2blockpool = (block1024_t*)calloc(1, num_blocks * (1024));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(J1J2blockpool,
+      "[ERR] Heap alloc in argon2_transform_segment for J1J2blockpool failed: ")
+
     memcpy(Z_buf, ((uint8_t*)thread_input) + OFFSET_r, (6 * sizeof(uint64_t)));
 
     /* Determine the start and end control values of this thread's j-loop.
@@ -897,6 +918,8 @@ void Argon2_MAIN(struct Argon2_parms* parms, uint8_t* output_tag)
 
     /* Input to the generator of 64-byte H0. The generator is Blake2B. */
     u8* H0_input = (u8*)calloc(1, H0_input_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(H0_input,
+        "[ERR] Heap alloc in Argon2_MAIN for H0_input failed: ")
 
     u8  final_block_C[sizeof(block1024_t)];
     u8  H0[64];
@@ -976,11 +999,15 @@ void Argon2_MAIN(struct Argon2_parms* parms, uint8_t* output_tag)
 
     /* Allocate the working memory matrix of Argon2. */
     working_memory = (u8*)calloc(1, m_dash * sizeof(block1024_t));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(working_memory,
+        "[ERR] Heap alloc in Argon2_MAIN for working_memory failed: ")
 
     /* Split the memory matrix into p rows by setting pointers to the
      * start of each row. A row has many 1024-byte blocks.
      */
     B = (block1024_t**)calloc(1, parms->p * sizeof(block1024_t*));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(B,
+        "[ERR] Heap alloc in Argon2_MAIN for B failed: ")
 
     /* Set a pointer to the start of each row in Argon2 matrix B[][]. */
     for(uint64_t i = 0; i < parms->p; ++i){
@@ -1033,6 +1060,8 @@ void Argon2_MAIN(struct Argon2_parms* parms, uint8_t* output_tag)
 
     /* Create p thread_id's - one for each thread we will run. */
     argon2_thread_ids = (pthread_t*)calloc(1, parms->p * sizeof(pthread_t));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(argon2_thread_ids,
+        "[ERR] Heap alloc in Argon2_MAIN for argon2_thread_ids failed: ")
 
     /* Offset into the input buffer for the Argon2 thread function. */
     thread_in_offset = 0;
@@ -1040,11 +1069,15 @@ void Argon2_MAIN(struct Argon2_parms* parms, uint8_t* output_tag)
     /* Allocate input buffers for each thread.                    */
     /* Each input buffer will contain a pointer and 8 uint64_t's. */
     thread_inputs = (void**)calloc(1, parms->p * sizeof(void*));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(thread_inputs,
+        "[ERR] Heap alloc in Argon2_MAIN for thread_inputs failed: ")
 
     for(uint32_t i = 0; i < parms->p; ++i)
     {
         thread_inputs[i] =
             calloc(1, sizeof(block1024_t*) + (8*sizeof(uint64_t)));
+            PRINT_ERR_AND_EXIT_IF_NULL_PTR(thread_inputs[i],
+                "[ERR] Heap alloc in Argon2_MAIN for thread_inputs[i] failed: ")
     }
 
 label_start_pass:
@@ -1247,7 +1280,11 @@ void signature_generate
     /* Compute prehash PH = BLAKE2B{64}(data) */
     memset(prehash, 0, prehash_len);
     blake2b_init(data, data_len, 0, prehash_len, prehash);
+
     second_btb_inbuf = (u8*)calloc(1, key_len_bytes + prehash_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(second_btb_inbuf,
+        "[ERR] Heap alloc in signature_generate for second_btb_inbuf failed: ")
+
     memcpy(second_btb_inbuf, private_key->bits, key_len_bytes);
     memcpy(second_btb_inbuf + key_len_bytes, prehash, prehash_len);
     blake2b_init(second_btb_inbuf, len_key_PH, 0, 64, second_btb_outbuf);
@@ -1270,6 +1307,9 @@ void signature_generate
 
     /* Compute e = trunc{bitwidth(Q)}(BLAKE2B{64}(R || PH)) */
     R_with_prehash = (u8*)calloc(1, R_used_bytes + prehash_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(R_with_prehash,
+        "[ERR] Heap alloc in signature_generate for R_with_prehash failed: ")
+
     memcpy(R_with_prehash, R.bits, R_used_bytes);
     memcpy(R_with_prehash + R_used_bytes, prehash, prehash_len);
     len_Rused_PH = R_used_bytes + prehash_len;
@@ -1448,6 +1488,9 @@ uint8_t signature_validate(bigint* Gmont, bigint* Amont, bigint* M, bigint* Q,
      * Check that this is equal to e. If it is, validation has passed.
      */
     R_with_prehash = (u8*)calloc(1, R_used_bytes + prehash_len);
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(R_with_prehash,
+        "[ERR] Heap alloc in signature_validate for R_with_prehash failed: ")
+
     memcpy(R_with_prehash, R.bits, R_used_bytes);
     memcpy(R_with_prehash + R_used_bytes, prehash, prehash_len);
     len_Rused_PH = R_used_bytes + prehash_len;
@@ -1521,13 +1564,8 @@ struct bigint* gen_pub_key(bigint* privkey_bigint)
                      (DH_G_MONT_PATH, DH_G_MONT_BITWIDTH, MAX_USED_BITWIDTH);
 
     bigint* R = (bigint*)calloc(1, sizeof(struct bigint));
-
-    if(R == NULL)
-    {
-        perror("[ERR] Cryptolib: Heap alloc for a new public key failed: ");
-        err = 1;
-        goto label_cleanup;
-    }
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(R,
+        "[ERR] Heap alloc in gen_pub_key for R (emitted key bigint) failed: ")
 
     bigint_create_from_u32(R, M->size_bits, 0);
     mont_pow_mod_m(Gm, privkey_bigint, M, R);

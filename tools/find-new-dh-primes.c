@@ -111,10 +111,21 @@ int main(int argc, char* argv[])
         max_reserved_bits = m_bits * 8;
     }
 
-    thread_func_inputs  = (void**)     malloc(num_threads * sizeof(void*));
-    thread_ids          = (pthread_t*) malloc(num_threads * sizeof(pthread_t));
-    test_Ms             = (bigint*)    malloc(num_threads * sizeof(bigint));
-    is_dh_modulus_found = (uint64_t*)  malloc(num_threads * sizeof(uint64_t));
+    thread_func_inputs = (void**)malloc(num_threads * sizeof(void*));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(thread_func_inputs,
+        "[ERR] Heap alloc in main for thread_func_inputs failed: ")
+
+    thread_ids = (pthread_t*)malloc(num_threads * sizeof(pthread_t));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(thread_ids,
+        "[ERR] Heap alloc in main for thread_ids failed: ")
+
+    test_Ms = (bigint*)malloc(num_threads * sizeof(bigint));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(test_Ms,
+        "[ERR] Heap alloc in main for test_Ms failed: ")
+
+    is_dh_modulus_found = (uint64_t*)malloc(num_threads * sizeof(uint64_t));
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(is_dh_modulus_found,
+        "[ERR] Heap alloc in main for is_dh_modulus_found failed: ")
 
     pthread_mutex_init(&M_finders_mutex, NULL);
 
@@ -129,6 +140,8 @@ int main(int argc, char* argv[])
     {
         bigint_create_from_u32(&(test_Ms[i]), max_reserved_bits, 0);
         thread_func_inputs[i] = calloc( 1, sizeof(uint64_t) + sizeof(bigint) );
+        PRINT_ERR_AND_EXIT_IF_NULL_PTR(thread_func_inputs[i],
+            "[ERR] Heap alloc in main for thread_func_inputs[i] failed: ")
         is_dh_modulus_found[i] = 0;
     }
 
