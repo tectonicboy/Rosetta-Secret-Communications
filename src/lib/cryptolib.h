@@ -886,8 +886,6 @@ void* argon2_transform_segment(void* thread_input)
         ++computed_blocks;
     }
 
-label_finish_segment:
-
     free(J1J2blockpool);
     return NULL;
 }
@@ -1569,8 +1567,6 @@ struct bigint* gen_pub_key(bigint* privkey_bigint)
 
     bigint_create_from_u32(R, M->size_bits, 0);
     mont_pow_mod_m(Gm, privkey_bigint, M, R);
-
-label_cleanup:
 
     bigint_cleanup(M);
     bigint_cleanup(Gm);

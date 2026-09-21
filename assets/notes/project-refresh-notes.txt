@@ -24,7 +24,8 @@
 
  7. Project directory structure needs improving. Smaller top-level dir.
 
- 8. Remove label_finish in functions that don't need one.
+ 8. Remove unused labels in all source files.
+ [COMPLETED]
 
  9. WRITE DOCUMENTATION FOR THE PROJECT LIKE IN THE COMPILER PROJECT.
     For the purposes of this, find a good logical split for the project's main
@@ -48,6 +49,7 @@
     should be moved to a special github repository for Advanced Software
     Performance Analysis, with a summary of the report kept in this repo.
     The writeup itself also needs a final polish.
+ [COMPLETED]
 
 16. PRESENTATION: Use new name Rosetta Secret Communications everywhere.
 
