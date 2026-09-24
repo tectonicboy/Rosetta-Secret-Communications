@@ -248,13 +248,10 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    /* Select the Rosetta Communication Interface for local interprocess
-     * communication sockets.
+    /* Rosetta Test Framework uses local interprocess communications over
+     * AF_UNIX sockets to simulate human users via local OS processes.
      */
-    init_communication = ipc_init_communication;
-    transmit_payload   = ipc_transmit_payload;
-    receive_payload    = ipc_receive_payload;
-    end_communication  = ipc_end_communication;
+    SELECT_LOCAL_UNIX_COMMUNICATIONS
 
     unsigned char  savefilename[2 * SMALL_FIELD_LEN] = {'\0'};
     unsigned char* full_save_dir = NULL;

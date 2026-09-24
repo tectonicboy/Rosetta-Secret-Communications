@@ -255,7 +255,7 @@ bigint* get_bigint_from_dat
     u32     file_bytes;
 
     big_n_ptr = (bigint*)calloc(1, sizeof(bigint));
-    PRINT_ERR_AND_EXIT_IF_NULL_PTR(big_b_ptr,
+    PRINT_ERR_AND_EXIT_IF_NULL_PTR(big_n_ptr,
         "[ERR] Heap alloc in get_bigint_from_dat for big_nn_ptr failed: ")
 
     bigint_create_from_u32(big_n_ptr, reserve_bits, 0);

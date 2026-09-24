@@ -1,13 +1,10 @@
 #include "../../src/client/network-code/client-primary-functions.h"
 int main()
 {
-    /* Select the Rosetta Communication Interface for local interprocess
-     * communication sockets.
+    /* Rosetta Test Framework uses local interprocess communications over
+     * AF_UNIX sockets to simulate human users via local OS processes.
      */
-    init_communication = ipc_init_communication;
-    transmit_payload   = ipc_transmit_payload;
-    receive_payload    = ipc_receive_payload;
-    end_communication  = ipc_end_communication;
+    SELECT_LOCAL_UNIX_COMMUNICATIONS
 
     uint8_t     status;
     const char* savedir  = TEST_FRAMEWORK_USER_SAVEFILES_DIR;

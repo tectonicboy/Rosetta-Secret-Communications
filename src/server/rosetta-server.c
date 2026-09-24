@@ -2,50 +2,39 @@
 #include "../lib/bigint.h"
 #include "../lib/cryptolib.h"
 
-/* TODO: Transform this communication interface into a struct. Write this long
- *       explanation for the 4 function pointers in official documentation,
- *       keep only a smaller comment in code. Move the interface to
- *       server communications header file.
+/* Rosetta Communication Interface.
  *
- * These function pointers tell the server whether to communicate through
- * Unix Domain sockets, or through Internet sockets. If the server was started
- * for the Rosetta Testing Framework, communication with test clients, which are
- * local OS processes talking to each other, simulating real people texting,
- * is done via locak unix interprocess communications (AF_UNIX sockets). If the
- * server is to be run normally for real Rosetta users to tune in to chatrooms
- * and text each other, Internet sockets provide the communication mechanism.
+ * These 4 function pointers drive the basic functioning of ANY physical form of
+ * communication, regardless of what happens at its lower levels of abstraction.
  *
- * The two communication mechanisms need different code for (1) initialization,
- * (2) transmitting a message to a known client, (3) receiving a message sent by
- * a known client and (4) accepting a newly arrived user/test messaging client.
+ * They make up Rosetta's communication interface. This interface allows the
+ * system to elegantly use the same functions for communicating regardless of
+ * what the actual communication method being used at the moment is.
  *
- * A command-line argument determines whether the server was started for the
- * testing framework or for the real system, and this in turn sets these
- * function pointers to the actual respective functions that implement the 4
- * differing communication operations. This is at server initialization time.
- *
- * This allows for an elegant way to simplify in-server communication code while
- * maintaining working messaging both for the Rosetta Test Framework and for the
- * real Rosetta system with only one set of simple, descriptive API functions,
- * instead of polluting server code with AF_UNIX / INET socket-specific code.
- *
- * Now, server packet and primary functions can call the generic communication
- * interface functions via these function pointers, relying on the fact that
- * they will have been set to the correct concrete communication functions.
+ * It allows easily adding new available communication methods too.
  */
 uint8_t(*init_communication)(void);
 uint8_t(*transmit_payload)  (uint64_t socket_ix, uint8_t* buf, size_t send_siz);
 ssize_t(*receive_payload)   (uint64_t socket_ix, uint8_t* buf, size_t max_siz);
 uint8_t(*onboard_new_client)(void);
 
-/* Memory region for short-term cryptographic artifacts for a login handshake */
-u8* temp_handshake_buf = NULL;
-u8  temp_handshake_memory_region_isLocked = 0;
-
-/* Login handshake is a two-transmission process, so keep track of whether we're
- * in the middle of it currently or not.
+/* Select local interprocess communications with AF_UNIX sockets. Used by the
+ * Rosetta Test Framework when simulatig human users via local OS processes.
  */
-u8 login_not_finished = 0;
+#define SELECT_LOCAL_UNIX_COMMUNICATIONS          \
+    init_communication = ipc_init_communication;  \
+    transmit_payload   = ipc_transmit_payload;    \
+    receive_payload    = ipc_receive_payload;     \
+    onboard_new_client = ipc_onboard_new_client;
+
+/* Select internet communications over TCP. Used by the regular user-facing
+ * version of the system.
+ */
+#define SELECT_TCP_INTERNET_COMMUNICATIONS        \
+    init_communication = tcp_init_communication;  \
+    transmit_payload   = tcp_transmit_payload;    \
+    receive_payload    = tcp_receive_payload;     \
+    onboard_new_client = tcp_onboard_new_client;
 
 /* The structure that represents a Rosetta client connected to the server. */
 struct connected_client
@@ -68,6 +57,15 @@ struct chatroom
     u64 owner_ix;
     u64 room_id;
 };
+
+/* Memory region for short-term cryptographic artifacts for a login handshake */
+u8* temp_handshake_buf = NULL;
+u8  temp_handshake_memory_region_isLocked = 0;
+
+/* Login handshake is a two-transmission process, so keep track of whether we're
+ * in the middle of it currently or not.
+ */
+u8 login_not_finished = 0;
 
 /* Bitmasks telling the server which client and room slots are currently free.
  *
@@ -104,6 +102,13 @@ bigint  server_privkey_bigint;
 #include "server-packet-functions.h"
 #include "server-primary-functions.h"
 
+/* Takes a single command-line argument:
+ *
+ * 0 for user-facing internet communications over standard TCP Linux sockets.
+ *
+ * 1 for local interprocess communications over AF_UNIX sockets, used by the
+ *   Rosetta Test Framework when simulating human users via local OS processes.
+ */
 int main(int argc, char* argv[])
 {
     u8  ret = 0;
@@ -119,24 +124,14 @@ int main(int argc, char* argv[])
 
     arg1 = atoi(argv[1]);
 
-    /* Select the communication interface. */
+    /* Set Rosetta Communication Interface to a concrete communication method */
 
-    /* If server is started for Rosetta Test Framework, use AF_UNIX sockets. */
-    if(arg1 == 1)
-    {
-        init_communication = ipc_init_communication;
-        transmit_payload   = ipc_transmit_payload;
-        receive_payload    = ipc_receive_payload;
-        onboard_new_client = ipc_onboard_new_client;
-    }
-    /* If the server is started for real user-facing operation, use AF_INET. */
-    else if(arg1 == 0)
-    {
-        init_communication = tcp_init_communication;
-        transmit_payload   = tcp_transmit_payload;
-        receive_payload    = tcp_receive_payload;
-        onboard_new_client = tcp_onboard_new_client;
-    }
+    /* Server started for the Rosetta Test Framework, use AF_UNIX sockets. */
+    if(arg1 == 1) { SELECT_LOCAL_UNIX_COMMUNICATIONS }
+
+    /* Server started for real user-facing operation, use AF_INET sockets. */
+    else if(arg1 == 0) { SELECT_TCP_INTERNET_COMMUNICATIONS }
+
     else
     {
         printf("[ERR] Server: Pass 0 for user-facing, 1 for Test Framework.\n");

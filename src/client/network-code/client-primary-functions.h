@@ -6,40 +6,39 @@
 #include "client-communications.h"
 #include "client-packet-functions.h"
 
-/* TODO: Transform this four-pointer communication interface into a struct
- *       and move the long explanation to proper documentation. These pointers
- *       are likely better off in client-communications source file. Have a
- *       smaller comment above them explainin concisely what they are for.
+/* Rosetta Communication Interface.
  *
- * These 4 function pointers tell the client whether to communicate through
- * Unix Domain sockets, or through Internet sockets. If the client was started
- * for the Rosetta Testing Framework, communication with the server (as a
- * local OS process talking to other OS processes as clients and thus simulating
- * real people texting on the internet without headaches with network issues)
- * is done via locak unix interprocess communications (AF_UNIX sockets). If the
- * client is to be run normally for a real Rosetta user to tune in to chatrooms
- * and text other people, Internet sockets provide the communication mechanism.
+ * These 4 function pointers drive the basic functioning of ANY physical form of
+ * communication, regardless of what happens at its lower levels of abstraction.
  *
- * The two communication mechanisms need different code for (1) initialization,
- * (2) transmitting a message to other people and (3) receiving a message sent
- * by other people (in both cases relayed by the server as an intermediary)
- * and (4) closing the communication.
+ * They make up Rosetta's communication interface. This interface allows the
+ * system to elegantly use the same functions for communicating regardless of
+ * what the actual communication method being used at the moment is.
  *
- * The GUI means the client was started for the real thing, the Test Framework
- * means it was started as a test user emulated via a local OS process.
- * This in turn sets these
- * function pointers to the actual respective functions that implement the 4
- * differing communication operations. This is at client initialization time.
- *
- * This allows for an elegant way to simplify in-client communication code while
- * maintaining working messaging both for Rosetta Test Framework and for the
- * real thing with only one set of simple, descriptive API functions, instead of
- * polluting client code with sockets API-specific code for AF_UNIX / Internet.
+ * It allows easily adding new available communication methods too.
  */
 uint8_t (*init_communication) (void);
 uint8_t (*transmit_payload)   (uint8_t* buf, size_t send_siz);
 uint8_t (*receive_payload)    (uint8_t* buf, uint64_t* recv_len);
 void    (*end_communication)  (void);
+
+/* Select local interprocess communications with AF_UNIX sockets. Used by the
+ * Rosetta Test Framework when simulatig human users via local OS processes.
+ */
+#define SELECT_LOCAL_UNIX_COMMUNICATIONS          \
+    init_communication = ipc_init_communication;  \
+    transmit_payload   = ipc_transmit_payload;    \
+    receive_payload    = ipc_receive_payload;     \
+    end_communication  = ipc_end_communication;
+
+/* Select internet communications over TCP. Used by the regular user-facing
+ * version of the system.
+ */
+#define SELECT_TCP_INTERNET_COMMUNICATIONS        \
+    init_communication = tcp_init_communication;  \
+    transmit_payload   = tcp_transmit_payload;    \
+    receive_payload    = tcp_receive_payload;     \
+    end_communication  = tcp_end_communication;
 
 /* This function pointer is what delivers all received messages by others
  * in our chatroom to the display mechanism used by the driver client program.

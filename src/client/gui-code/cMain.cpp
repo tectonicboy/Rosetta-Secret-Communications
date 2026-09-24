@@ -341,12 +341,8 @@ void cMain::BtnClickLoginGo(wxCommandEvent &evt)
 
     /* Rosetta Communication Interface is set to AF_INET sockets here, as this
      * user-facing wxWidgets GUI client driver uses TCP for communication.
-     * TODO: Make the interface into a struct.
      */
-    init_communication = tcp_init_communication;
-    transmit_payload   = tcp_transmit_payload;
-    receive_payload    = tcp_receive_payload;
-    end_communication  = tcp_end_communication;
+    SELECT_LOCAL_UNIX_COMMUNICATIONS
 
     login_status = login(password, password_len, "./user-save.dat");
 

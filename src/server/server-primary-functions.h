@@ -31,6 +31,7 @@ u8 self_init()
 
     temp_handshake_buf = NULL;
 
+    /* Start listening for incoming user client requests. */
     status = init_communication();
     if(status)
     {
