@@ -1,4 +1,4 @@
-![System Design Diagram](assets/rosetta-system-design-diagram.png)
+![System Design Diagram](assets/gallery/rosetta-system-design-diagram.png)
 
 # Rosetta Secret Communications
 

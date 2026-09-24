@@ -1,5 +1,5 @@
-#include "../src/lib/rosetta-helpers.h"
-#include "../src/lib/bigint.h"
+#include "../lib/rosetta-helpers.h"
+#include "../lib/bigint.h"
 
 /* Command-line arguments expected:
  * - Bitwidth of prime order Q

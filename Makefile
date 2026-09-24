@@ -2,7 +2,7 @@
 
 # MAKEFILE ENTRIES COMMON TO ALL 3 PROJECT MAKEFILES: common-build-config.mk
 
-include common-build-config.mk
+include assets/common-build-config.mk
 
 PRIMARY_TARGETS   = server client test_framework tools
 SECONDARY_TARGETS = clean distclean
@@ -62,10 +62,10 @@ build_dir:
 	@mkdir -p bin/manual-user-testing bin/automatic-user-testing bin/tools
 
 test_framework: | build_dir
-	$(MAKE) -C ./rosetta-test-framework
+	$(MAKE) -C ./src/rosetta-test-framework
 
 tools: | build_dir
-	$(MAKE) -C ./tools
+	$(MAKE) -C ./src/tools
 
 server: | build_dir
 	$(CC) $(ROSETTA_SERVER_SRC) -o $(BIN_DIR)/$(ROSETTA_SERVER_BIN) \
@@ -96,8 +96,8 @@ clean:
 	rm -rf $(BIN_DIR)/$(ROSETTA_SERVER_ASAN_BIN) && \
 	rm -rf $(BIN_DIR)/$(ROSETTA_CLIENT_BIN)      && \
 	rm -rf $(BIN_DIR)/$(ROSETTA_CLIENT_ASAN_BIN)
-	$(MAKE) -C ./rosetta-test-framework clean
-	$(MAKE) -C ./tools clean
+	$(MAKE) -C ./src/rosetta-test-framework clean
+	$(MAKE) -C ./src/tools clean
 
 distclean:
 	rm -rf $(BIN_DIR)

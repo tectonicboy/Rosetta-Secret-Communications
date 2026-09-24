@@ -5,7 +5,7 @@
 #
 # MAKEFILE ENTRIES COMMON TO ALL 3 PROJECT MAKEFILES ARE IN config.mk
 
-include ../common-build-config.mk
+include ../../assets/common-build-config.mk
 
 PRIMARY_TARGETS += test_framework
 PRIMARY_TARGETS += manual_user_spawner
@@ -16,7 +16,7 @@ PRIMARY_TARGETS += simulation_1_auto_user_spawner_3
 
 .PHONY: all clean $(PRIMARY_TARGETS)
 
-BIN_DIR                    = ../bin
+BIN_DIR                    = ../../bin
 ROSETTA_TEST_FRAMEWORK_SRC = rosetta-test-framework.c
 ROSETTA_TEST_FRAMEWORK_BIN = rosetta-test-framework
 MANUAL_USER_SPAWNER_SRC    = manual-user-testing/manual-user-spawner.c

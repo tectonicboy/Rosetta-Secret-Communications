@@ -5,11 +5,11 @@
 #
 # MAKEFILE ENTRIES COMMON TO ALL PROJECT MAKEFILES: common-build-config.mk
 
-include ../common-build-config.mk
+include ../../assets/common-build-config.mk
 
 .PHONY: all clean
 
-BIN_DIR = ../bin
+BIN_DIR = ../../bin
 FIND_NEW_DH_PRIMES_SRC = find-new-dh-primes.c
 FIND_NEW_DH_PRIMES_BIN = tools/find-new-dh-primes
 

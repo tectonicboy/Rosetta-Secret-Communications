@@ -23,6 +23,7 @@
  [DROPPED]
 
  7. Project directory structure needs improving. Smaller top-level dir.
+ [COMPLETED]
 
  8. Remove unused labels in all source files.
  [COMPLETED]
@@ -31,8 +32,9 @@
     For the purposes of this, find a good logical split for the project's main
     components: bigint, crypt, client, server, rtf, communication interface.
 
-10. Communication interface (4 function ptrs) should be a well documented struct
-    instead of 4 pointers on their own.
+10. Communication interface (4 function ptrs) should be better than initializing
+    4 function pointers on their own every time.
+ [COMPLETED]
 
 11. For TCP, plans to let the server do kernel bypass networking with DPDK.
     While normally server data path isn't where the largest part of latency is,
