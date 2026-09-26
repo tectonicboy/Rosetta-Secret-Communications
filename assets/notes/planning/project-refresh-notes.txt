@@ -42,6 +42,8 @@
 
 12. The pubkey format check that was commented out. The nonce reuse after client
     is restarted. Mark these 2 as cryptography details that need attention.
+    Look at all other TODOs throughout the codebase, decide which should be
+    done as part of this polishing effort.
 
 13. Check with Valgrind that there are zero memory leaks possible.
 
