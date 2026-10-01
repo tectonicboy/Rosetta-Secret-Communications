@@ -56,8 +56,10 @@
  [COMPLETED]
 
 16. PRESENTATION: Use new name Rosetta Secret Communications everywhere.
+ [COMPLETED]
 
 17. PRESENTATION: Make sure github landing page is clean, polished and relays
                   quickly to employers looking at it why they should be liking
                   what they see. With updated README, not the current one that
                   starts with "this has been an incredible project for me" ...
+ [COMPLETED]

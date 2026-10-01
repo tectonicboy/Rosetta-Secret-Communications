@@ -7,7 +7,7 @@ Overview
 --------
 
 A hobby solo project where I've created a system for secret communications fully
-from scratch in ≈ 10,000 lines of C code. The cryptography algorithms, the Big
+from scratch in ≈ 12,000 lines of C code. The cryptography algorithms, the Big
 Integer math engine they use, the communications server and client using a
 custom payload protocol, and GUI + TUI user interfaces were all written by me,
 with my own brain and two hands, without vibe coding or AI-generated code. LLMs
@@ -15,7 +15,17 @@ have in fact saved me time though, e.g. as info dumps and giving me new ideas.
 
 An abstract communication interface consisting of function pointers allows
 easily swapping underlying physical methods of communication, giving the system
-potential to be used in a variety of ways.
+potential to be used in a variety of ways. The communication function pointers
+are set to the concrete userspace Linux-facing API functions of the underlying
+communication mechanism.
+
+So far I have regular TCP sockets for internet communication for real users and
+AF_UNIX sockets for local interprocess communication used by the Rosetta Test
+Framework. In the future, I plan to make a kernel bypass networking mechanism
+with DPDK or AF_XDP as well. Although network packet processing latency isn't
+the biggest bottleneck in the running server or client, this does allow advanced
+protection against Denial of Service attacks and other specialized networking
+capabilities to be implemented.
 
 A Test Framework I wrote in C simulates real human users via local OS processes
 talking over local Unix interprocess communication sockets, allowing for easy
@@ -80,8 +90,8 @@ Credits
 -------
 
 Many thanks to fgrieu, moderator at Cryptography Stack Exchange, for providing
-expensive help with the cryptography itself - what algorithms should be used to
-begin with, what input and output they should get, and everything else needed
-for the encryption and authentication to work and form a valid security scheme.
+extensive help with the cryptography theory itself - what algorithms should be
+used, what input and output they should get, and everything else needed for the
+encryption and authentication to work in theory as a unified security scheme.
 
 ```
