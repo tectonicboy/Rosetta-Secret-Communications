@@ -97,7 +97,7 @@ CHAPTER X: Future plans & potential for the project.......................
 ################################################################################
 ################################################################################
 
-Chapter I: Overview of the Project
+CHAPTER I: Overview of the Project
 --------------------------------------------------------------------------------
 
 In the second and third decades of the 21st century, we are seeing an increasing
@@ -171,3 +171,229 @@ users, as well as fully automated test simulations where virtual users get
 spawned and send each other messages programmatically based on a schedule.
 Multiple chat rooms, each with different guest virtual users, can be present
 at once during testing, to observe how well the system maintains them.
+
+################################################################################
+################################################################################
+
+CHAPTER II: Custom underlying libraries
+--------------------------------------------------------------------------------
+
+Two underlying libraries have been developed for the system - one for doing math
+on gargantuan numbers efficiently and one that contains implementations of all
+the cryptography algorithms needed for the system's security.
+
+1. Big Integer Library
+======================
+
+The custom BigInt library provides mathematical operations on unsigned integers
+of huge sizes. Modern cryptography requires operations on numbers with thousands
+of digits, so this was a mandatory requirement. This library is what makes it
+possible to perform critical and parameterized cryptographic operations.
+
+A big integer is represented as an object of a C struct called bigint. It holds
+the bare minimum needed to maintain an evolving big integer - its maximum size,
+its current size, both in bits, and a pointer to its heap-allocated bits buffer.
+A constructor-like function is used to initialize a bigint object of that struct
+to a given integer. A destructor-like function cleans a bigint's resources up.
+
+Saving a big integer to a file and loading one from a file is also supported.
+
+A common term used in big integer libraries is "a limb". This is simply a part
+of a number. For example, a 325-bit integer has 10 32-bit limbs and a final part
+of size 5 bits. We have 16-bit limbs, 32-bit limbs, etc. Different algorithms
+in the library use different limb sizes, but that's all there is to it.
+
+Big integers are always stored in little-endian byte order by the library.
+
+Operations currently implemented in the library:
+
+Nullifying, equating, saving to and loading from a file, comparison, addition,
+subtraction, multiply, divide, powering, simple modular multiplication,
+Montgomery Modular Multiplication & Powering, Rabin-Miller primality test, and
+utility functions for debugging like a pretty printer for a bigint's bits and
+switching the endianness of a bit string.
+
+Addition, subtraction and multiplication are currently implemented to operate on
+32-bit limbs at a time, while division operates on 16-bit limbs, as that allows
+the algorithm to rely onl on 64-bit storage throughout its operation. Algorithms
+for these 4 operations were taken from Handbook of Applied Cryptography.
+
+Montgomery Modular Multiplication operates on 64-bit limbs. One peculiarity of
+its implementation is that it currently hardcodes the parameters that depend on
+the modulus M, that is: L (number of 8-byte limbs in M) and the multiplicative
+inverse MU. This is acceptable in the context of Rosetta, since M stays constant
+in the long run, and so do L and MU. It does mean, however, that should a new
+modulus M be decided later on, L and MU have to be either changed, or finally
+implemented as input arguments, though that might slow things down a little.
+
+A special Dual Montgomery Modular Powering function takes the arguments for two
+function calls to the standard montgomery modular powering and performs special
+interleaved montgomery modular multiplication on both operand sets at once where
+possible. Namely, in the Montgomery Modular Powering algorithm, we go over the
+bits of the power and: do one montgomery multiplication for sure, and do one
+further montgomery multiplication if the current bit of the power is set. The
+interleaved Montgomery Powering performs interleaved montgomery multiplication
+acting on both input operand sets for the first multiplication, and also does it
+for the 2nd multiplication if both powers' bit at that index happen to be set.
+
+This was done as a successful optimization acting on performance profiling data
+that indicated Montgomery Modular Multiplication to be accounting for 61% of all
+CPU cycles with under-utilized CPU micro-op execution ports. It resulted in a
+10% speed up.
+
+A further neat optimization to Montgomery Modular Multiplication came as a
+reaction to the GCC compiler emitting a vectorized and a non-vectorized version
+of the inner loop, due to pointer aliasing concerns. I factored this inner loop
+out into its own function, which I can pass __restrict__ pointers to, in order
+to guarantee to the compiler that the pointers won't be used for overlapping
+memory operations. This resulted in the compiler successfully dropping the
+slower non-vectorized version of the inner loop altogether and only emitting the
+good vectorized version of the loop.
+
+2. Cryptography algorithms library
+==================================
+
+This library is a collection of cryptography algorithms that are all used in the
+system at various points in the security scheme. The implementations are mostly
+taken from the algorithms' original RFC specifications.
+
+Algorithm{X}(y, z) notation: This simply means we are telling the algorithm to
+give us X bytes of output, and it takes y and z as input arguments. An example
+of an algorithm with a custom output size is Blake2b.
+
+Algorithms implemented as part of the library:
+
+ChaCha20, BLAKE2b, one-pass Argon2id, Schnorr Signature generation & validation,
+generation of a pseudorandom private key from /dev/urandom and its corresponding
+public key, and a function to check a public key's form for integrity.
+
+Some other notable cryptography algorithms are small enough and/or are used in
+few enough places, that their code simply appears directly where they're needed,
+instead of having their own function in the cryptography library itself.
+Examples are HMAC and obtaining a Diffie-Hellman shared secret.
+
+Currently, Argon2id only works with one pass, which is sufficient for security.
+
+The RFCs that the implementation of various algorithms is taken from:
+
+ChaCha20 - RFC 8439
+BLAKE2b  - RFC 7693
+Argon2id - RFC 9106
+HMAC     - NIST.FIPS.198-1
+
+For the other algorithms:
+
+- Diffie-Hellman modulus M and prime factor Q: M is a ≈ 3070-bit prime positive
+  integer and Q is a ≈ 320-bit prime positive integer exactly dividing (M - 1).
+  The bit width of these two can vary, that is just what the system uses now.
+
+- Diffie-Hellman generator is given by the formula: G = [2^ ((M - 1) / Q)] mod M
+
+- Generating a private key is simply grabbing pseudorandom bytes from a source
+  that is deemed adequate from a security standpoint, in this case from the
+  standard /dev/urandom file on GNU/Linux. Generating a 320-bit private key
+  simply means grabbing 320 bits from that pseudorandom source.
+
+- Generating a public key "A", from a private key "a", is done with the formula:
+  A = G^a mod M
+
+- In order for Alice and Bob, both in possession of the same Diffie-Hellman M, Q
+  and G, to generate the same shared secret "X" on both sides, given Bob's
+  private/public keys (b, B) and Alice's pair (a, A) and Bob holding Alice's
+  public key, while Alice holds Bob's public key:
+
+    Bob's shared secret: X = A^b mod M
+  Alice's shared secret: X = B^a mod M
+
+  Of course, their public keys must have been computed with the same M, Q and G.
+
+- Generating and validating a Schnorr Signature for authentication:
+
+Let:
+
+(a, A) - Alice's private/public key pair;
+     M - the diffie-hellman modulus;
+     Q - the prime number that exactly divides (M - 1);
+     G - the diffie-hellman generator;
+
+1. Call BLAKE2B{64} with input - whatever we're signing.
+   The produced 64-byte hash of this is called the prehash PH.
+
+2. Call BLAKE2B{64} with input - the signer's private key concatenated with the
+   prehash, reduce the result of this modulo (Q - 1), add 1. Yields secret k:
+
+   k = [BLAKE2B{64}(a||PH) mod (Q - 1)] + 1
+
+3. Compute R = G^k mod M
+4. Compute e = BLAKE2B{64}(R||PH), truncated to bitwidth of Q.
+5. Compute s = ( k + ((Q - a) × e) ) mod Q
+
+The signature itself is (s, e).
+--------------------------------------------------------------------------------
+To validate against public key A and whatever was signed, the receiver:
+
+1. checks that 0 <= s < Q, and that e has the expected bitwidth (that of Q).
+2. Computes the prehash PH as in step 1 for signature generation.
+3. Computes R = (G^s * A^e) mod M. This is: [(G^s mod M) * (A^e mod M)] mod M
+4. Computes val_e = BLAKE2B{64}(R||PH), truncated to bitwidth of Q.
+
+   Check that val_e is equal to e. If it is, validation passes.
+   Under any other circumstances, signature validation fails.
+--------------------------------------------------------------------------------
+
+3. Source file contents summary for the custom libraries.
+=========================================================
+
+src/lib/
+
+    ============================================================================
+    ============================================================================
+    1) bigint.h     1.1)  #defines required for common BigInt operations.
+                    1.2)  Struct definition: bigint
+                    1.3)  Function : Get the number of used bits of a BigInt.
+                    1.4)  Function : Constructor-like creator of big integers.
+                    1.5)  Functions: Small utility operations for big integers.
+                    1.6)  Functions: Save to / load a big integer from a file.
+                    1.7)  Function : Compare two big integers.
+                    1.8)  Function : Equate one big integer to another.
+                    1.9)  Functions: Arithmetic operations on big integers.
+                    1.10) Function : Rabin-Miller primality test.
+                    1.11) Functions: Montgomery Modular Multiplication, Powering
+
+                    LoC: 1779
+    ============================================================================
+    ============================================================================
+    2) cryptolib.h  2.1)  Cryptography constants & static data structures.
+                    2.2)  Functions: Implementation of ChaCha20.
+                    2.3)  Functions: Implementation of BLAKE2b.
+                    2.4)  Functions: Implementation of Argon2id.
+                    2.5)  Function : Generate a Schnorr signature.
+                    2.6)  Function : Validate a Schnorr signature.
+                    2.7)  Functions: Generate private and public keys.
+                    2.8)  Function : Validate a public key's form for integrity.
+
+                    LoC: 1618
+    ============================================================================
+    ============================================================================
+    3) rosetta-helpers-h
+
+                    3.1)  Header file includes used across the whole system.
+                    3.2)  Function: Clear memory without compiler elimination.
+                    3.3)  Utility macros and small functions.
+                    3.4)  Packet ID magic constant definitions.
+                    3.5)  #defines for common constants used across the system.
+                    3.6)  #defines for helpful shorthands.
+                    3.7)  #defines for common file paths.
+
+                    LoC: 193
+    ============================================================================
+    ============================================================================
+
+*******************************************************************************
+*                                                                             *
+*  Rosetta libraries lines of code: 3590                                      *
+*                                                          10 October 2026    *
+*******************************************************************************
+
+################################################################################
+################################################################################
