@@ -94,3 +94,80 @@ CHAPTER X: Future plans & potential for the project.......................
 25. Kernel bypass networking..............................................
 26. Emergency radio communicator embedded device..........................
 
+################################################################################
+################################################################################
+
+Chapter I: Overview of the Project
+--------------------------------------------------------------------------------
+
+In the second and third decades of the 21st century, we are seeing an increasing
+amount of hidden surveillance and spying on everyday people, unbeknownst to them
+on apps such as Facebook and Instagram by governments and intelligence agencies.
+Mobile smartphones have even been reported to quietly listen in on what you say
+in real life, by people who start seeing advertisements for what they've just
+talked about. There is colossal hidden surveillance on all regular people.
+
+As of 2026, most people are not aware of this and how dangerous it is in the
+context of living a free life. This project aims to be a strong pillar of rescue
+from the governments and companies spying on us every day, by providing a
+completely private and secure method of communicating with your friends by means
+of cryptography. It's not intended for mass use, but rather for isolated cases
+when a group of people really do need to have an online conversation in secret.
+
+For instance, if a company trade secret must be protected from spying mobile
+phones and everyday chat apps, whoever is having a conversation involving that
+secret can talk on this system and be assured that nobody - be it a company or a
+government entity - will ever find out. Not only are your messages encrypted and
+authenticated, only visible to your friends on the system, what's more - your
+internet service provider can't even find out WHO you talked to, since all your
+outgoing network traffic is first routed to the system's relay server before
+reaching your friends' devices. The server operator CANNOT decrypt and read
+people's messages, only intended recipient users can do that.
+
+Secretly talking to your friends on Rosetta is ideally bootstrapped by starting
+with an off-system meeting agreeing a time for the first secret session on the
+system, the chat room name, its owner (who creates it) and the code name of each
+friend participating in the chat. Then, future secret meetings can be planned on
+the system directly. Everybody picks a new codename before entering a chat room,
+there's no visible identity for anybody.
+
+The system must run on a secure GNU/Linux machine, not Windows, MacOs or the
+like, as these spy on people to begin with and your messages are likely to leak,
+especially if you are already a person of interest who's being actively tracked.
+A relatively modern CPU supporting 256-bit vector SIMD instructions is required.
+In the future, a custom handheld radio communicator will be devised as well.
+
+Another goal this project has had right from the start is to get me better at C
+programming and good modern software engineering practices for large projects,
+a resounding success. I've learnt enormous amounts from it, having written over
+10 thousand lines of C code for it. Not only C programming, it's also taught me
+how to keep a large software project healthy and advanced performance analysis
+and optimizations techniques based on CPU microarchitecture & compiler behavior.
+
+The server's public key comes readily available to clients at install time.
+
+The programming interfaces provided to access all supported physical methods of
+communication (e.g. the Linux Sockets API for TCP provided by the OS itself)
+are all abstracted away into a unified API that the system can always work with.
+
+This unified communications interface consists of 4 function pointers to the 4
+basic communication operations - begin session, end session, send message and
+receive message. Regardless of the internals of each physical communication
+method and its own programming interface, Rosetta's communication machinery will
+wrap its interface into this unified API, to make it seamlessly accessible for
+the whole system where communication behaviour and code is present. This allows
+new methods of communication to be easily integrated into the system.
+
+A Test Framework was developed for the Rosetta. It simulates real human users by
+spawning local OS processes and having them talk using local interprocess
+communication sockets (AF_UNIX on GNU/Linux). It drives the exact same code
+paths as real human users, while saving headaches caused by things like changing
+IP addresses and firewall rules getting in the way.
+
+The Test Framework supports both manual testing, where multiple virtual users
+can be spawned and the test operator sends messages from each one by hand,
+observing in real time how they get delivered to the intended recipient virtual
+users, as well as fully automated test simulations where virtual users get
+spawned and send each other messages programmatically based on a schedule.
+Multiple chat rooms, each with different guest virtual users, can be present
+at once during testing, to observe how well the system maintains them.
