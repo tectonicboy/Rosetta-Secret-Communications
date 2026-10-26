@@ -292,12 +292,15 @@ For the other algorithms:
 - Generating a private key is simply grabbing pseudorandom bytes from a source
   that is deemed adequate from a security standpoint, in this case from the
   standard /dev/urandom file on GNU/Linux. Generating a 320-bit private key
-  simply means grabbing 320 bits from that pseudorandom source.
+  simply means grabbing 320 bits from that pseudorandom source and setting the
+  highest bit to 1, to make sure it really is 320-bit.
 
 - Generating a public key "A", from a private key "a", is done with the formula:
   A = G^a mod M
 
-- In order for Alice and Bob, both in possession of the same Diffie-Hellman M, Q
+- Computing a shared secret on multiple sides.
+
+  In order for Alice and Bob, both in possession of the same Diffie-Hellman M, Q
   and G, to generate the same shared secret "X" on both sides, given Bob's
   private/public keys (b, B) and Alice's pair (a, A) and Bob holding Alice's
   public key, while Alice holds Bob's public key:
@@ -394,6 +397,153 @@ src/lib/
 *  Rosetta libraries lines of code: 3590                                      *
 *                                                          10 October 2026    *
 *******************************************************************************
+
+################################################################################
+################################################################################
+
+CHAPTER III: The Rosetta client
+--------------------------------------------------------------------------------
+
+4. Overview of the client
+=========================
+
+The client is what users run in order to use Rosetta. It has both a graphical
+user interface (GUI), made using wxWidgets in C++, and a terminal user interface
+(TUI) made in C like the rest of the project.
+
+Different usecases necessitate different ways of using the system, which is
+achieved using different Client Driver Programs, which differ in some ways at
+the highest level of abstraction,  while still using the same core functionality
+of the client layer.
+
+Client code used by real human users in the base system lives under /src/client/
+while the TUI-based client driver is currently part of the Test Framework.
+
+The design of the client allows different ways of using Rosetta. The 4 primary
+parts of the client layer are:
+
+- Client User Interface
+- Client Primary Functions
+- Client Packet Functions
+- Client Communications
+
+The user interface part implements the mechanism via which the user of the
+system will be creating rooms, talking to their friends, etc. It is separated
+from the Primary Functions part on purpose, so that different ways of using the
+system can be created by having different UI implementations, which are called
+client driver programs, described in the next chapter.
+
+The primary functions part contains abstractions for the main client-facing
+operations that can be performed as part of using Rosetta: register, login,
+create chatroom, join chatroom, send message, leave chatroom, logout. They
+handle logic such as sanitizing user input for codename and their password and
+calling, and handling any arising errors from the appropriate lower-level
+functions for payload construction/parsing and functions for communication,
+strictly using the Unified Communication Interface, which is what the
+Communications Machinery component exposes to the rest of the system, so it can
+elegantly use the same communication functions regardless of which underlying
+physical communication mechanism is currently being used.
+
+The packet functions part contains functions that construct payload buffers for
+outgoing packets to the server and functions for processing incoming packets
+from the server. Each recognized payload structure has its own unique magic
+constant that identifies it, right at the start of the payload buffer. After
+constructing/parsing a payload buffer, this part of the client layer does not
+itself invoke functions that execute communication operations, this is done one
+abstraction layer up, inside the Primary Functions part.
+
+The client communications part (conceptually residing in the Communications
+Machinery component in the system design) of the client layer is what actually
+contains the implementations of the functions that the function pointers in the
+Unified Communication Interface are set to during initialization. This part
+contains implementations of every possible function that these function pointers
+can be set to. For instance, the transmit_payload() function in the Unified
+Communication Interface can be set to a payload sending function for AF_UNIX
+(local interprocess communications) to talk to other local processes, which is
+what the Test Framework does, or it can be set to an AF_INET payload sending
+function that uses Internet Sockets in the Linux Sockets API to undertake TCP
+communications between human users. Both of these concrete communication
+functions are implemented in the client communications part of the client layer.
+
+5. Client driver programs
+=========================
+
+Client driver programs implement the Client User Interface part of the client
+layer in different ways. Each client driver program runs the exact same
+code paths for the client primary functions and client packet functions parts of
+the client layer. They may be using the same, or different communication
+functions in the client communications part, which is invisible to the higher
+levels of abstraction in the client layer, including to the UI part, since these
+parts only utilize functions provided by the Unified Communication Interface:
+transmit_payload, receive_payload, end_communication, init_communication.
+
+There are currently 2 client driver programs: The wxWidgets GUI based one that
+human users utilize, and the terminal interface one used in the Test Framework.
+
+One important distinction between the 2 is the way in which the running client
+is notified of a received message by the polling thread. In the former, we have
+to actually change GUI elements, in the latter it's just printf(). In the
+latter, when a client is notified that the chatroom they were in has been closed
+by the owner of the room, a potentially blocked scanf() call has to be unblocked
+as well.
+
+This is done with conditional compilation using #ifdef. The GUI client driver
+program defines the preprocessor macro USE_WX_GUI. Then, code that needs to
+handle these events differently for different client driver programs uses #ifdef
+and #ifndef to select the respective code for handling the events.
+
+Here is some code in Client Primary Functions that illustrates this:
+
+Example 1:
+---------
+
+////////// Remove the wxWidgets GUI elements for being in a chat room if the
+////////// client receives information that the room owner has closed the room:
+////////// This does not have to be done for the terminal user interface driver
+////////// program because there are no GUI widgets like buttons to remove.
+
+#ifdef USE_WX_GUI
+force_user_out_of_room();
+#endif
+
+Example 2:
+---------
+
+////////// If not using the wxWidgets GUI client driver program, simply display
+////////// the received message using printf(). Otherwise, call the appropriate
+////////// message displaying function through a function pointer that had been
+////////// been set during client initialization. In the wxWidgets GUI case, it
+////////// will change the GUI element to have the received message displayed.
+
+#ifndef USE_WX_GUI
+printf("{OWN_INDEX: %lu} received msg: %s\n",
+        own_ix, text_message_line);
+#else
+display_received_msg((char*)text_message_line);
+#endif
+
+////////// display_received_msg function pointer will have been set to this
+////////// function for the client driver program that uses the wxWidgets GUI:
+
+/* Update GUI using the g_instance global pointer.
+ *
+ * Client polled the server and received a new message from somebody in their
+ * chatroom. Display it on the user's chat room GUI window.
+ */
+void display_gui_message(char* message_line)
+{
+    wxString msg_to_display = wxString::FromUTF8(message_line);
+    g_instance->GetEventHandler()->CallAfter([msg_to_display]()
+    {
+        g_instance->msg_entries->AppendText(msg_to_display);
+        g_instance->msg_entries->AppendText("\n");
+    });
+    return;
+}
+
+More than these 2 client driver programs can be implemented in the future.
+The infrastructure and logical separation in the system design are already
+there, making this an easy task.
 
 ################################################################################
 ################################################################################
