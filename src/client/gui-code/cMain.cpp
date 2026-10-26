@@ -7,7 +7,7 @@
 
 #include "logo.h"
 #include "cMain.h"
-#include "../network-code/client-primary-functions.h"
+#include "../core-client-layer/client-primary-functions.h"
 
 /* Background and foreground colors of the Rosetta user-facing client GUI. */
 #define BG_COLOR wxColour(30, 30, 30)

@@ -1,4 +1,4 @@
-#include "../../client/network-code/client-primary-functions.h"
+#include "../../client/core-client-layer/client-primary-functions.h"
 
 int main()
 {
