@@ -98,6 +98,7 @@ bigint* Gm; /* Montgomery Form of G.                               */
 bigint* server_pubkey_bigint;
 bigint  server_privkey_bigint;
 
+#include "primary-function-prototypes.h"
 #include "server-communications.h"
 #include "server-packet-functions.h"
 #include "server-primary-functions.h"
