@@ -67,8 +67,8 @@ CHAPTER IV: The Rosetta server............................................
 10. Server deployment strategy............................................
 11. Source file contents summary for the server...........................
 
-CHAPTER V: Communications machinery.......................................
-12. The Rosetta Communications Interface..................................
+CHAPTER V: Communications Machinery.......................................
+12. The Rosetta Unified Communication Interface...........................
 13. Supported underlying communication mechanisms.........................
 14. Source file contents summary for the communications machinery.........
 
@@ -923,6 +923,242 @@ src/server/
 *                                                                             *
 *  Rosetta server lines of code: 2776                                         *
 *                                                          30 October 2026    *
+*******************************************************************************
+
+################################################################################
+################################################################################
+
+CHAPTER V: Communication Machinery
+--------------------------------------------------------------------------------
+
+Rosetta's system design is set up in a way that allows multiple underlying
+communication mechanisms to exist and be used for different usecases of the
+system and allows new communication mechanisms to be easily integrated.
+
+This chapter describes how that is achieved.
+
+12. The Rosetta Unified Communication Interface
+===============================================
+
+When any part of the system needs to perform a communication operation, such as
+sending a message, it does so through an abstract function interface that is
+always the same regardless of what the underlying communication mechanism
+currently being used is.
+
+That interface consists of 4 function pointers, both on server and on client
+side, which describe in an abstract way the common communication operations that
+are actually being carried out.
+
+For the client, these 4 communication operations are:
+
+    - Initialize communication: Establish a connection with the Rosetta server.
+    - Send a message: Server receives it and relays it to the user's friends.
+    - Receive a message: Waits for the server to send a reply to a request.
+    - End communication: Disconnect from the server.
+
+Corresponding 4 function pointers, in client-primary-functions.h:
+
+uint8_t (*init_communication) (void);
+uint8_t (*transmit_payload)   (uint8_t* buf, size_t send_siz);
+uint8_t (*receive_payload)    (uint8_t* buf, uint64_t* recv_len);
+void    (*end_communication)  (void);
+
+For the server, these 4 communication operations are:
+
+    - Initialize communication: Start-up and enter onboarding new clients loop.
+    - Send a message: Send a reply to a client request.
+    - Receive a message: Receive a request from a client.
+    - Onboard new client: Sits and listens for new client connection requests.
+
+Corresponding 4 function pointers, in rosetta-server.c:
+
+uint8_t(*init_communication)(void);
+uint8_t(*transmit_payload)  (uint64_t socket_ix, uint8_t* buf, size_t send_siz);
+ssize_t(*receive_payload)   (uint64_t socket_ix, uint8_t* buf, size_t max_siz);
+uint8_t(*onboard_new_client)(void);
+
+Every underlying communication mechanism exposes its own usage interface.
+Rosetta shouldn't and doesn't need to concern itself with the communication
+interface of every single underlying communication mechanism that has been
+intergrated into the system. This is why the Unified Communication Interface,
+consisthing of these 4 function pointers, was created.
+
+Both the Server and the Client have a communication source code file which
+contains the actual implementations of how the communication mechanism-specific
+usage interfaces are wrapped by logic that ultimately allows these interfaces to
+be used through the 4 function pointers in the Unified Communication Interface
+and allows Rosetta to undertake communication operations through that unified
+interface, regardless of what underlying communication mechanism is being used.
+
+The whole system uses the Unified Communication Interface in every single place
+where one of the 4 main communication operations must be carried out.
+
+The logical connection between the Unified Communication Interface and the
+interface exposed by the actual underlying communication mechanism happens by
+setting the 4 function pointers to the 4 wrapper functions that deal with the
+specific communication mechanism's usage interface. Remember, a set of 4 wrapper
+functions for each integrated communication mechanism is present in the server's
+and client's respective communications source code file. This function pointer
+assignment happens at system initialization time, for both server and client.
+
+13. Supported underlying communication mechanisms
+=================================================
+
+Currently there are 2 underlying communication mechanisms integrated: Internet
+communications over TCP sockets on Linux, for the real human user-oriented use
+case of the system, and local interprocess communications over AF_UNIX sockets
+on Linux, for the Rosetta Test Framework use case.
+
+Here is the communication mechanism selection code for the server:
+
+/* Select local interprocess communications with AF_UNIX sockets. Used by the
+ * Rosetta Test Framework when simulatig human users via local OS processes.
+ */
+#define SELECT_LOCAL_UNIX_COMMUNICATIONS          \
+    init_communication = ipc_init_communication;  \
+    transmit_payload   = ipc_transmit_payload;    \
+    receive_payload    = ipc_receive_payload;     \
+    onboard_new_client = ipc_onboard_new_client;
+
+/* Select internet communications over TCP. Used by the regular user-facing
+ * version of the system.
+ */
+#define SELECT_TCP_INTERNET_COMMUNICATIONS        \
+    init_communication = tcp_init_communication;  \
+    transmit_payload   = tcp_transmit_payload;    \
+    receive_payload    = tcp_receive_payload;     \
+    onboard_new_client = tcp_onboard_new_client;
+
+To avoid confusion, I will repeat: The actual implementations of each set of 4
+wrapper functions that connects the Unified Communication Interface to the
+usage API of each possible communication mechanisms live in the server's and
+client's communication source code file:
+
+ - Server implementations: src/server/server-communications.h
+ - Client implementations: src/client/core-client-layer/client-communications.h
+
+Then, the point in the source code where the Unified Communication Interface is
+initialized to one of the integrated underlying communication mechanisms' usage
+API is simply an invocation of one of these macros, enabling the system to use
+the underlying communication mechanism through the 4 function pointers in the
+Unified Communication Interface elegantly.
+
+The code for the client side is analogous: A macro with a set of 4 function
+pointer assignments for each integrated communication mechanism and then an
+invocation of one of the macros depending on which mechanism is selected for the
+particular use case.
+
+In the future, if a new underlying communication mechanism is to be added and
+integrated into Rosetta, nothing about how the system carries out communication
+operations will change at all. There would simply have to be a new set of 4
+wrapper functions added in the client's and server's communication source code
+file that wrap around the API that the new communication mechanism itself
+exposes to the world.
+
+One idea that keeps coming up for a future communication mechanism is radio.
+That would allow, for instance, drones or robots containing small embedded chips
+to use Rosetta for encrypted and authenticated communication, for instance in a
+military use case.
+
+14. Source file contents summary for the communications machinery
+=================================================================
+
+SERVER SIDE COMMUNICATION MACHINERY:
+
+src/server/
+
+    ============================================================================
+    ============================================================================
+    1)  rosetta-server.c
+
+                    1.1) Unified Communication Interface: Function pointers
+                    1.2) Unified Communication Interface: Selection macros
+                    1.3) Selection of a communication mechanism based on a
+                         command-line argument, in main().
+
+                    LoC: Already added to the Server component's lines of code.
+    ============================================================================
+    ============================================================================
+    2)  server-communications.h
+
+                    2.1) One set of 4 wrapper functions for each integrated
+                         communication mechanism, to which the 4 function
+                         pointers in the Unified Communication Interface will be
+                         getting set when selecting a communication mechanism.
+
+                    LoC: Already added to the Server component's lines of code.
+    ============================================================================
+    ============================================================================
+
+CLIENT SIDE COMMUNICATION MACHINERY:
+
+src/client/core-client-layer/
+
+    ============================================================================
+    ============================================================================
+    3)  client-primary-functions.h
+
+                    3.1) Unified Communication Interface: Function pointers
+                    3.2) Unified Communication Interface: Selection macros
+
+                    LoC: Already added to the Client component's lines of code.
+    ============================================================================
+    ============================================================================
+    4)  client-communications.h
+
+                    4.1) One set of 4 wrapper functions for each integrated
+                         communication mechanism, to which the 4 function
+                         pointers in the Unified Communication Interface will be
+                         getting set when selecting a communication mechanism.
+
+                    LoC: Already added to the Client component's lines of code.
+    ============================================================================
+    ============================================================================
+
+src/client/gui-code/
+
+    ============================================================================
+    ============================================================================
+    5)  cMain.cpp   5.1) Select Linux TCP Internet communication mechanism:
+                         Set the Unified Communication Interface's 4 function
+                         pointers to the 4 wrapper functions for TCP sockets
+
+                    LoC: Already added to the Client component's lines of code.
+    ============================================================================
+    ============================================================================
+
+src/rosetta-test-framework/automatic-user-testing/
+
+    ============================================================================
+    ============================================================================
+    6)  auto-spawnerX.c
+
+                    6.1) Pick Linux local interprocess communication mechanism:
+                         Set the Unified Communication Interface's 4 function
+                         pointers to the 4 wrapper functions for AF_UNIX sockets
+
+                    LoC: Already added to the Test Framework component's LoC.
+    ============================================================================
+    ============================================================================
+
+src/rosetta-test-framework/manual-user-testing/
+
+    ============================================================================
+    ============================================================================
+    7)  manual-user-spawner.c
+
+                    7.1) Pick Linux local interprocess communication mechanism:
+                         Set the Unified Communication Interface's 4 function
+                         pointers to the 4 wrapper functions for AF_UNIX sockets
+
+                    LoC: Already added to the Test Framework component's LoC.
+    ============================================================================
+    ============================================================================
+
+*******************************************************************************
+*                                                                             *
+*  Communication machinery lines of code: Not applicable, already counted.    *
+*                                                                             *
 *******************************************************************************
 
 ################################################################################
