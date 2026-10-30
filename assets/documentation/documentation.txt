@@ -494,6 +494,7 @@ and #ifndef to select the respective code for handling the events.
 
 Here is some code in Client Primary Functions that illustrates this:
 
+--------------------------------------------------------------------------------
 Example 1:
 ---------
 
@@ -505,7 +506,7 @@ Example 1:
 #ifdef USE_WX_GUI
 force_user_out_of_room();
 #endif
-
+--------------------------------------------------------------------------------
 Example 2:
 ---------
 
@@ -540,6 +541,7 @@ void display_gui_message(char* message_line)
     });
     return;
 }
+--------------------------------------------------------------------------------
 
 More than these 2 client driver programs can be implemented in the future.
 The infrastructure and logical separation in the system design are already
@@ -662,9 +664,6 @@ structures will be given and well documented in here.
 7. Source file contents summary for the client
 ==============================================
 
-################################################################################
-################################################################################
-
 src/client/gui-code/
 
     ============================================================================
@@ -737,3 +736,194 @@ src/client/core-client-layer/
                     LoC: 1086
     ============================================================================
     ============================================================================
+
+*******************************************************************************
+*                                                                             *
+*  Rosetta client lines of code: 4398                                         *
+*                                                          10 October 2026    *
+*******************************************************************************
+
+################################################################################
+################################################################################
+
+CHAPTER IV: The Rosetta server
+--------------------------------------------------------------------------------
+
+8. Overview of the server
+=========================
+
+The Rosetta server is an executable that's deployed and runs on AWS currently.
+It sits between all Rosetta clients, which never send transmissions to each
+other directly, but rather rely on the server as a relay mechanism. This means
+that the server disallows users' Internet Service Provider (ISP) from finding
+out not only what they're saying, but also WHO they're talking to, despite
+seeing the target IP addresses in their network traffic, complementing secrecy.
+
+It has several important responsibilities:
+
+    - Securely relay a sender's message to everyone they're in a chatroom with.
+    - Maintain critical state about chatrooms and their participants.
+    - Gracefully handle unexpected situations, e.g. a user losing connection.
+    - Securely work with sensitive cryptographic artifacts.
+    - Maintain a secure environment, protect itself & users from eavesdroppers.
+
+The server has 4 primary components:
+
+    - Top-level operator : Communication API selection, listening loop, etc.
+    - Primary Functions  : Transmission processing, server initialization, etc.
+    - Packet Functions   : Payload crafting & parsing.
+    - Communications     : Unified Communication Interface server side logic.
+
+
+9. Server workflow & payload structures
+=======================================
+
+The top-level operator begins by checking the command line arguments and based
+on those, selects the chosen underlying communication interface. After that, it
+calls the server initialization function. If all is good so far, it enters the
+infinite listening loop that waits for new connection requests and onboards new
+clients upon receiving one.
+
+Currently, the server architecture is such that a new thread is started for each
+client, but that will probably be optimized to only start a new thread when the
+current number of threads can't handle all the incoming polling requests of
+currently connected clients.
+
+The server's long-term public key is already present with clients at install
+time. Clients wishing to connect and use Rosetta first send a short-term key
+pair, as does the server. Then a short-term DH shared secret is computed on
+both sides. Authentication until that point, before Schnorr Signatures can be
+computed, is done with HMAC. This short-term shared secret is used to transport
+the client's long-term public key to the server in encrypted form, which means
+it gets destroyed almost instantly after it's created.
+
+Then the server handles requests for users to create a new chat room, join an
+existing one, leave a chat room or send a message in their current chat room.
+When a client sends a message, the server can't decrypt it, it merely relays the
+message to everyone else who is in the same chat room as the sender, while
+attaching its own Schnorr Signature to the payload, so the receiver(s) can be
+assured that the message really was relayed by the legitimate Rosetta server.
+
+The server's biggest workload and time eater is Schnorr Signatures. Verifying
+them and computing its own. This is why, in bigint.h, the Montgomery Modular
+Multiplication and Powering functions were optimized to such a big extent. Since
+each client polls the server multiple times per second, it's predictable and
+computable how many clients the server can handle at once before the total time
+it takes the server to process all signatures overtakes the time between poll
+requests of a client, which is currently every set to 100,000 microseconds, aka
+100 milliseconds, aka 0.1 seconds. This means the server has 100 milliseconds
+to process the poll requests of EACH connected client in total. Currently, the
+time it takes to verify a poll request's incoming signature is, on average, a
+little over 4200 microseconds, or 4.2 milliseconds. 100 milliseconds of client
+poll interval gives the server enough time to handle about 20 clients per thread
+if a future redesign allows multiple clients being processed by 1 thread, unlike
+the design now, where each client makes a new thread start.
+
+As mentioned in the part of this documentation that talks about the Client
+component of Rosetta, in 6. Client workflow & payload structures, the system
+uses a custom payload protocol that describes how each recognized payload buffer
+will look like exactly. The server uses this as much as the client does. It
+parses payloads constructed by clients and generates payloads that clients will
+be parsing, according to this payload protocol. Diagrams of each recognized
+payload can be found in server-packet-functions.h, the protocol itself has some
+minor shortcomings, a fix for which would have me change many places of how
+it would be documented here, which is the reason I will only document this
+payload protocol once the rework effort which fixes these shortcomings is done.
+The payload diagrams in server-packet-functions.h (and client-packet-functions.h
+for that matter) will have to suffice for the time being.
+
+10. Server deployment strategy
+==============================
+
+The server is currently deployed on an AWS EC2 Linux machine. This necessitates
+that each client's public IP address must be whitelisted on the AWS panel, in
+order for the client's requests to be able to reach the server. This becomes
+especially annoying if a client's public IP address gets changed frequently by
+their ISP. Currently, clients' IP addresses get added manually to the AWS
+whitelist menu for the AWS machine's NIC, but I believe this can be automated.
+
+Perhaps the handling of changed clients' IP addresses can be automated in the
+future too, by a small system that checks if the IP address of a client is still
+the same as registered for access to the Rosetta server, or perhaps some AWS
+machinery that automatically and securely whitelists Rosetta users somehow.
+
+The server's IP address is given in a #define in the client software currently,
+which will have to be improved and possibly automated in the future.
+Specifically, it is #defined in client-communications.h. The server does not
+need client IP addresses, since it never initiates a connection with a client,
+only clients initiate communication with the server once a user logs in.
+
+In either case, Rosetta is not intended for mass use, but rather for small
+groups of people who really want to talk in secret online. I will definitely
+know about every user, so it's not really a problem to whitelist their IP
+addresses on AWS for the time being.
+
+11. Source file contents summary for the server
+===============================================
+
+src/server/
+
+    ============================================================================
+    ============================================================================
+    1)  primary-function-prototypes.h
+
+                    1.1) Function prototypes for server primary functions in
+                         order to call them by server packet functions that are
+                         defined above the primary functions' definitions.
+
+                    LoC: 24
+    ============================================================================
+    ============================================================================
+    2)  rosetta-server.h
+
+                    2.1) Unified Communication Interface: Declare function ptrs.
+                    2.2) Unified Communication Interface: API Selection macros.
+                    2.3) Struct definitions: connected_client, chatroom
+                    2.4) Globals for bookkeeping, cryptography, rooms state, etc
+                    2.5) #includes for the 4 server header files.
+                    2.6) Main function: initialize and begin listening loop.
+
+                    LoC: 194
+    ============================================================================
+    ============================================================================
+    3)  server-communications.h
+
+                    3.1) #includes: Linux headers for Sockets API.
+                    3.2) #defines for communication-specific constants.
+                    3.3) Globals & #defines for server communications.
+                    3.4) Unified Communication Interface: TCP functions.
+                    3.5) Unified Communication Interface: AF_UNIX functions.
+
+                    LoC: 343
+    ============================================================================
+    ============================================================================
+    4)  server-packet-functions.h
+
+                    4.1) Function definitions: Payload construction and parsing.
+
+                    LoC: 1535
+    ============================================================================
+    ============================================================================
+    5)  server-primary-functions.h
+
+                    5.1) Function definition: Check if client public key exists
+                    5.2) Function definition: Add a pending message for a client
+                    5.3) Function definition: Remove a client from a chat room
+                    5.4) Function definition: Authenticate a client transmission
+                    5.5) Function definition: Remove a client from Rosetta.
+                    5.6) Function definition: Server initialization.
+                    5.7) Function definition: Identify a new transmission.
+                    5.8) Function definition: Start a new client thread.
+
+                    LoC: 680
+    ============================================================================
+    ============================================================================
+
+*******************************************************************************
+*                                                                             *
+*  Rosetta server lines of code: 2776                                         *
+*                                                          30 October 2026    *
+*******************************************************************************
+
+################################################################################
+################################################################################
