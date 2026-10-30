@@ -342,7 +342,7 @@ void cMain::BtnClickLoginGo(wxCommandEvent &evt)
     /* Rosetta Communication Interface is set to AF_INET sockets here, as this
      * user-facing wxWidgets GUI client driver uses TCP for communication.
      */
-    SELECT_LOCAL_UNIX_COMMUNICATIONS
+    SELECT_TCP_INTERNET_COMMUNICATIONS
 
     login_status = login(password, password_len, "./user-save.dat");
 

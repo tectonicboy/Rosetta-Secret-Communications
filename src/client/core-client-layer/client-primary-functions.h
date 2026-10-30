@@ -6,12 +6,12 @@
 #include "client-communications.h"
 #include "client-packet-functions.h"
 
-/* Rosetta Communication Interface.
+/* Unified Communication Interface.
  *
  * These 4 function pointers drive the basic functioning of ANY physical form of
  * communication, regardless of what happens at its lower levels of abstraction.
  *
- * They make up Rosetta's communication interface. This interface allows the
+ * They make up the Unified Communication Interface. This interface allows the
  * system to elegantly use the same functions for communicating regardless of
  * what the actual communication method being used at the moment is.
  *
