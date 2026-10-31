@@ -8,6 +8,7 @@
  * - Number of threads to use (primes checked in parallel)
  */
 #define REQ_NUM_CMD_LINE_ARGS 4
+#define THREAD_FUNC_INPUT_BUF_SIZE sizeof(uint64_t) + sizeof(bigint)
 
 unsigned long rabin_miller_passes;
 uint64_t* is_dh_modulus_found;
@@ -139,7 +140,7 @@ int main(int argc, char* argv[])
     for(uint64_t i = 0; i < num_threads; ++i)
     {
         bigint_create_from_u32(&(test_Ms[i]), max_reserved_bits, 0);
-        thread_func_inputs[i] = calloc( 1, sizeof(uint64_t) + sizeof(bigint) );
+        thread_func_inputs[i] = calloc(1, THREAD_FUNC_INPUT_BUF_SIZE);
         PRINT_ERR_AND_EXIT_IF_NULL_PTR(thread_func_inputs[i],
             "[ERR] Heap alloc in main for thread_func_inputs[i] failed: ")
         is_dh_modulus_found[i] = 0;
@@ -147,8 +148,9 @@ int main(int argc, char* argv[])
 
     /**************************   FIND Q   ***********************************/
 
-    /* Generate random 320-bit prime Q. Set last and first bit to 1.      */
-    /* This ensures it's really 320-bit and it's odd for prime potential. */
+    /* Generate random prime Q. Set last and first bit to 1. This ensures it is
+     * really of the required bitwidth and it's odd for prime potential.
+     */
 
     rand_fd = fopen(DEV_URANDOM_PATH, "r");
     if(rand_fd == NULL)
@@ -164,18 +166,24 @@ int main(int argc, char* argv[])
         goto label_cleanup;
     }
 
-    /* Clear all bits more significant than the bitwidth requested. */
-    /* Set the most significant requested bit too. */
+    /* Clear all bits more significant than the bitwidth requested, from the
+     * last used byte. Set the most significant requested bit to ensure it
+     * really is of the requested bitwidth, and set the least significant bit,
+     * in order to make it an odd number with potential to be a prime.
+     */
     for(uint8_t i = 1; i <= unused_bits_q; ++i)
         Q.bits[q_bytes - 1] &= ~(1 << (7 - unused_bits_q + i));
 
     Q.bits[q_bytes - 1] |= (1 << (7 - unused_bits_q));
     Q.bits[0] |= (1 << 0);
+
+    /* Calculate the final number of used bits in the BigInt. */
     Q.used_bits = get_used_bits(Q.bits, q_bytes);
 
     while(is_prime == 0)
     {
-        printf("Finding 320-bit prime  Q  --  numbers checked: %lu\n", counter);
+        printf("Finding %lu-bit prime  Q  --  numbers checked: %lu\n",
+               q_bits, counter);
         is_prime = rabin_miller(&Q, rabin_miller_passes);
         ++counter;
         if(is_prime == 1)
@@ -200,7 +208,7 @@ int main(int argc, char* argv[])
 
         aux_bytes = temp_aux_bits / 8;
     }
-    printf("\n\n============ STARTING TO FIND 3072-BIT  M  ==============\n\n");
+    printf("\n\n============ STARTING TO FIND PRIME  M  ==============\n\n");
 
 label_keep_searching:
 
@@ -259,11 +267,10 @@ label_keep_searching:
            tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
     SET_PRINT_BG_BLACK
 
-    printf("All %lu threads finished.\nDiscoveries: [", num_threads);
+    printf("All %lu threads finished.\n", num_threads);
 
     for(uint64_t i = 0; i < num_threads; ++i)
     {
-        printf(" %lu ", is_dh_modulus_found[i]);
         if(is_dh_modulus_found[i] == 1)
         {
             printf("\n\n ===========>>>   Found M  <<<=========\n\n");
@@ -273,11 +280,10 @@ label_keep_searching:
             keep_searching = 0;
         }
     }
-    printf("]\n");
 
     if(keep_searching)
     {
-        printf("\n3072-bit primes checked: %lu  --  ", counter);
+        printf("\n %lu-bit primes checked: %lu  --  ", m_bits, counter);
         printf("The search continues.\n\n");
         goto label_keep_searching;
     }
