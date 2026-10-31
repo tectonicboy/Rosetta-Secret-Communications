@@ -73,7 +73,7 @@ CHAPTER V: Communications Machinery.......................................
 14. Source file contents summary for the communications machinery.........
 
 CHAPTER VI: Custom tools..................................................
-15. New Diffie-Hellman prime parameters finder............................
+15. New Diffie-Hellman prime number parameters finder.....................
 16. Source file contents summary for the tools............................
 
 CHAPTER VII: Rosetta Test Framework.......................................
@@ -378,7 +378,7 @@ src/lib/
                     LoC: 1618
     ============================================================================
     ============================================================================
-    3) rosetta-helpers-h
+    3) rosetta-helpers.h
 
                     3.1)  Header file includes used across the whole system.
                     3.2)  Function: Clear memory without compiler elimination.
@@ -1159,6 +1159,97 @@ src/rosetta-test-framework/manual-user-testing/
 *                                                                             *
 *  Communication machinery lines of code: Not applicable, already counted.    *
 *                                                                             *
+*******************************************************************************
+
+################################################################################
+################################################################################
+
+CHAPTER VI: Custom Tools
+--------------------------------------------------------------------------------
+
+This part of the project concerns itself with individual tools that have been
+developed to support the various stages of the system's development & operation.
+
+15. New Diffie-Hellman prime number parameters finder
+=====================================================
+
+This small tool is used to find positive prime integers suitable for use in the
+Diffie-Hellman shared secret scheme. It uses my custom Big Integer library to
+find them, and is the originating source of the actual Diffie-Hellman prime
+order Q and modulus M that are in use during Rosetta's normal operation. Namely,
+the Rabin-Miller Primality Check algorithm from my Big Integer library is used.
+
+It takes 4 user-provided command line arguments:
+
+    - Required bitwidth of prime order Q
+    - Required bitwidth of modulus M, where Q exactly divides (M - 1)
+    - Number of Rabin-Miller passes to run before considering a number prime
+    - Number of threads to use (checks that many moduli in parallel)
+
+Typical usage example: bin/tools/find-new-dh-primes 320 3072 50 16
+
+A single thread is used to find Q, as that normally takes under 60 seconds for
+a 320-bit Q. To find the prime M, such that (M - 1) is exactly divisible by the
+prime Q, multiple threads are used to check multiple M's at once. The number of
+threads used is determined by the 4th and last provided command-line argument.
+
+A global array of flags keeps track which M, of the ones currently being checked
+by the running threads, was found to be suitable. Each M has an accompanying
+uint64_t index that determines which of the flags in that array is set to 1 if
+that that particular M turns out to be prime and to follow (M - 1) mod Q = 0. A
+mutex lock prevents a race condition on the global array of indicator flags. The
+input argument buffer of the thread function is populated with 2 things: The
+bigint object of the M currently being checked, and its own flag's index into
+the global array of indicator flags.
+
+Algorithm: Find a new Diffie-Hellman prime factor Q and modulus M:
+---------
+
+To kick off the process of finding Q and M, initial pseudorandom bytes are
+sampled from /dev/urandom. The most significant bit of Q is set to 1, in order
+to guarantee it really is of the required bitwidth, and the least significant
+bit is set to 1 to ensure it's an odd number and thus potentially prime. Then,
+it simply adds 2 to the Q being tested until a prime is found.
+
+Once a prime Q of (at minimum) the requested bitwidth B1 is found, the next step
+of the process generates a pseudorandom number AUX of bitwidth B2, sets its most
+significant bit to 1, sets its least significant bit to 0 to make it even. Then,
+AUX is multiplied by the discovered prime Q, lastly we add 1 in order to make
+the resulting M an odd number. This result is called "test M" and each thread
+gets its own test M to check for primality.
+
+Once all threads finish checking their own test M's, a counter is incremented by
+number_of_threads to keep track of how many DH moduli we have checked so far.
+If none of the threads turned out to have a valid DH modulus M, all zero flags
+are printed to indicate none of them found one, then new pseudorandom AUX are
+sampled, multiplied by Q, add 1 and passed to each thread for checking.
+
+If a batch of threads checking their test M's turns out to have found a valid M,
+the index of the thread that found it is reported and the info and bits of the
+modulus M are dumped in little-endian byte order, as are all BigInts in Rosetta.
+
+16. Source file contents summary for the tools
+==============================================
+
+src/tools/
+
+    ============================================================================
+    ============================================================================
+    1) find-new-dh-primes.c
+
+                    1.1) Necessary #includes for helpers and bigint headers.
+                    1.2) #defines for readability and global variables.
+                    1.3) Thread function that's run to check each test modulus.
+                    1.4) main: check cmd-line args, then find Q and M.
+
+                    LoC: 312
+    ============================================================================
+    ============================================================================
+
+*******************************************************************************
+*                                                                             *
+*  Rosetta Tools lines of code: 312                                           *
+*                                                          31 October 2026    *
 *******************************************************************************
 
 ################################################################################
