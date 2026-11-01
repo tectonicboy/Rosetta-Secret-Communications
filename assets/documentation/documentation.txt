@@ -80,19 +80,26 @@ CHAPTER VII: Rosetta Test Framework.......................................
 17. Test Framework overview & local OS processes as virtual users.........
 18. Manual testing with hand-operated virtual users.......................
 19. Automatic simulations with programmatic auto-operated virtual users...
-20. Source file contents summary for the Test Framework...................
+20. Testing scenarios outside the scope of the Test Framework.............
+21. Source file contents summary for the Test Framework...................
 
-CHAPTER VIII: Rosetta Security Scheme.....................................
-21. Overview of the security scheme.......................................
-22. Full detailed security scheme.........................................
-23. Weaknesses & future hardening opportunities...........................
+CHAPTER VIII: Build system and installation...............................
+22. Prerequisites for building Rosetta....................................
+23. The organization of Makefiles.........................................
+24. User installation.....................................................
 
-CHAPTER IX: Advanced system performance analysis & optimizations..........
-24. Detailed optimization experiments & produced write-ups................
+CHAPTER IX: Rosetta Security Scheme.......................................
+25. Overview of the security scheme.......................................
+26. Full detailed security scheme.........................................
+27. Weaknesses & future hardening opportunities...........................
 
-CHAPTER X: Future plans & potential for the project.......................
-25. Kernel bypass networking..............................................
-26. Emergency radio communicator embedded device..........................
+CHAPTER X: Advanced system performance analysis & optimizations...........
+28. Current state of Rosetta's performance and small optimizations........
+29. Detailed optimization experiments & produced write-ups................
+
+CHAPTER XI: Future plans & potential for the project......................
+30. Kernel bypass networking..............................................
+31. Emergency radio communicator embedded device..........................
 
 ################################################################################
 ################################################################################
@@ -1254,3 +1261,106 @@ src/tools/
 
 ################################################################################
 ################################################################################
+
+CHAPTER VII: Rosetta Test Framework
+--------------------------------------------------------------------------------
+
+17. Test Framework overview & local OS processes as virtual users
+=================================================================
+
+In the first regular human user-facing operation of the system, a person starts
+the Rosetta client and connects to the server, before joining/creating chatrooms
+and sending messages in them.
+
+In the Test Framework, the human user actors are replaced by a number of local
+Linux OS processes that talk to each other (through the server, as usual) over
+AF_UNIX sockets for local interprocess communications, instead of AF_INET
+internet sockets for TCP.
+
+With this idea, testing of the system has been made much easier thanks to the
+Test Framework. It essentially implements the top-level component of the Client
+in a different way than the normal human user-facing way does. Instead of the
+wxWidgets Graphical User Interface, a TUI (terminal user interface) is used and
+instead of human users entering passwords and codenames for chatrooms and
+clicking buttons on the GUI, we either have fully automated carrying out of such
+user actions via testing bots (called Auto User Spawners in the Test Framework)
+or manual selection of which user action to undertake by entering command
+numbers on the TUI, done from user entities called Manual User Spawners.
+
+This means there are 2 ways of carrying out whole-system testing operations
+using the Test Framework: Manual mode, where the human test operator
+manually has OS processes (that simulate users) create / join chat rooms, send
+messages in them, leave / close chatrooms, etc, which makes it easy to test all
+sorts of different scenariors and edge cases as we see fit, and Automated Mode
+where a fully specified series of events, with custom timing between them, is
+carried out on the system, again by the different OS processes simulating users.
+
+The reason this Test Framework makes whole-system testing easier is you no
+longer have headaches from things such as changing IP addresses, firewall rule
+updates, server deployment platform maintenance and the like.
+
+Importantly, the exact same code paths are driven when running virtual test
+users via the Test Framework as when running the system for real. The only
+difference is, we don't go through the wxWidgets GUI, but over a TUI using
+commands and selection numbers, and we use AF_UNIX sockets instead of talking
+over TCP using AF_INET sockets.
+
+Test user save files live in src/rosetta-test-framework/test-accounts, and more
+can be created by registering if the need arises.
+
+18. Manual testing with hand-operated virtual users
+===================================================
+
+This way of using the Test Framework lets the test operator / developer spawn
+as many users as they want and have each of them use Rosetta in whatever way
+deemed fit for the testing.
+
+The binary produced by the Test Framework Makefile from manual-user-spawner.c,
+located in bin/manual-user-testing/ is run as many times as the number of number
+of test users you want. The server must be started first of course, with AF_UNIX
+selected for the Unified Communication Interface.
+
+Just about any conceivable way to use the system can be personally tested this
+way. Users can join rooms, create rooms, send messages, leave rooms, room owners
+can close rooms with users in them, etc.
+
+19. Automatic simulations with programmatic auto-operated virtual users
+=======================================================================
+
+This is the more sophisticated way to use the Test Framework. There is a
+collection of what's called "automatic simulations". Each simulation spawns a
+number of virtual users on its own, where each user is its own executable from a
+C program that defines what and when that particular test user will do.
+
+First, the executable bin/rosetta-test-framework is started. The server must be
+started as well with AF_UNIX selected for the Unified Communication Interface.
+
+Then, from the test framework executable, one of the predefined automatic test
+simulations is selected. As it runs, it uses fork() and execve() to spawn the
+users that are part of this simulation, from their respective auto user spawner
+executables. Once an auto user spawner has been started, it automatically
+carries out the Rosetta usage actions defined for that user in its C program.
+
+These are function calls to create_room, join_room, send_message, etc, the same
+functions that get called when a real human user is on Rosetta through the
+wxWidgets graphical user interface, so the same code paths end up being tested.
+
+20. Testing scenarios outside the scope of the Test Framework
+=============================================================
+
+The 2 main differences between real world users running Rosetta and the way
+virtual test users run it in the Test Framework is where we find the scenariors
+that are outside the scope of the framework. The 2 differences being local
+interprocess communication with AF_UNIX sockets instead of TCP with AF_INET
+sockets, as well as using a terminal user interface (TUI) instead of the
+wxWidgets graphical user interface (GUI).
+
+If these two parts of the system are to be tested, for now the only way is to
+get two fake "real world" accounts from 2 devices that the test operator owns
+and get them in chat rooms and sending messages to each other, which completely
+replicates how real world users would run the system.
+
+21. Source file contents summary for the Test Framework
+=======================================================
+
+
