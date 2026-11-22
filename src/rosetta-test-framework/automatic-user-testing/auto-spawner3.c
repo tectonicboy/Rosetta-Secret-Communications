@@ -37,7 +37,7 @@ int main()
     if(status)
     {
         printf("[ERR] RTF Simulation 1: Devi could not join a chat room.\n");
-        if(status == 2){
+        if(status == 2)
             printf("[ERR] RTF Simulation 1: Server reply to Devi's JOIN_ROOM\n"
                    "                        request took too long.\n");
         exit(1);
