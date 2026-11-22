@@ -1,5 +1,4 @@
 #include "../../client/core-client-layer/client-primary-functions.h"
-
 int main()
 {
     /* Rosetta Test Framework uses local interprocess communications over
@@ -41,7 +40,6 @@ int main()
         if(status == 2){
             printf("[ERR] RTF Simulation 1: Server reply to Devi's JOIN_ROOM\n"
                    "                        request took too long.\n");
-        }
         exit(1);
     }
     printf("[OK]  RTF Simulation 1: Devi join a chat room!\n");

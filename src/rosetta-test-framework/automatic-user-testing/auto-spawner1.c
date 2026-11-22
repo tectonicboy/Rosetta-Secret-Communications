@@ -46,8 +46,6 @@ int main()
 
     sleep(12);
 
-    /* Send messages, close the chat room, wait 2 sec, then exit Rosetta. */
-
     /* Send messages */
     const char* msgs[] = {"Hi from kev", "kev_msg_2a", "kev_msg_3b"};
 
