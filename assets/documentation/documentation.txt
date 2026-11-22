@@ -1480,3 +1480,96 @@ src/rosetta-test-framework/manual-user-testing/
 
 ################################################################################
 ################################################################################
+
+CHAPTER VIII: Build system and installation
+--------------------------------------------------------------------------------
+
+Building from sources is not complicated at all, as Rosetta is written from the
+ground up, the vast majority in C, with very minimal dependencies.
+
+The only somewhat non-standard part is getting wxWidgets and using some makefile
+code for it when building the real human user-facing GUI client.
+
+22. Prerequisites for building Rosetta.
+=======================================
+
+Tools to build with, computing environment to build for and run on:
+
+Default toolchain choice    : GCC version 16.2 or later.
+Default optimization level  : -O3
+Targeted CPU architecture   : Modern x86_64 CPUs (≈ 2016 & later) with AVX2.
+Targeted operating system   : GNU/Linux
+Assumed Linux Kernel version: >= 7.3
+Linux Kernel & libc assumed : Modern standard kernels & glibc in 2026 or later.
+C and C++ standards assumed : c17 and c++20. Specified in common-build-config.mk
+
+wxWidgets 3.2 must be installed for GUI client operation.
+
+On Fedora, the following package search with DNF was successful:
+
+dnf search wxgtk
+
+It revealed the following required package names for wxWidgets:
+
+wxGTK.x86_64
+wxGTK-devel.x86_64
+wxGTK-media.x86_64
+
+Install them with "sudo dnf install PACKAGE_NAME" before building and running.
+
+23. The organization of Makefiles
+=================================
+
+The base system sources, the tools and the Test Framework each have their own
+Makefile. The base system's ("top-level") Makefile calls the other two in order
+to build the whole project. That's 3 Makefiles.
+
+Additionally, all Makefile definitions common to all 3 Makefiles are placed in
+an auxilliary make build system file: assets/common-build-config.mk, which is
+included at the top of all 3 of the project's Makefiles.
+
+The Makefile contents are written in an industry-standard way, neatly separating
+the logical pieces into their own sections. For instance, instead of repeatedly
+writing the same target names in multiple places, they're placed in a Makefile
+variable. Directories are also abstracted away via named Makefile constants.
+
+Build output goes to bin/ with subdirectories for some project components & the
+3 primary executables - client, server and test framework - at the top level.
+
+Starting from the project's root directory, the Makefiles are located at:
+
+./assets/common-build-config.mk  -----------  LoC: 83
+./Makefile  --------------------------------  LoC: 104
+./src/tools/Makefile  ----------------------  LoC: 23
+./src/rosetta-test-framework/Makefile  -----  LoC: 83
+
+*******************************************************************************
+*                                                                             *
+*  Rosetta build system lines of code: 293                                    *
+*                                                          22 November 2026   *
+*******************************************************************************
+
+The top-level Makefile calls the other ones.
+
+To build the project, simply run "make" from the top-level directory.
+
+24. User installation
+=====================
+
+At the moment, it hasn't been decided what the final method of installation for
+regular human users will be. Thus, the repository can be cloned and the system
+compiled from sources using "make" from the top-level project directory.
+
+The system must be started from top-level directory as the working directory,
+since filepaths used at runtime assume that as their starting directory.
+
+A single savefile will be created at the top-level project directory after the
+user registers. It will be read each time the user runs a login.
+
+The server's public key comes with the installation. Obviously, users shouldn't
+know the server's private key. This will be figured out at release time.
+
+################################################################################
+################################################################################
+
+CHAPTER IX: Rosetta Security Scheme
