@@ -35,7 +35,7 @@ Client        : 4398
 Server        : 2752
 Libraries     : 3590
 Tools         : 306
-Test Framework: 845
+Test Framework: 840
 Makefiles     : 293
 
 LINES OF DOCS:
@@ -1363,4 +1363,120 @@ replicates how real world users would run the system.
 21. Source file contents summary for the Test Framework
 =======================================================
 
+src/rosetta-test-framework/
 
+    ============================================================================
+    ============================================================================
+    1) rosetta-test-framework.c
+
+                    1.1) Function definition: Create a new test user savefile.
+                    1.2) Function definition: Start an auto test simulation.
+                    1.3) Function definition: Draw main menu & listen for input.
+                    1.4) Function definition: main, simply calls draw_menu_0().
+
+                    LoC: 209
+    ============================================================================
+    ============================================================================
+
+src/rosetta-test-framework/test-accounts/
+
+    FILE COLLECTION: Test user savefiles emitted by the test framework.
+
+src/rosetta-test-framework/automatic-user-testing/
+
+    ============================================================================
+    ============================================================================
+    2) auto-simulated-user-test-1.c
+
+                    2.1) Function definition: fork & execve: Start the server.
+
+                    2.2) Function definition: fork & execve: Start an auto user.
+                                              Base automatic user program file
+                                              path is taken from a #define in
+                                              helpers header, then the number of
+                                              the user program is appended and
+                                              this is the final executable path
+                                              used in the execve call to start
+                                              that particular auto user program.
+
+                    2.3) Function definition: main(): Define number of times to
+                                                      run the simulation for, in
+                                                      order to get more latency
+                                                      measurements, open & close
+                                                      latency readings file to
+                                                      clear it.
+
+                                                      Code block with label and
+                                                      jump back to it as many
+                                                      times as the simulation
+                                                      was defined to run for:
+
+                                                      1. Spawn all auto users.
+                                                      2. Wait for some seconds.
+                                                      3. system() function call
+                                                         to invoke python3 and
+                                                         run the measurement
+                                                         processing script.
+
+                    LoC: 136
+    ============================================================================
+    ============================================================================
+    FILE COLLECTION: auto-spawnerX.c are the C source files for automatic users
+                     and the actions they programmatically take once a given
+                     test simulation starts them with execve.
+
+                     Each automatic user program defines the user's codename
+                     and password, room names they should create / join, and
+                     savefile directory by grabbing the base path for these from
+                     a #define in the helpers header and appending the name of
+                     the user's own savefile.
+
+                     The C macro for selecting AF_UNIX communication is invoked.
+
+                     login() is called, then a chat room is created or joined.
+
+                     Messages are defined in a stack array of const char*'s.
+
+                     A loop calls send_text() with each desired message, with a
+                     delay between sending messages done with a sleep() call.
+
+                     Total auto user programs: 3
+
+                     LoC: 3 * 60 = 180.
+    ============================================================================
+    ============================================================================
+
+src/rosetta-test-framework/manual-user-testing/
+
+    ============================================================================
+    ============================================================================
+    3) manual-user-spawner.c - Run several in parallel to manually control as
+                               many simulated Rosetta users as you want, each
+                               one individually carrying usage actions like
+                               joining/creating/leaving/closing a chat room,
+                               sending messages, etc. The server must have been
+                               started separately by hand, with AF_UNIX sockets.
+
+                    3.1) Function definition: The manual user actions loop.
+
+                    3.2) Function definition: main(). Sanitize command-line
+                                              arguments, select AF_UNIX sockets,
+                                              save main()'s own thread_ID,
+                                              set the predefined signal handler
+                                              as the handler for SIGUSR1, whose
+                                              only purpose is to unblock from
+                                              the blocked scanf() in user loop,
+                                              call login(), enter the user loop.
+
+                    LoC: 315
+    ============================================================================
+    ============================================================================
+
+*******************************************************************************
+*                                                                             *
+*  Rosetta Test Framework lines of code: 840                                  *
+*                                                          22 November 2026   *
+*******************************************************************************
+
+################################################################################
+################################################################################
